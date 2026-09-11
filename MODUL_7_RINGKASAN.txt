@@ -1,0 +1,52 @@
+================================================================================
+               RINGKASAN MODUL 7: UNITY NETWORK CLIENT & WEBSOCKET CONTROLLER
+                            MAHJONG CUSTOM V1.0 (C# NETWORK)
+================================================================================
+
+1. DESKRIPSI MODUL
+   Modul 7 membangun jembatan komunikasi jaringan berkecepatan tinggi antara 
+   klien Unity (C#) dan Authoritative Go Backend Server menggunakan protokol 
+   WebSocket murni (RFC 6455). Seluruh logika permainan diatur secara otoritatif 
+   oleh server untuk mencegah kecurangan (cheat-proof), sementara klien bertindak 
+   sebagai penampil visual responsif yang mengirimkan aksi pemain.
+
+--------------------------------------------------------------------------------
+2. DAFTAR FILE & SKRIP C# (NETWORK LAYER)
+   • client/Assets/Scripts/Network/NetworkProtocol.cs
+     - Kontrak data DTO, Enums, dan Action Code JSON yang selaras 1:1 dengan 
+       Go Backend (`server/pkg/network/protocol.go`).
+     - Menyediakan struktur untuk Auth, Matchmaking, Custom Room, Friend List, 
+       Hand Dealing, Turn Start, Discard, Reaction Prompt, dan Round End.
+   • client/Assets/Scripts/Network/WebSocketClient.cs
+     - Driver WebSocket mandiri (Zero-Dependency) menggunakan `ClientWebSocket` 
+       bawaan .NET Standard / Unity runtime tanpa plugin berbayar.
+     - Mendukung koneksi TLS/WSS terenkripsi (Koyeb), auto-reconnect, dan 
+       pembacaan stream asinkron non-blocking.
+   • client/Assets/Scripts/Network/UnityMainThreadDispatcher.cs
+     - Pengatur antrean thread-safe yang menyalurkan event WebSocket dari background 
+       task ke Main Thread Unity untuk manipulasi visual GameObject & UI.
+   • client/Assets/Scripts/Network/GameNetworkManager.cs
+     - Singleton Controller utama yang mengorkestrasi alur login/register, antrean 
+       Ranked Matchmaking, Custom Room dengan kode 4 digit (misal: "VIP-8821"), 
+       undangan teman (Friend Invite), serta sinkronisasi giliran dan ubin 3D.
+
+--------------------------------------------------------------------------------
+3. ALUR KERJA JARINGAN & EVENT HANDLERS
+   1. Autentikasi: Login / Register dengan penyimpanan session token di memory.
+   2. Matchmaking / Room: 
+      - Ranked Queue: Mencari 4 pemain otomatis berdasarkan rentang Trophy.
+      - Custom Room: Membuat ruangan ber-kode unik atau bergabung via kode teman.
+   3. Friend System: Mengambil daftar teman online dan mengirim notifikasi invite mabar.
+   4. Siklus In-Game:
+      - `NOTIF_DEAL_HANDS`: Menerima 13 ubin privat milik sendiri & jumlah ubin lawan.
+      - `NOTIF_TURN_START`: Menyalakan timer 15 detik pada kompas meja 3D.
+      - `REQ_DISCARD_TILE`: Mengirim aksi buang ubin saat pemain men-drag ubin.
+      - `NOTIF_REACTION_PROMPT`: Menampilkan Action Bar (Chow, Pong, Kong, Win, Pass).
+      - `NOTIF_ROUND_END`: Menerima rincian skor, special hands, dan poin trofi (+40/-25).
+
+--------------------------------------------------------------------------------
+4. STATUS IMPLEMENTASI
+   • Kode C# Jaringan: 100% Selesai & Terstruktur.
+   • Kompatibilitas Platform: Android, iOS, Windows, Mac (Cross-Platform).
+   • Kesiapan Modul Berikutnya: Siap disambungkan ke Modul 8 (UI Touch Controller & Audio).
+================================================================================

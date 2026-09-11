@@ -1,0 +1,81 @@
+================================================================================
+         RINGKASAN MODUL 2: HAND EVALUATOR & SCORING ENGINE (GO)
+                       MAHJONG CUSTOM v1.0
+================================================================================
+
+1. TUJUAN MODUL 2
+-----------------
+Membangun "Otak Wasit" permainan untuk:
+- Mengevaluasi apakah tangan pemain sah untuk WIN dalam waktu < 1 mikrodetik.
+- Mendeteksi kelayakan aksi responsif saat lawan buang kartu (Chow, Pong, Kong).
+- Mengenali pola khusus (Special Hands: Seven Pairs, Pure Suit, All Triplets).
+- Menghitung perolehan skor aditif berdasarkan Rule Book v1.0.
+
+2. STRUKTUR DATA & EFISIENSI EVALUATOR
+--------------------------------------
+- Menggunakan Array Frekuensi `[5][10]int` (Count Matrix):
+  * Index 0 = Bamboo (1-9)
+  * Index 1 = Dot (1-9)
+  * Index 2 = Character (1-9)
+  * Index 3 = Wind (1-4)
+  * Index 4 = Dragon (1-3)
+- Dengan matriks ini, pengecekan kartu tidak membutuhkan sorting atau alokasi 
+  memori berulang, sehingga zero-allocation dan bebas lag.
+
+3. LOGIKA VALIDASI AKSI KARTU
+------------------------------
+a. CHOW (Tiga Tile Berurutan):
+   - HANYA berlaku dari pemain tepat di sebelah kiri (Previous Seat: (mySeat+3)%4).
+   - HANYA berlaku untuk Number Tiles (Bamboo, Dot, Character).
+   - Menghasilkan daftar pasangan tile penyambung yang valid.
+
+b. PONG (Tiga Tile Kembar Identik):
+   - Pemain memiliki minimal 2 tile kembar di tangan untuk mengambil tile buangan.
+   - Berlaku dari pemain mana pun.
+
+c. KONG (Empat Tile Kembar Identik):
+   - Open Kong: Memiliki 3 tile kembar dan mengambil tile ke-4 dari discard lawan.
+   - Concealed Kong: Memiliki 4 tile kembar di tangan sendiri.
+   - Added Kong: Menambahkan tile ke-4 pada Pong yang sudah terbuka.
+
+4. LOGIKA VALIDASI KEMENANGAN (WIN)
+-----------------------------------
+a. Standard Win (4 Meld + 1 Pair):
+   - Algoritma Backtracking: Pilih 1 calon Pair (tile berjumlah >= 2).
+   - Sisa 12 tile dipecah secara rekursif menjadi Triplet (Pong) atau Sequence (Chow).
+   - Jika semua tile habis terbagi, tangan dinyatakan SAH (WIN).
+
+b. Special Hands:
+   - Seven Pairs: Tepat 7 pasangan unik (14 tile tertutup, 0 open melds).
+   - Pure Suit: Seluruh 14 tile hanya berasal dari 1 jenis suit angka (tanpa Honor).
+   - All Triplets: 4 Meld semuanya Pong/Kong + 1 Pair (tanpa ada Chow).
+
+5. SKEMA PENGHITUNGAN SKOR v1.0
+-------------------------------
++------------------------------------+----------------+
+| Kondisi Kemenangan                 | Perolehan Skor |
++------------------------------------+----------------+
+| Base Win (Kemenangan Dasar)        | +100 poin      |
+| Self Draw Win                      | +30 poin       |
+| Discard Win                        | +20 poin       |
+| Seven Pairs                        | +100 poin      |
+| Pure Suit                          | +100 poin      |
+| All Triplets                       | +50 poin       |
+| Bonus per 1 Flower / Season        | +10 poin       |
+| Bonus Set 4 Flower Lengkap         | +50 poin       |
+| Bonus Set 4 Season Lengkap         | +50 poin       |
+| Bonus Full 8 Flower & Season       | +150 poin      |
++------------------------------------+----------------+
+*Bonus bersifat aditif (dijumlahkan secara kumulatif).
+
+6. DAFTAR FILE SUMBER KODE MODUL 2
+----------------------------------
+- server/pkg/engine/meld.go
+  Definisi tipe kombinasi Chow, Pong, Kong, dan Pair.
+- server/pkg/engine/evaluator.go
+  Algoritma evaluasi win (Backtracking O(1)), deteksi Chow/Pong/Kong, 
+  special hands, dan kalkulator skor.
+- server/pkg/engine/evaluator_test.go
+  Unit test lengkap menguji Standard Win, Seven Pairs, Pure Suit, All Triplets,
+  Chow/Pong, dan akurasi skor.
+================================================================================

@@ -1,0 +1,61 @@
+================================================================================
+          RINGKASAN MODUL 4: WEBSOCKET NETWORK LAYER (GO)
+                       MAHJONG CUSTOM v1.0
+             (UPDATED: RANKED MATCH, CUSTOM ROOM & FRIEND INVITE)
+================================================================================
+
+1. TUJUAN MODUL 4
+-----------------
+Menghubungkan Game Engine di memori server dengan jaringan internet:
+- Membangun Server WebSocket real-time berbasis standar RFC 6455.
+- Menerapkan arsitektur Concurrency murni di Go (Goroutines & Channels).
+- Mengimplementasikan protokol Envelope JSON (Pesan Client <-> Server).
+- Mengatur 2 MODE PERMAINAN:
+  a. Ranked Matchmaking Queue (Auto-matching 4 pemain).
+  b. Custom Room by Code (Membuat meja mabar khusus dengan kode, misal: "VIP-8821").
+- Mendukung sistem Invite Friend langsung ke meja mabar.
+- Menyediakan port dinamis ($PORT) yang siap dideploy ke Cloud Koyeb.
+
+2. ARSITEKTUR JARINGAN & CONCURRENCY (GOROUTINES)
+-------------------------------------------------
+Setiap kali ada 1 HP pemain terhubung ke server:
+a. Connection Upgrade:
+   Koneksi HTTP di-upgrade menjadi WebSocket murni melalui handshake RFC 6455.
+b. ReadPump (Goroutine Masuk):
+   Goroutine ringan yang khusus mendengarkan pesan JSON masuk dari HP pemain.
+c. WritePump (Goroutine Keluar):
+   Goroutine khusus yang mengirimkan paket broadcast dari channel antrian ke HP.
+d. Central Hub Management:
+   Memisahkan koneksi antrian Ranked publik dan Private Custom Room ber-kode.
+
+3. SKEMA PROTOKOL ENVELOPE JSON
+-------------------------------
+Format Standar:
+{
+  "type": "NAMA_EVENT",
+  "payload": { ... }
+}
+
+Daftar Event Utama:
+- "create_custom_room"      : Host membuat meja mabar ber-kode (misal: "VIP-8821").
+- "custom_room_created"     : Server mengonfirmasi kode meja ke Host.
+- "join_custom_room"        : Pemain bergabung ke meja teman dengan memasukkan kode.
+- "invite_friend"           : Host mengundang teman online dari Friend List.
+- "friend_invite_received"  : Teman menerima popup undangan mabar di layar HP.
+- "game_start"              : Mengirim data awal meja (Seat, Hand, Mode, Daftar Pemain).
+- "my_draw"                 : Mengirim tile yang baru diambil ke pemain aktif.
+- "player_draw"             : Broadcast ke 3 pemain lain bahwa ada yang draw.
+- "action_discard"          : Client mengirim permintaan buang kartu.
+- "tile_discarded"          : Broadcast tile yang dibuang ke seluruh meja.
+- "action_prompt"           : Server menawarkan tombol reaksi (Pong/Kong/Chow/Win/Pass).
+- "claim_action"            : Client merespon tombol aksi yang dipilihnya.
+- "action_resolved"         : Broadcast hasil eksekusi meld ke seluruh meja.
+- "round_end"               : Broadcast rincian skor pemenang ronde & trophy update.
+
+4. DUKUNGAN DEPLOYMENT CLOUD (KOYEB)
+------------------------------------
+- Server membaca environment variable os.Getenv("PORT").
+- Jika di lokal: Menggunakan port default 8080 (ws://localhost:8080/ws).
+- Jika di Koyeb: Otomatis memakai port cloud dengan protokol WSS gratis.
+- Endpoint /healthz tersedia untuk health check otomatis Koyeb.
+================================================================================

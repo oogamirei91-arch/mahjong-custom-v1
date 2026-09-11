@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Modul 8: Unity UI Touch Controller, Sound Synthesizer & Android APK - Mahjong Custom v1.0</title>
+<style>
+  @page { size: A4; margin: 1.5cm; }
+  body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; color: #1e293b; background-color: #ffffff; line-height: 1.6; margin: 0; padding: 0; font-size: 13px; }
+  .header-card { background: linear-gradient(135deg, #b45309 0%, #0f172a 100%); color: #ffffff; padding: 24px 30px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-left: 6px solid #f59e0b; }
+  .header-card h1 { margin: 0 0 6px 0; font-size: 24px; letter-spacing: -0.5px; color: #fde68a; }
+  .header-card p { margin: 0; font-size: 13px; color: #cbd5e1; }
+  .badge { display: inline-block; background: rgba(245, 158, 11, 0.25); color: #fde68a; border: 1px solid #f59e0b; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-top: 10px; }
+  h2 { color: #b45309; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-size: 16px; }
+  h3 { color: #0f172a; margin-top: 18px; margin-bottom: 8px; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+  th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+  th { background-color: #f1f5f9; color: #0f172a; font-weight: 600; }
+  tr:nth-child(even) { background-color: #f8fafc; }
+  .flowchart-container { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 15px 0; text-align: center; }
+  .code-box { background: #0f172a; color: #f8fafc; padding: 14px 18px; border-radius: 8px; font-family: 'Consolas', 'Courier New', monospace; font-size: 11.5px; line-height: 1.5; overflow-x: auto; margin: 12px 0; }
+  .code-keyword { color: #f472b6; font-weight: bold; }
+  .code-type { color: #38bdf8; }
+  .code-func { color: #4ade80; }
+  .code-comment { color: #94a3b8; font-style: italic; }
+  .code-string { color: #fde047; }
+  .code-num { color: #fb923c; }
+  .callout { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 15px 0; font-size: 12px; }
+  .callout-title { font-weight: 700; color: #92400e; margin-bottom: 4px; }
+  .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="header-card">
+  <h1>MODUL 8: UNITY UI TOUCH CONTROLLER, AUDIO & ANDROID APK</h1>
+  <p>Mahjong Custom v1.0 — Antarmuka Layar Sentuh, Synthesizer Audio DSP & Panduan Export APK Android</p>
+  <span class="badge">Touch Raycasting &bull; Action Bar Chow/Pong/Kong/Win &bull; Procedural Audio DSP &bull; Android APK Export</span>
+</div>
+
+<h2>1. Gambaran Umum Modul 8</h2>
+<p>
+  Modul 8 menyempurnakan seluruh pengalaman bermain di sisi klien Unity dengan mengintegrasikan:
+</p>
+<ul>
+  <li><strong>Touch Interaction Handler:</strong> Pengendalian interaksi sentuhan layar smartphone Android/iOS dengan sistem *Tap-to-Elevate* (ubin naik 1.8 cm) dan *Drag-to-Discard* (swipe ke arah meja untuk membuang ubin).</li>
+  <li><strong>Action Bar Pop-up (5-Second Window):</strong> Panel tombol reaksi yang muncul otomatis saat lawan membuang ubin yang cocok untuk deklarasi <em>Chow, Pong, Kong,</em> atau <em>Win (Hu)</em>.</li>
+  <li><strong>Procedural Audio Synthesizer (Zero-Asset DSP):</strong> Menghasilkan audio realistis (ketukan ubin padat, gesekan meja beludru, alarm timer, dan musik kemenangan kasino) secara prosedural murni menggunakan matematika gelombang suara C#.</li>
+  <li><strong>Panduan Build APK Android & iOS:</strong> Langkah praktis untuk mengompilasi proyek menjadi file instalasi APK siap pasang di smartphone.</li>
+</ul>
+
+<h2>2. Diagram Flowchart Interaksi Sentuhan & Siklus Reaksi</h2>
+<div class="flowchart-container">
+  <svg width="600" height="230" viewBox="0 0 600 230" xmlns="http://www.w3.org/2000/svg">
+    <!-- Touch Event -->
+    <rect x="15" y="40" width="125" height="150" rx="8" fill="#0f172a" stroke="#f59e0b" stroke-width="2"/>
+    <text x="77" y="65" fill="#fde68a" font-size="11" font-weight="bold" text-anchor="middle">1. Touch / Tap</text>
+    <text x="77" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Physics Raycast 3D</text>
+    <text x="77" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">Tap 1: Elevate +1.8cm</text>
+    <text x="77" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">Play TileClick SFX</text>
+    <text x="77" y="150" fill="#38bdf8" font-size="9" text-anchor="middle">Swipe Up / Tap 2</text>
+    <text x="77" y="168" fill="#38bdf8" font-size="9" text-anchor="middle">Execute Discard</text>
+
+    <!-- Arrow 1 -->
+    <line x1="140" y1="115" x2="165" y2="115" stroke="#f59e0b" stroke-width="2"/>
+
+    <!-- Server Verification -->
+    <rect x="165" y="40" width="135" height="150" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="2"/>
+    <text x="232" y="65" fill="#93c5fd" font-size="11" font-weight="bold" text-anchor="middle">2. Server Verify</text>
+    <text x="232" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Go Engine Checks</text>
+    <text x="232" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">Validate Turn & Hand</text>
+    <text x="232" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">Broadcast Discard</text>
+    <text x="232" y="150" fill="#fde047" font-size="9" text-anchor="middle">Evaluate Opponents</text>
+    <text x="232" y="168" fill="#93c5fd" font-size="9" text-anchor="middle">Open Reaction Window</text>
+
+    <!-- Arrow 2 -->
+    <line x1="300" y1="115" x2="325" y2="115" stroke="#3b82f6" stroke-width="2"/>
+
+    <!-- Action Bar Popup -->
+    <rect x="325" y="40" width="130" height="150" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+    <text x="390" y="65" fill="#a7f3d0" font-size="11" font-weight="bold" text-anchor="middle">3. Action Bar HUD</text>
+    <text x="390" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">5s Countdown Timer</text>
+    <text x="390" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">[CHOW] [PONG]</text>
+    <text x="390" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">[KONG] [WIN / HU]</text>
+    <text x="390" y="150" fill="#fde047" font-size="9" text-anchor="middle">[PASS] Button</text>
+    <text x="390" y="168" fill="#a7f3d0" font-size="9" text-anchor="middle">Audio Button Pop</text>
+
+    <!-- Arrow 3 -->
+    <line x1="455" y1="115" x2="480" y2="115" stroke="#10b981" stroke-width="2"/>
+
+    <!-- Outcome / Victory -->
+    <rect x="480" y="40" width="105" height="150" rx="8" fill="#0f172a" stroke="#ec4899" stroke-width="2"/>
+    <text x="532" y="65" fill="#fbcfe8" font-size="11" font-weight="bold" text-anchor="middle">4. Victory</text>
+    <text x="532" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Round End Modal</text>
+    <text x="532" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">Base Win (+100)</text>
+    <text x="532" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">Special Hands</text>
+    <text x="532" y="150" fill="#38bdf8" font-size="9" text-anchor="middle">Trofi (+40 / -25)</text>
+    <text x="532" y="168" fill="#fbcfe8" font-size="9" text-anchor="middle">Fanfare SFX</text>
+  </svg>
+</div>
+
+<div class="page-break"></div>
+
+<h2>3. Struktur Hirarki Canvas UI di Unity</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Elemen UI</th>
+      <th>Komponen Unity</th>
+      <th>Fungsi Interaksi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>TopBar_HUD</strong></td>
+      <td><code>Image</code>, <code>Text</code> (Username, Trofi, Rank)</td>
+      <td>Menampilkan profil pemain, sisa ubin tembok (*Wall*), dan informasi ronde ("EAST 1").</td>
+    </tr>
+    <tr>
+      <td><strong>Panel_ActionBar</strong></td>
+      <td><code>HorizontalLayoutGroup</code>, <code>Button[]</code></td>
+      <td>Tombol melayang <em>Chow, Pong, Kong, Win, Pass</em> yang muncul selama 5 detik jendela reaksi.</td>
+    </tr>
+    <tr>
+      <td><strong>Modal_CustomRoom</strong></td>
+      <td><code>CanvasGroup</code>, <code>Text</code>, <code>InputField</code></td>
+      <td>Menampilkan kode ruangan privat 4 digit (misal: "VIP-8821") dan input kode untuk gabung.</td>
+    </tr>
+    <tr>
+      <td><strong>Modal_FriendList</strong></td>
+      <td><code>ScrollView</code>, <code>VerticalLayoutGroup</code></td>
+      <td>Menampilkan daftar teman online dan tombol undang langsung (*Direct Invite*).</td>
+    </tr>
+    <tr>
+      <td><strong>Modal_Victory</strong></td>
+      <td><code>CanvasGroup</code>, <code>Text</code>, <code>Button</code></td>
+      <td>Layar pengumuman pemenang, rincian bonus bunga, poin kombinasi tangan, dan perolehan trofi.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4. Penjelasan Baris demi Baris Skrip C#</h2>
+
+<h3>A. ProceduralAudioSynthesizer.cs — Sintesis DSP Nada Kemenangan Kasino</h3>
+<div class="code-box">
+<span class="code-keyword">private</span> <span class="code-type">AudioClip</span> <span class="code-func">SynthesizeVictoryFanfare</span>()
+{
+    <span class="code-comment">// Frekuensi Akord C Mayor Kasino: C5, E5, G5, C6</span>
+    <span class="code-type">float</span>[] freqs = <span class="code-keyword">new</span> <span class="code-type">float</span>[] { <span class="code-num">523.25f</span>, <span class="code-num">659.25f</span>, <span class="code-num">783.99f</span>, <span class="code-num">1046.50f</span> };
+    <span class="code-keyword">for</span> (<span class="code-type">int</span> i = <span class="code-num">0</span>; i &lt; totalSamples; i++)
+    {
+        <span class="code-type">float</span> t = (<span class="code-type">float</span>)i / SAMPLE_RATE;
+        <span class="code-comment">// Sintesis arpeggio bertahap dengan peluruhan resonan (decay)</span>
+        ...
+    }
+}
+</div>
+
+<h2>5. Panduan Praktis Export File APK Android di Unity</h2>
+<ol>
+  <li><strong>Buka Unity Editor:</strong> Pastikan Anda menggunakan versi Unity 2021 LTS, 2022 LTS, atau Unity 6 yang memiliki modul <em>Android Build Support</em> (termasuk OpenJDK & Android SDK & NDK).</li>
+  <li><strong>Switch Platform ke Android:</strong>
+    <ul>
+      <li>Pilih menu <strong>File ➔ Build Settings</strong>.</li>
+      <li>Klik platform <strong>Android</strong> ➔ Tekan tombol <strong>Switch Platform</strong>.</li>
+    </ul>
+  </li>
+  <li><strong>Konfigurasi Player Settings:</strong>
+    <ul>
+      <li>Pilih <strong>Player Settings ➔ Other Settings</strong>.</li>
+      <li>Isi <strong>Package Name:</strong> <code>com.vipcasino.mahjongcustom</code>.</li>
+      <li>Atur <strong>Minimum API Level:</strong> <code>Android 8.0 (API Level 26)</code>.</li>
+      <li>Atur <strong>Target API Level:</strong> <code>Android 14 (API Level 34)</code>.</li>
+      <li>Atur <strong>Scripting Backend:</strong> <code>IL2CPP</code>.</li>
+      <li>Pada <strong>Target Architectures:</strong> Pastikan centang <code>ARM64</code> aktif.</li>
+    </ul>
+  </li>
+  <li><strong>Kompilasi (Build APK):</strong>
+    <ul>
+      <li>Klik tombol <strong>Build</strong> di jendela Build Settings.</li>
+      <li>Beri nama file <code>MahjongVIP.apk</code> lalu simpan.</li>
+      <li>Salin file <code>MahjongVIP.apk</code> ke smartphone Android Anda untuk langsung dipasang dan dimainkan!</li>
+    </ul>
+  </li>
+</ol>
+
+<div class="callout">
+  <div class="callout-title">Selamat! Seluruh Proyek Mahjong Custom v1.0 Selesai 100%</div>
+  Dari Modul 1 (Engine Ubin Go) hingga Modul 8 (Client Unity APK Android), seluruh arsitektur sistem telah selesai dibangun secara mandiri, bersih, terdokumentasi, dan teruji menyeluruh.
+</div>
+
+</body>
+</html>

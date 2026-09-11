@@ -1,0 +1,46 @@
+================================================================================
+                    RINGKASAN MODUL 6: UNITY 3D SCENE & PROCEDURAL ASSETS
+                          MAHJONG CUSTOM V1.0 (CLIENT ENGINE)
+================================================================================
+
+1. DESKRIPSI MODUL
+   Modul 6 berfokus pada pembangunan visual 3D meja permainan, ubin (tiles), 
+   kompas LED digital, dan kamera isometrik di Unity menggunakan pendekatan 
+   Procedural Generation (C#). Dengan arsitektur ini, game dapat langsung 
+   dijalankan secara mandiri (zero external asset dependencies) dengan estetika 
+   mewah bertema "Modern Luxury VIP Emerald Casino".
+
+--------------------------------------------------------------------------------
+2. DAFTAR FILE & SKRIP C# (CLIENT ASSETS)
+   • client/Assets/Scripts/Procedural/ProceduralTable.cs
+     - Menghasilkan geometri meja 3D lengkap dengan felt hijau zamrud, bingkai kayu
+       mahoni gelap, lis emas, serta 4 titik penempatan pemain (East, South, West, North).
+   • client/Assets/Scripts/Procedural/ProceduralTile.cs
+     - Mengontrol visual ubin 3D dual-layer (Wajah Pearl Ivory putih di depan, Giok 
+       Hijau di belakang), animasi sentuh/terangkat (1.8 cm hover) pada layar sentuh,
+       serta kalkulasi UV mapping atlas.
+   • client/Assets/Scripts/Procedural/ProceduralTileAtlas.cs
+     - Generator tekstur atlas 2D resolusi tinggi (2048x2048) untuk seluruh 144 ubin
+       (Dots, Bamboo, Characters, Winds, Dragons, Flowers, Seasons) secara otomatis.
+   • client/Assets/Scripts/Procedural/TableCompass.cs
+     - Piringan kompas gyro 3D berbalut lis kuningan emas di tengah meja dengan LED ring
+       sebagai penunjuk arah angin aktif dan indikator hitung mundur 15 detik (Turn Timer).
+   • client/Assets/Scripts/Visual/CameraController.cs
+     - Pengontrol kamera 3D dengan sudut isometrik 48 derajat, adaptasi FOV dinamis 
+       untuk layar HP Android & iOS (Portrait / Landscape), serta efek zoom kemenangan.
+
+--------------------------------------------------------------------------------
+3. FITUR VISUAL & PENGALAMAN PENGGUNA (UX)
+   • Zero Asset Dependency: Game dapat di-compile dan dijalankan langsung tanpa 
+     perlu mengunduh model 3D atau tekstur eksternal berbayar.
+   • Sentuhan Responsif Mobile: Ubin otomatis naik saat di-tap dan dapat di-drag 
+     ke tengah meja untuk dibuang (discard).
+   • Indikator LED Visual: Lampu LED kompas berganti warna secara dinamis 
+     (Hijau -> Kuning -> Berkedip Merah pada sisa 4 detik terakhir).
+
+--------------------------------------------------------------------------------
+4. STATUS IMPLEMENTASI
+   • Kode C# Procedural & Visual: 100% Selesai & Terstruktur.
+   • Integrasi Shader & Material: Menggunakan Unity Standard Shader (PBR).
+   • Kesiapan Modul Berikutnya: Siap disambungkan ke Modul 7 (Network Client).
+================================================================================

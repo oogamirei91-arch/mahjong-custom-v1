@@ -1,0 +1,39 @@
+# Go binaries & temporary files
+server/game-server.exe
+server/game-server
+server/*.exe
+server/*.test
+*.out
+.env
+
+# Unity Temporary & Cache Folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+
+# Visual Studio / VS Code / IDE
+.vs/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+
+# Android / iOS Builds
+*.apk
+*.aab
+*.app
+*.ipa
+
+# OS Generated
+.DS_Store
+Thumbs.db

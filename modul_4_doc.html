@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Modul 4: WebSocket Network Layer - Mahjong Custom v1.0</title>
+<style>
+  @page { size: A4; margin: 1.5cm; }
+  body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; color: #1e293b; background-color: #ffffff; line-height: 1.6; margin: 0; padding: 0; font-size: 13px; }
+  .header-card { background: linear-gradient(135deg, #0284c7 0%, #0f172a 100%); color: #ffffff; padding: 24px 30px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-left: 6px solid #38bdf8; }
+  .header-card h1 { margin: 0 0 6px 0; font-size: 24px; letter-spacing: -0.5px; color: #e0f2fe; }
+  .header-card p { margin: 0; font-size: 13px; color: #cbd5e1; }
+  .badge { display: inline-block; background: rgba(56, 189, 248, 0.25); color: #e0f2fe; border: 1px solid #38bdf8; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-top: 10px; }
+  h2 { color: #0369a1; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-size: 16px; }
+  h3 { color: #0f172a; margin-top: 18px; margin-bottom: 8px; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+  th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+  th { background-color: #f1f5f9; color: #0f172a; font-weight: 600; }
+  tr:nth-child(even) { background-color: #f8fafc; }
+  .flowchart-container { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 15px 0; text-align: center; }
+  .code-box { background: #0f172a; color: #f8fafc; padding: 14px 18px; border-radius: 8px; font-family: 'Consolas', 'Courier New', monospace; font-size: 11.5px; line-height: 1.5; overflow-x: auto; margin: 12px 0; }
+  .code-keyword { color: #f472b6; font-weight: bold; }
+  .code-type { color: #38bdf8; }
+  .code-func { color: #4ade80; }
+  .code-comment { color: #94a3b8; font-style: italic; }
+  .code-string { color: #fde047; }
+  .code-num { color: #fb923c; }
+  .callout { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 15px 0; font-size: 12px; }
+  .callout-title { font-weight: 700; color: #1d4ed8; margin-bottom: 4px; }
+  .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="header-card">
+  <h1>MODUL 4: WEBSOCKET NETWORK LAYER</h1>
+  <p>Mahjong Custom v1.0 — Real-Time Hub, Custom Room by Code & Friend Invite</p>
+  <span class="badge">WebSocket RFC 6455 &bull; Ranked Queue &bull; Custom Room &bull; Friend Invite</span>
+</div>
+
+<h2>1. Gambaran Umum Modul 4 (Updated)</h2>
+<p>
+  Modul 4 mengelola seluruh komunikasi jaringan real-time antara HP pemain (Unity) dan server Go. Modul ini kini mendukung <strong>2 Mode Permainan</strong>:
+</p>
+<ul>
+  <li><strong>🏆 Ranked Matchmaking:</strong> Antrian matchmaking otomatis untuk 4 pemain acak yang memperebutkan Trophy Points.</li>
+  <li><strong>👥 Custom Room (Mabar):</strong> Host dapat membuat meja khusus dengan kode (misal: "VIP-8821") dan mengundang teman langsung dari Friend List.</li>
+</ul>
+
+<h2>2. Diagram Flowchart Arsitektur Ranked vs Custom Room</h2>
+
+<h3>Flowchart: Alur Pembentukan Meja (Ranked vs Custom)</h3>
+<div class="flowchart-container">
+  <svg width="600" height="230" viewBox="0 0 600 230" xmlns="http://www.w3.org/2000/svg">
+    <rect x="20" y="80" width="130" height="65" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+    <text x="85" y="105" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">HP Pemain (Unity)</text>
+    <text x="85" y="125" fill="#38bdf8" font-size="9" text-anchor="middle">WebSocket Client</text>
+
+    <!-- Split Lines -->
+    <line x1="150" y1="95" x2="220" y2="45" stroke="#f59e0b" stroke-width="2"/>
+    <line x1="150" y1="130" x2="220" y2="175" stroke="#10b981" stroke-width="2"/>
+
+    <!-- Path 1: Ranked -->
+    <rect x="220" y="20" width="180" height="55" rx="6" fill="#fefce8" stroke="#ca8a04" stroke-width="1.5"/>
+    <text x="310" y="42" fill="#a16207" font-size="10" font-weight="bold" text-anchor="middle">Mode: RANKED MATCH</text>
+    <text x="310" y="58" fill="#64748b" font-size="8" text-anchor="middle">Auto-Join Queue ➔ 4 Pemain Acak</text>
+
+    <!-- Path 2: Custom -->
+    <rect x="220" y="150" width="180" height="55" rx="6" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="310" y="172" fill="#15803d" font-size="10" font-weight="bold" text-anchor="middle">Mode: CUSTOM ROOM</text>
+    <text x="310" y="188" fill="#64748b" font-size="8" text-anchor="middle">Create/Join by Code (VIP-8821) + Invite</text>
+
+    <!-- Hub Central -->
+    <line x1="400" y1="47" x2="450" y2="105" stroke="#f59e0b" stroke-width="1.5"/>
+    <line x1="400" y1="177" x2="450" y2="105" stroke="#10b981" stroke-width="1.5"/>
+
+    <rect x="450" y="75" width="130" height="65" rx="6" fill="#0369a1" stroke="#38bdf8" stroke-width="2"/>
+    <text x="515" y="100" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Server Hub</text>
+    <text x="515" y="118" fill="#e0f2fe" font-size="8" text-anchor="middle">StartMatch() 4P</text>
+  </svg>
+</div>
+
+<div class="page-break"></div>
+
+<h2>3. Penjelasan Koding Baris per Baris</h2>
+
+<h3>A. Pembuatan Custom Room & Undangan Teman (<code>server/pkg/network/hub.go</code>)</h3>
+<div class="code-box">
+<span class="code-comment">// Membuat Meja Mabar Ber-Kode</span><br>
+<span class="code-keyword">func</span> (h *<span class="code-type">Hub</span>) <span class="code-func">CreateCustomRoom</span>(c *<span class="code-type">Client</span>, requestedCode <span class="code-type">string</span>) (*engine.<span class="code-type">Room</span>, <span class="code-type">string</span>, <span class="code-type">error</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;roomCode := requestedCode<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span> roomCode == <span class="code-string">""</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roomCode = fmt.<span class="code-func">Sprintf</span>(<span class="code-string">"VIP-%04d"</span>, rand.<span class="code-func">Intn</span>(<span class="code-num">10000</span>))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;roomID := fmt.<span class="code-func">Sprintf</span>(<span class="code-string">"CUSTOM-%s"</span>, roomCode)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;targetRoom := engine.<span class="code-func">NewRoom</span>(roomID)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;h.customRooms[roomCode] = targetRoom<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> h.<span class="code-func">assignSeatAndJoin</span>(c, targetRoom)<br>
+}<br>
+<br>
+<span class="code-comment">// Mengirim Undangan Mabar ke HP Teman</span><br>
+<span class="code-keyword">func</span> (h *<span class="code-type">Hub</span>) <span class="code-func">SendFriendInvite</span>(fromUser *<span class="code-type">Client</span>, friendUserID, roomCode <span class="code-type">string</span>) <span class="code-type">error</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;friendClient, exists := h.clientsByUser[friendUserID]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span> !exists { <span class="code-keyword">return</span> fmt.<span class="code-func">Errorf</span>(<span class="code-string">"teman sedang offline"</span>) }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;msgBytes, _ := <span class="code-func">EncodeMessage</span>(<span class="code-string">"friend_invite_received"</span>, <span class="code-type">FriendInviteReceivedPayload</span>{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FromUsername: fromUser.Player.Username,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RoomCode: &nbsp;&nbsp;&nbsp;&nbsp;roomCode,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;})<br>
+&nbsp;&nbsp;&nbsp;&nbsp;friendClient.<span class="code-func">SendMessage</span>(msgBytes)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> <span class="code-keyword">nil</span><br>
+}
+</div>
+
+<h2>4. Hasil Validasi Unit Test Modul 4</h2>
+<p>Unit test di <code>server/pkg/network/protocol_test.go</code> memvalidasi:</p>
+<ul>
+  <li>✅ <strong>Encoding Envelope JSON:</strong> Pembungkusan pesan `action_discard` dan `round_end` menghasilkan format JSON yang valid.</li>
+  <li>✅ <strong>Custom Room & GameMode:</strong> Format pesan pembuatan meja kustom dan undangan teman terkirim presisi.</li>
+</ul>
+
+<div style="margin-top: 40px; padding: 15px; border-top: 1px solid #cbd5e1; text-align: center; font-size: 11px; color: #64748b;">
+  Dokumen Resmi &bull; Mahjong Custom v1.0 Game Architecture &bull; Modul 4 (Updated)
+</div>
+
+</body>
+</html>

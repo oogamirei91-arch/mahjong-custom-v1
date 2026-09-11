@@ -1,0 +1,76 @@
+================================================================================
+       RINGKASAN MODUL 5: DATABASE & PERSISTENCE LAYER (GO + SUPABASE)
+                       MAHJONG CUSTOM v1.0
+          (UPDATED: FRIEND LIST, RANKED MATCH & CUSTOM ROOM HISTORY)
+================================================================================
+
+1. TUJUAN MODUL 5
+-----------------
+Menyediakan lapisan penyimpanan data permanen di Cloud Supabase (PostgreSQL):
+- Registrasi akun dan login pemain dengan password aman terenkripsi (Salted Hash).
+- Sistem Pertemanan (Friend List): Kirim request, accept, dan pantau status teman.
+- Pencatatan akumulasi Trophy Points dan statistik pertandingan (Ranked Match).
+- Penyimpanan riwayat pertandingan (Ranked vs Custom Room) beserta skor JSONB.
+- Sistem Kenaikan Gelar Prestasi Kasino (Rank Tier Progression).
+- View Leaderboard global untuk menampilkan daftar 50 pemain peringkat teratas.
+
+2. SKEMA STRUKTUR TABEL DATABASE (SUPABASE)
+-------------------------------------------
+a. Tabel 'users':
+   - id (UUID, Primary Key)
+   - username (VARCHAR, Unique)
+   - password_hash (TEXT)
+   - display_name (VARCHAR)
+   - avatar_id (INT)
+   - created_at / last_login (TIMESTAMPTZ)
+
+b. Tabel 'user_stats' (1:1 dengan Users):
+   - user_id (UUID, Foreign Key -> users.id)
+   - total_matches (INT)
+   - total_wins (INT)
+   - trophy_points (BIGINT)
+   - rank_tier (VARCHAR)
+   - highest_score (INT)
+   - win_rate (Persentase Kemenangan)
+
+c. Tabel 'friendships' (Sistem Friend List):
+   - id (UUID, Primary Key)
+   - user_id (UUID -> users.id)
+   - friend_id (UUID -> users.id)
+   - status (VARCHAR: 'PENDING', 'ACCEPTED', 'BLOCKED')
+   - created_at (TIMESTAMPTZ)
+
+d. Tabel 'match_records':
+   - id (UUID, Primary Key)
+   - room_code (VARCHAR)
+   - game_mode (VARCHAR: 'RANKED' atau 'CUSTOM')
+   - winner_id (UUID -> users.id)
+   - winning_type (VARCHAR)
+   - total_rounds (4)
+   - player_scores (JSONB: rincian skor ke-4 pemain)
+   - played_at (TIMESTAMPTZ)
+
+e. View 'v_leaderboard':
+   - Query otomatis yang mengurutkan pemain berdasarkan Trophy Points tertinggi.
+
+3. TINGKAT GELAR KASINO (RANK TIER PROGRESSION)
+-----------------------------------------------
++--------------------+-------------------------+
+| Trophy Points      | Gelar Rank Tier         |
++--------------------+-------------------------+
+| 0 - 499 Trophy     | Novice 🥉 (Pemula)      |
+| 500 - 1,499 Trophy | Apprentice 🥈 (Menengah)|
+| 1,500 - 3,999 Pts  | Expert 🥇 (Mahir)       |
+| 4,000 - 9,999 Pts  | Master 💎 (Master)      |
+| 10,000+ Trophy     | VIP Legend 👑 (Legenda) |
++--------------------+-------------------------+
+
+4. CARA MENJALANKAN SKEMA SQL DI SUPABASE
+-----------------------------------------
+1. Buka dashboard proyek Supabase Anda di browser (https://supabase.com/dashboard).
+2. Klik menu 'SQL Editor' di panel sebelah kiri.
+3. Buka file 'server/migrations/001_init_schema.sql', copy seluruh kodenya, 
+   lalu paste ke SQL Editor Supabase.
+4. Klik tombol 'RUN'. Seluruh tabel (Users, Stats, Friendships, Match Records) 
+   dan view leaderboard akan langsung terbuat!
+================================================================================

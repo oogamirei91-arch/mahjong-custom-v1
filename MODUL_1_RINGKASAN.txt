@@ -1,0 +1,61 @@
+================================================================================
+              RINGKASAN MODUL 1: TILE & DECK ENGINE (GO)
+                       MAHJONG CUSTOM v1.0
+================================================================================
+
+1. TUJUAN MODUL 1
+-----------------
+Membangun fondasi paling mendasar dari game Mahjong:
+- Struktur data representasi 144 tile fisik.
+- Pengacakan kartu (Shuffle) yang aman dari manipulasi client.
+- Pembagian kartu awal (Deal) untuk 4 pemain.
+- Alokasi Dead Wall (Replacement Wall) sebanyak 14 tile.
+
+2. KOMPOSISI 144 TILE FISIK
+----------------------------
+a. Number Tiles (108 Tile):
+   - Bamboo (Bambu)      : 1 sampai 9 x 4 keping = 36 tile
+   - Dot (Lingkaran)     : 1 sampai 9 x 4 keping = 36 tile
+   - Character (Karakter): 1 sampai 9 x 4 keping = 36 tile
+
+b. Honor Tiles (28 Tile):
+   - Wind (Angin)  : East (1), South (2), West (3), North (4) x 4 keping = 16 tile
+   - Dragon (Naga) : Red (1), Green (2), White (3) x 4 keping = 12 tile
+
+c. Bonus Tiles (8 Tile):
+   - Flower (Bunga) : Plum (1), Orchid (2), Chrysanthemum (3), Bamboo (4) = 4 tile
+   - Season (Musim) : Spring (1), Summer (2), Autumn (3), Winter (4)    = 4 tile
+
+TOTAL: 108 + 28 + 8 = 144 TILE (Setiap tile memiliki ID unik 0 - 143).
+
+3. STRUKTUR PEMBAGIAN KARTU (DEAL)
+----------------------------------
+- Dealer (East)    : 14 Tile (Langsung siap discard tanpa draw pertama)
+- Player 2 (South) : 13 Tile
+- Player 3 (West)  : 13 Tile
+- Player 4 (North) : 13 Tile
+Total Kartu Dibagikan Awal = 53 Tile.
+
+- Dead Wall (Replacement Wall) = 14 Tile (Disisihkan di ujung belakang wall).
+- Sisa Tile Aktif (Live Wall)  = 144 - 53 - 14 = 77 Tile.
+
+4. DAFTAR FILE SUMBER KODE MODUL 1
+----------------------------------
+- server/go.mod
+  Definisi modul Go untuk backend server.
+- server/pkg/engine/tile.go
+  Mendefinisikan Enum Suit, Konstanta Angka/Angin/Naga/Bunga, Struct Tile, 
+  dan Helper method.
+- server/pkg/engine/deck.go
+  Membuat 144 tile, algoritma Fisher-Yates shuffle kriptografis, alokasi 
+  Deal 4 pemain, dan fungsi Draw dari depan/belakang wall.
+- server/pkg/engine/tile_test.go
+  Pengujian otomatis (Unit Test) untuk memastikan 100% akurasi logika kartu.
+
+5. CARA KERJA SISTEM KEAMANAN (SERVER AUTHORITY)
+------------------------------------------------
+- Shuffle dan penentuan seluruh isi deck dilakukan 100% di Server Go.
+- Client Unity hanya akan menerima ID kartu miliknya sendiri.
+- Client tidak pernah mengetahui urutan tile di dalam wall, sehingga mustahil
+  dilakukan hacking atau 'wall-hack' dari sisi HP pemain.
+================================================================================

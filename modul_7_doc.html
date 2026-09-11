@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Modul 7: Unity Network Client & WebSocket Controller - Mahjong Custom v1.0</title>
+<style>
+  @page { size: A4; margin: 1.5cm; }
+  body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; color: #1e293b; background-color: #ffffff; line-height: 1.6; margin: 0; padding: 0; font-size: 13px; }
+  .header-card { background: linear-gradient(135deg, #1e40af 0%, #0f172a 100%); color: #ffffff; padding: 24px 30px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-left: 6px solid #3b82f6; }
+  .header-card h1 { margin: 0 0 6px 0; font-size: 24px; letter-spacing: -0.5px; color: #bfdbfe; }
+  .header-card p { margin: 0; font-size: 13px; color: #cbd5e1; }
+  .badge { display: inline-block; background: rgba(59, 130, 246, 0.25); color: #bfdbfe; border: 1px solid #3b82f6; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-top: 10px; }
+  h2 { color: #1d4ed8; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-size: 16px; }
+  h3 { color: #0f172a; margin-top: 18px; margin-bottom: 8px; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+  th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+  th { background-color: #f1f5f9; color: #0f172a; font-weight: 600; }
+  tr:nth-child(even) { background-color: #f8fafc; }
+  .flowchart-container { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 15px 0; text-align: center; }
+  .code-box { background: #0f172a; color: #f8fafc; padding: 14px 18px; border-radius: 8px; font-family: 'Consolas', 'Courier New', monospace; font-size: 11.5px; line-height: 1.5; overflow-x: auto; margin: 12px 0; }
+  .code-keyword { color: #f472b6; font-weight: bold; }
+  .code-type { color: #38bdf8; }
+  .code-func { color: #4ade80; }
+  .code-comment { color: #94a3b8; font-style: italic; }
+  .code-string { color: #fde047; }
+  .code-num { color: #fb923c; }
+  .callout { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 15px 0; font-size: 12px; }
+  .callout-title { font-weight: 700; color: #1e40af; margin-bottom: 4px; }
+  .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="header-card">
+  <h1>MODUL 7: UNITY NETWORK CLIENT & WEBSOCKET CONTROLLER</h1>
+  <p>Mahjong Custom v1.0 — Driver Jaringan Realtime C#, Sinkronisasi Game State & Integrasi Go Backend</p>
+  <span class="badge">RFC 6455 ClientWebSocket &bull; Thread-Safe Dispatcher &bull; Ranked & Custom Rooms &bull; Authoritative Sync</span>
+</div>
+
+<h2>1. Gambaran Umum Modul 7</h2>
+<p>
+  Modul 7 membangun <strong>Lapisan Komunikasi Jaringan (Network Layer)</strong> di sisi klien Unity menggunakan bahasa pemrograman C#. Lapisan ini menghubungkan game secara realtime dengan <em>Authoritative Go Backend Server</em> melalui protokol WebSocket murni.
+</p>
+<ul>
+  <li><strong>Zero-Dependency Networking:</strong> Menggunakan kelas <code>System.Net.WebSockets.ClientWebSocket</code> bawaan .NET Standard / Unity runtime tanpa memerlukan library pihak ketiga berbayar.</li>
+  <li><strong>Thread-Safe Execution:</strong> Menggunakan <code>UnityMainThreadDispatcher</code> untuk menjamin bahwa data WebSocket yang diterima pada background worker thread dialirkan dengan aman ke Main Thread Unity.</li>
+  <li><strong>Penyelarasan Protokol 1:1:</strong> Semua Action Code dan Payload JSON terpetakan secara identik dengan server Go di <code>server/pkg/network/protocol.go</code>.</li>
+  <li><strong>Multi-Mode Support:</strong> Mengelola antrean <em>Ranked Matchmaking</em>, pembuatan <em>Custom Room</em> dengan kode unik (misal: "VIP-8821"), serta daftar teman dan undangan mabar in-game.</li>
+</ul>
+
+<h2>2. Diagram Flowchart Siklus Komunikasi WebSocket</h2>
+<div class="flowchart-container">
+  <svg width="600" height="230" viewBox="0 0 600 230" xmlns="http://www.w3.org/2000/svg">
+    <!-- Box 1: Unity UI -->
+    <rect x="15" y="40" width="125" height="150" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="2"/>
+    <text x="77" y="65" fill="#93c5fd" font-size="11" font-weight="bold" text-anchor="middle">1. Unity UI / Input</text>
+    <text x="77" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Touch Tap / Drag</text>
+    <text x="77" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">Login / Match Queue</text>
+    <text x="77" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">Custom Room Code</text>
+    <text x="77" y="150" fill="#38bdf8" font-size="9" text-anchor="middle">Discard Tile (X)</text>
+    <text x="77" y="168" fill="#38bdf8" font-size="9" text-anchor="middle">Reaction (Pong/Win)</text>
+
+    <!-- Arrow 1 -->
+    <line x1="140" y1="115" x2="165" y2="115" stroke="#3b82f6" stroke-width="2"/>
+
+    <!-- Box 2: GameNetworkManager -->
+    <rect x="165" y="40" width="135" height="150" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+    <text x="232" y="65" fill="#a7f3d0" font-size="11" font-weight="bold" text-anchor="middle">2. GameNetManager</text>
+    <text x="232" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Singleton Controller</text>
+    <text x="232" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">Wrap JSON Envelope</text>
+    <text x="232" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">Session Token Attach</text>
+    <text x="232" y="150" fill="#fde047" font-size="9" text-anchor="middle">Async Send Queue</text>
+    <text x="232" y="168" fill="#a7f3d0" font-size="9" text-anchor="middle">Event Broadcaster</text>
+
+    <!-- Arrow 2 -->
+    <line x1="300" y1="115" x2="325" y2="115" stroke="#10b981" stroke-width="2"/>
+
+    <!-- Box 3: WebSocketClient -->
+    <rect x="325" y="40" width="125" height="150" rx="8" fill="#0f172a" stroke="#f59e0b" stroke-width="2"/>
+    <text x="387" y="65" fill="#fde68a" font-size="11" font-weight="bold" text-anchor="middle">3. WebSocketClient</text>
+    <text x="387" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">ClientWebSocket .NET</text>
+    <text x="387" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">RFC 6455 Framing</text>
+    <text x="387" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">WSS / TLS Handshake</text>
+    <text x="387" y="150" fill="#cbd5e1" font-size="9" text-anchor="middle">Background Stream</text>
+    <text x="387" y="168" fill="#f59e0b" font-size="9" text-anchor="middle">Auto-Reconnect Loop</text>
+
+    <!-- Arrow 3 -->
+    <line x1="450" y1="115" x2="475" y2="115" stroke="#f59e0b" stroke-width="2"/>
+
+    <!-- Box 4: Go Backend Server -->
+    <rect x="475" y="40" width="110" height="150" rx="8" fill="#0f172a" stroke="#ec4899" stroke-width="2"/>
+    <text x="530" y="65" fill="#fbcfe8" font-size="11" font-weight="bold" text-anchor="middle">4. Go Server</text>
+    <text x="530" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Authoritative Hub</text>
+    <text x="530" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">Room & State Engine</text>
+    <text x="530" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">15s Turn Timer</text>
+    <text x="530" y="150" fill="#cbd5e1" font-size="9" text-anchor="middle">Supabase DB Sync</text>
+    <text x="530" y="168" fill="#ec4899" font-size="9" text-anchor="middle">Trophy & Ranks</text>
+  </svg>
+</div>
+
+<div class="page-break"></div>
+
+<h2>3. Tabel Pemetaan Aksi Jaringan (Network Action Mapping)</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Action Code</th>
+      <th>Arah (Direction)</th>
+      <th>Keterangan Payload</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>REQ_AUTH_LOGIN</code></td>
+      <td>Client ➔ Server</td>
+      <td>Mengirim username & password untuk otentikasi.</td>
+    </tr>
+    <tr>
+      <td><code>RES_AUTH_LOGIN</code></td>
+      <td>Server ➔ Client</td>
+      <td>Hasil login, session token, perolehan trofi, dan gelar rank tier.</td>
+    </tr>
+    <tr>
+      <td><code>REQ_MATCH_QUEUE</code></td>
+      <td>Client ➔ Server</td>
+      <td>Mendaftar ke antrean Ranked Matchmaking 4 pemain.</td>
+    </tr>
+    <tr>
+      <td><code>REQ_CREATE_CUSTOM</code></td>
+      <td>Client ➔ Server</td>
+      <td>Membuat ruangan privat dan menerima kode 4 digit (misal: "VIP-8821").</td>
+    </tr>
+    <tr>
+      <td><code>REQ_FRIEND_INVITE</code></td>
+      <td>Client ➔ Server</td>
+      <td>Mengirim undangan mabar langsung ke teman yang sedang online di lobby.</td>
+    </tr>
+    <tr>
+      <td><code>NOTIF_DEAL_HANDS</code></td>
+      <td>Server ➔ Client</td>
+      <td>Membagikan 13 ubin privat milik sendiri dan ubin bunga/musim (bonus).</td>
+    </tr>
+    <tr>
+      <td><code>NOTIF_TURN_START</code></td>
+      <td>Server ➔ Client</td>
+      <td>Memulai giliran pemain dan menyalakan timer 15 detik di kompas meja.</td>
+    </tr>
+    <tr>
+      <td><code>REQ_DISCARD_TILE</code></td>
+      <td>Client ➔ Server</td>
+      <td>Mengirim ID ubin yang dibuang oleh pemain saat melakukan drag.</td>
+    </tr>
+    <tr>
+      <td><code>NOTIF_REACTION_PROMPT</code></td>
+      <td>Server ➔ Client</td>
+      <td>Memicu Action Bar (Chow, Pong, Kong, Win, Pass) dengan window 5 detik.</td>
+    </tr>
+    <tr>
+      <td><code>NOTIF_ROUND_END</code></td>
+      <td>Server ➔ Client</td>
+      <td>Hasil ronde, pola kemenangan (Special Hands), dan kalkulasi trofi (+40/-25).</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4. Penjelasan Baris demi Baris Skrip C# Jaringan</h2>
+
+<h3>A. UnityMainThreadDispatcher.cs — Eksekusi Aman Antar-Thread</h3>
+<div class="code-box">
+<span class="code-keyword">private void</span> <span class="code-func">Update</span>()
+{
+    <span class="code-comment">// Kunci antrean dan eksekusi semua action yang datang dari WebSocket background thread</span>
+    <span class="code-keyword">lock</span> (executionQueue)
+    {
+        <span class="code-keyword">while</span> (executionQueue.Count > <span class="code-num">0</span>)
+        {
+            executionQueue.<span class="code-func">Dequeue</span>()?.<span class="code-func">Invoke</span>();
+        }
+    }
+}
+</div>
+
+<h3>B. GameNetworkManager.cs — Mengirim Aksi Buang Ubin (Discard)</h3>
+<div class="code-box">
+<span class="code-keyword">public async void</span> <span class="code-func">DiscardTile</span>(<span class="code-type">int</span> tileId)
+{
+    <span class="code-type">var</span> payload = <span class="code-keyword">new</span> <span class="code-type">DiscardPayload</span> 
+    { 
+        seat_index = localSeatIndex, 
+        tile = <span class="code-keyword">new</span> <span class="code-type">TileData</span> { id = tileId } 
+    };
+    <span class="code-keyword">await</span> <span class="code-func">SendEnvelope</span>(NetworkAction.REQ_DISCARD_TILE, JsonUtility.<span class="code-func">ToJson</span>(payload));
+}
+</div>
+
+<div class="callout">
+  <div class="callout-title">Keamanan Otoritatif Server (Authoritative Security)</div>
+  Klien Unity tidak pernah memiliki data ubin tersembunyi milik lawan atau urutan tembok (*wall order*). Server hanya mengirimkan ID ubin privat milik pemain lokal, mencegah aplikasi modifikasi/eksploitasi X-Ray membaca tangan lawan.
+</div>
+
+<h2>5. Panduan Pengujian Koneksi ke Server Backend Go</h2>
+<ol>
+  <li>Jalankan Server Go lokal: Masuk ke folder <code>server/</code> lalu jalankan <code>go run cmd/game-server/main.go</code>.</li>
+  <li>Buka Unity Editor, buka scene yang memuat GameObject <code>[GameNetworkManager]</code>.</li>
+  <li>Atur parameter <code>serverWebSocketUrl</code> ke <code>ws://localhost:8080/ws</code> (atau <code>wss://[app-name].koyeb.app/ws</code> jika dideploy ke cloud).</li>
+  <li>Tekan tombol Play di Unity. Log console akan menampilkan pesan: <code>[GameNetworkManager] Terhubung ke Server Mahjong!</code>.</li>
+</ol>
+
+</body>
+</html>

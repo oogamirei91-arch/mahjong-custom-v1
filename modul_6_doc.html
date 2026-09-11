@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Modul 6: Unity 3D Scene & Procedural Assets - Mahjong Custom v1.0</title>
+<style>
+  @page { size: A4; margin: 1.5cm; }
+  body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; color: #1e293b; background-color: #ffffff; line-height: 1.6; margin: 0; padding: 0; font-size: 13px; }
+  .header-card { background: linear-gradient(135deg, #065f46 0%, #0f172a 100%); color: #ffffff; padding: 24px 30px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-left: 6px solid #10b981; }
+  .header-card h1 { margin: 0 0 6px 0; font-size: 24px; letter-spacing: -0.5px; color: #a7f3d0; }
+  .header-card p { margin: 0; font-size: 13px; color: #cbd5e1; }
+  .badge { display: inline-block; background: rgba(16, 185, 129, 0.25); color: #a7f3d0; border: 1px solid #10b981; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-top: 10px; }
+  h2 { color: #047857; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-size: 16px; }
+  h3 { color: #0f172a; margin-top: 18px; margin-bottom: 8px; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+  th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+  th { background-color: #f1f5f9; color: #0f172a; font-weight: 600; }
+  tr:nth-child(even) { background-color: #f8fafc; }
+  .flowchart-container { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 15px 0; text-align: center; }
+  .code-box { background: #0f172a; color: #f8fafc; padding: 14px 18px; border-radius: 8px; font-family: 'Consolas', 'Courier New', monospace; font-size: 11.5px; line-height: 1.5; overflow-x: auto; margin: 12px 0; }
+  .code-keyword { color: #f472b6; font-weight: bold; }
+  .code-type { color: #38bdf8; }
+  .code-func { color: #4ade80; }
+  .code-comment { color: #94a3b8; font-style: italic; }
+  .code-string { color: #fde047; }
+  .code-num { color: #fb923c; }
+  .callout { background: #ecfdf5; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 15px 0; font-size: 12px; }
+  .callout-title { font-weight: 700; color: #065f46; margin-bottom: 4px; }
+  .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="header-card">
+  <h1>MODUL 6: UNITY 3D SCENE & PROCEDURAL ASSETS</h1>
+  <p>Mahjong Custom v1.0 — Visual 3D Meja VIP Casino, Dual-Layer Tiles, Kompas LED & Kamera Mobile</p>
+  <span class="badge">Procedural Mesh C# &bull; Emerald Felt &bull; Jade Tiles &bull; LED Compass Timer &bull; Android/iOS Isometric</span>
+</div>
+
+<h2>1. Gambaran Umum Modul 6</h2>
+<p>
+  Modul 6 membangun <strong>Lapisan Presentasi Visual 3D (Presentation Layer)</strong> pada Unity Engine. Menggunakan teknik <em>Procedural Generation</em> dalam skrip C#, seluruh aset geometri (meja bermain, ubin 3D, piringan kompas) dan tekstur atlas 2048x2048 dihasilkan secara langsung saat runtime.
+</p>
+<ul>
+  <li><strong>Zero External Asset Dependency:</strong> Tidak memerlukan aset FBX/3D model berbayar dari Unity Asset Store — proyek dapat langsung dijalankan dan di-build.</li>
+  <li><strong>Estetika Modern Luxury VIP:</strong> Permukaan meja dilapisi beludru hijau zamrud (Emerald Felt), rangka kayu mahoni gelap mengkilap, dan lis sudut kuningan emas.</li>
+  <li><strong>Dual-Layer Tile Architecture:</strong> Ubin Mahjong memiliki 2 lapisan material terpisah (Wajah Gading Mutiara di depan dan Punggung Giok Zamrud di belakang).</li>
+  <li><strong>3D Center Compass & LED Turn Ring:</strong> Kompas digital di tengah meja menampilkan penunjuk arah mata angin aktif dan hitungan mundur 15 detik (LED Hijau ➔ Kuning ➔ Berkedip Merah).</li>
+</ul>
+
+<h2>2. Diagram Flowchart Visual Generation Pipeline</h2>
+<div class="flowchart-container">
+  <svg width="600" height="230" viewBox="0 0 600 230" xmlns="http://www.w3.org/2000/svg">
+    <!-- Step 1 -->
+    <rect x="15" y="40" width="125" height="150" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+    <text x="77" y="65" fill="#a7f3d0" font-size="11" font-weight="bold" text-anchor="middle">1. Procedural Atlas</text>
+    <text x="77" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Generate Texture2D</text>
+    <text x="77" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">2048x2048 Pixels</text>
+    <text x="77" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">6 Kolom x 7 Baris</text>
+    <text x="77" y="150" fill="#38bdf8" font-size="9" text-anchor="middle">Dots, Bam, Wan,</text>
+    <text x="77" y="168" fill="#38bdf8" font-size="9" text-anchor="middle">Winds, Dragons</text>
+
+    <!-- Arrow 1 -->
+    <line x1="140" y1="115" x2="165" y2="115" stroke="#10b981" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- Step 2 -->
+    <rect x="165" y="40" width="125" height="150" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="2"/>
+    <text x="227" y="65" fill="#93c5fd" font-size="11" font-weight="bold" text-anchor="middle">2. Table & Seats</text>
+    <text x="227" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">ProceduralTable.cs</text>
+    <text x="227" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">Emerald Felt Mesh</text>
+    <text x="227" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">Mahogany Rim</text>
+    <text x="227" y="150" fill="#38bdf8" font-size="9" text-anchor="middle">4 Seat Anchors:</text>
+    <text x="227" y="168" fill="#38bdf8" font-size="9" text-anchor="middle">South, East, North, West</text>
+
+    <!-- Arrow 2 -->
+    <line x1="290" y1="115" x2="315" y2="115" stroke="#10b981" stroke-width="2"/>
+
+    <!-- Step 3 -->
+    <rect x="315" y="40" width="125" height="150" rx="8" fill="#0f172a" stroke="#f59e0b" stroke-width="2"/>
+    <text x="377" y="65" fill="#fde68a" font-size="11" font-weight="bold" text-anchor="middle">3. 3D Tile Prefabs</text>
+    <text x="377" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">ProceduralTile.cs</text>
+    <text x="377" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">Dual-Layer Bevel Mesh</text>
+    <text x="377" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">Ivory Front (Submesh 0)</text>
+    <text x="377" y="150" fill="#cbd5e1" font-size="9" text-anchor="middle">Jade Back (Submesh 1)</text>
+    <text x="377" y="168" fill="#38bdf8" font-size="9" text-anchor="middle">Touch Tap/Hover Anim</text>
+
+    <!-- Arrow 3 -->
+    <line x1="440" y1="115" x2="465" y2="115" stroke="#10b981" stroke-width="2"/>
+
+    <!-- Step 4 -->
+    <rect x="465" y="40" width="120" height="150" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+    <text x="525" y="65" fill="#a7f3d0" font-size="11" font-weight="bold" text-anchor="middle">4. Compass & Cam</text>
+    <text x="525" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">TableCompass.cs</text>
+    <text x="525" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">Gold Brass Casing</text>
+    <text x="525" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">LED 15s Timer Ring</text>
+    <text x="525" y="150" fill="#94a3b8" font-size="9" text-anchor="middle">CameraController.cs</text>
+    <text x="525" y="168" fill="#38bdf8" font-size="9" text-anchor="middle">Mobile Responsive FOV</text>
+  </svg>
+</div>
+
+<div class="page-break"></div>
+
+<h2>3. Struktur Hirarki Scene di Unity Hierarchy Window</h2>
+<table>
+  <thead>
+    <tr>
+      <th>GameObject</th>
+      <th>Komponen Terpasang</th>
+      <th>Fungsi Utama</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>[GameTable]</strong></td>
+      <td><code>ProceduralTable.cs</code>, <code>MeshFilter</code>, <code>MeshRenderer</code></td>
+      <td>Menghasilkan meja beludru hijau, lis mahoni, dan titik koordinat kursi pemain.</td>
+    </tr>
+    <tr>
+      <td>├── <strong>Seat_South (Local)</strong></td>
+      <td><code>Transform</code> (Pos: 0, 0.02, -0.42)</td>
+      <td>Anchor peletakan ubin tangan milik pemain lokal (tampilan bawah layar).</td>
+    </tr>
+    <tr>
+      <td>├── <strong>Seat_East (Right)</strong></td>
+      <td><code>Transform</code> (Pos: 0.42, 0.02, 0)</td>
+      <td>Anchor peletakan ubin tertutup milik lawan di sisi kanan (rotasi -90&deg;).</td>
+    </tr>
+    <tr>
+      <td>├── <strong>Seat_North (Top)</strong></td>
+      <td><code>Transform</code> (Pos: 0, 0.02, 0.42)</td>
+      <td>Anchor peletakan ubin tertutup lawan di sisi atas (rotasi 180&deg;).</td>
+    </tr>
+    <tr>
+      <td>├── <strong>Seat_West (Left)</strong></td>
+      <td><code>Transform</code> (Pos: -0.42, 0.02, 0)</td>
+      <td>Anchor peletakan ubin tertutup lawan di sisi kiri (rotasi 90&deg;).</td>
+    </tr>
+    <tr>
+      <td>├── <strong>[TableCompass]</strong></td>
+      <td><code>TableCompass.cs</code>, <code>MeshFilter</code>, <code>MeshRenderer</code></td>
+      <td>Piringan emas tengah meja dengan lampu LED 15 detik countdown.</td>
+    </tr>
+    <tr>
+      <td><strong>[AtlasManager]</strong></td>
+      <td><code>ProceduralTileAtlas.cs</code></td>
+      <td>Generator gambar 144 ubin Mahjong 2048x2048 resolusi tinggi.</td>
+    </tr>
+    <tr>
+      <td><strong>Main Camera</strong></td>
+      <td><code>Camera</code>, <code>CameraController.cs</code></td>
+      <td>Kamera isometrik 48&deg; dengan auto-zoom saat deklarasi Menang.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4. Penjelasan Baris demi Baris Skrip C#</h2>
+
+<h3>A. ProceduralTable.cs — Pembuat Meja Kasino 3D</h3>
+<div class="code-box">
+<span class="code-keyword">public void</span> <span class="code-func">GenerateTableMesh</span>()
+{
+    <span class="code-comment">// 1. Tentukan ukuran permukaan bermain (Felt Hijau)</span>
+    <span class="code-type">float</span> halfSize = tableSize * <span class="code-num">0.5f</span>;
+    <span class="code-type">Vector3</span>[] vertices = <span class="code-keyword">new</span> <span class="code-type">Vector3</span>[]
+    {
+        <span class="code-comment">// Felt Hijau (Top Play Area: 4 Titik Sudut)</span>
+        <span class="code-keyword">new</span> <span class="code-type">Vector3</span>(-halfSize, <span class="code-num">0</span>, -halfSize),
+        <span class="code-keyword">new</span> <span class="code-type">Vector3</span>(halfSize, <span class="code-num">0</span>, -halfSize),
+        <span class="code-keyword">new</span> <span class="code-type">Vector3</span>(halfSize, <span class="code-num">0</span>, halfSize),
+        <span class="code-keyword">new</span> <span class="code-type">Vector3</span>(-halfSize, <span class="code-num">0</span>, halfSize),
+        <span class="code-comment">// Rim Kayu Mahoni (8 Titik Bevel Luar & Bawah)</span>
+        ...
+    };
+
+    <span class="code-comment">// Pisahkan Submesh 0 (Felt Beludru) dan Submesh 1 (Kayu Mahoni)</span>
+    tableMesh.subMeshCount = <span class="code-num">2</span>;
+    tableMesh.<span class="code-func">SetTriangles</span>(feltTriangles, <span class="code-num">0</span>);
+    tableMesh.<span class="code-func">SetTriangles</span>(woodRimTriangles, <span class="code-num">1</span>);
+}
+</div>
+
+<h3>B. ProceduralTile.cs — Logika Ubin & Animasi Layar Sentuh</h3>
+<div class="code-box">
+<span class="code-keyword">public void</span> <span class="code-func">SetSelected</span>(<span class="code-type">bool</span> selected)
+{
+    <span class="code-comment">// Animasi saat ubin disentuh pemain di layar HP: Ubin naik 1.8 cm</span>
+    <span class="code-type">Vector3</span> targetPos = isSelected ? defaultLocalPos + <span class="code-keyword">new</span> <span class="code-type">Vector3</span>(<span class="code-num">0</span>, <span class="code-num">0.018f</span>, <span class="code-num">0</span>) : defaultLocalPos;
+    activeAnimCoroutine = <span class="code-func">StartCoroutine</span>(AnimateLocalPosition(targetPos, <span class="code-num">0.12f</span>));
+}
+</div>
+
+<div class="callout">
+  <div class="callout-title">Keunggulan Performa Mobile (Optimization)</div>
+  Semua material menggunakan <em>Unity Standard Shader</em> dengan properti PBR (Glossiness, Metallic, Emission) tanpa shader kustom yang berat, menjamin rendering 60+ FPS stabil di HP Android kelas entri (low-end) sekalipun.
+</div>
+
+<h2>5. Panduan Pengujian di Unity Editor</h2>
+<ol>
+  <li>Buka Unity Editor (versi 2021 LTS, 2022 LTS, atau 6000).</li>
+  <li>Pastikan folder skrip berada di <code>Assets/Scripts/Procedural/</code> dan <code>Assets/Scripts/Visual/</code>.</li>
+  <li>Buat GameObject kosong, beri nama <code>[GameTable]</code>, lalu attach skrip <code>ProceduralTable.cs</code>.</li>
+  <li>Klik kanan pada Inspector komponen <code>ProceduralTable</code> ➔ pilih <strong>"Regenerate Table Mesh"</strong>. Meja kasino 3D hijau zamrud akan langsung terbuat secara instan di Scene View.</li>
+  <li>Jalankan Play Mode untuk melihat inisialisasi kompas LED dan kamera isometrik.</li>
+</ol>
+
+</body>
+</html>

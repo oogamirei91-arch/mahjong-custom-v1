@@ -1,0 +1,75 @@
+================================================================================
+          RINGKASAN MODUL 3: ROOM & GAME STATE MANAGER (GO)
+                       MAHJONG CUSTOM v1.0
+================================================================================
+
+1. TUJUAN MODUL 3
+-----------------
+Menghubungkan seluruh komponen engine menjadi satu alur permainan meja (Room) 
+yang dinamis, adil, dan otomatis:
+- Mengelola 4 pemain dalam satu meja (Kursi East, South, West, North).
+- Mengatur State Machine tahapan game dari Lobby hingga Match Selesai.
+- Menjalankan Game Loop per giliran: Draw -> Rekursi Flower -> Discard -> Reaction.
+- Mengelola sistem Timer (15 detik giliran, 5 detik reaksi, Auto-Discard).
+- Mengatur siklus 4 ronde per match dan rotasi Dealer.
+
+2. STATE MACHINE TAHAPAN PERMAINAN (GAME PHASE)
+-----------------------------------------------
+1. PhaseLobby
+   Menunggu 4 pemain masuk dan menduduki kursi.
+2. PhaseDealing
+   Server mengocok wall, membagikan 53 kartu awal (Dealer 14, P2-P4 13), 
+   dan otomatis membersihkan Flower/Season awal dengan replacement tile.
+3. PhaseTurnActive
+   Giliran pemain aktif berpikir (timer 15 detik) untuk memilih tile buangan.
+4. PhaseAwaitingReactions
+   Jendela waktu (5 detik) bagi 3 pemain lain untuk merespon tile buangan 
+   dengan tombol: WIN, KONG, PONG, CHOW, atau PASS.
+5. PhaseRoundEnded
+   Ronde selesai karena ada yang WIN atau Wall habis (Draw). Skor dihitung.
+6. PhaseMatchEnded
+   Seluruh 4 ronde selesai. Pemain dengan akumulasi skor tertinggi menjadi 
+   Juara Match.
+
+3. SIKLUS GAME LOOP PER GILIRAN
+-------------------------------
+1. DRAW:
+   Pemain aktif mengambil 1 tile dari wall (13 kartu -> 14 kartu).
+   Jika mendapat Flower/Season -> otomatis masuk ke Bonus Area (+10 poin) dan 
+   mengambil pengganti dari Dead Wall (Tail) sampai mendapat kartu aktif.
+2. DISCARD:
+   Pemain membuang 1 tile ke Discard Pond (14 kartu -> 13 kartu).
+3. EVALUASI REAKSI:
+   Server mengecek apakah 3 pemain lain bisa bereaksi:
+   - Jika ADA yang bisa -> Masuk PhaseAwaitingReactions (5 detik).
+   - Jika TIDAK ADA -> Langsung giliran pemain berikutnya (NextTurn).
+4. RESOLVE REAKSI:
+   Server mengeksekusi klaim prioritas tertinggi: WIN > KONG > PONG > CHOW.
+   Jika semua PASS -> Giliran bergeser ke pemain berikutnya.
+
+4. SISTEM TIMER & AUTO-DISCARD
+------------------------------
+- Turn Timer: 15 detik per giliran normal.
+- Reaction Timer: 5 detik untuk merespon discard lawan.
+- Auto-Discard: Jika waktu 15 detik habis, server otomatis membuang tile 
+  paling kanan (tile yang baru saja di-draw) agar permainan tetap berjalan cepat.
+
+5. ROTASI DEALER & SIKLUS 4 RONDE
+---------------------------------
+- Ronde 1: Dealer = East
+- Ronde 2: Dealer = South
+- Ronde 3: Dealer = West
+- Ronde 4: Dealer = North
+Setelah ronde 4 selesai, total skor ke-4 ronde diakumulasi untuk menentukan Juara.
+
+6. DAFTAR FILE SUMBER KODE MODUL 3
+----------------------------------
+- server/pkg/engine/player.go
+  Struktur data pemain (Hand, BonusTiles, OpenMelds, Discards, MatchScore).
+- server/pkg/engine/game_state.go
+  Definisi GamePhase, konfigurasi timer, ActionClaim, dan logika Auto-Discard.
+- server/pkg/engine/room.go
+  Game Loop Room 4 pemain, State Machine, Draw/Discard, dan Reaction Resolving.
+- server/pkg/engine/room_test.go
+  Unit test simulasi alur deal, draw, discard, auto-discard, dan transisi turn.
+================================================================================

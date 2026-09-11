@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Modul 2: Hand Evaluator & Scoring Engine - Mahjong Custom v1.0</title>
+<style>
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    background-color: #ffffff;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+  }
+  .header-card {
+    background: linear-gradient(135deg, #1e1b4b 0%, #064e3b 100%);
+    color: #ffffff;
+    padding: 24px 30px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-left: 6px solid #fbbf24;
+  }
+  .header-card h1 {
+    margin: 0 0 6px 0;
+    font-size: 24px;
+    letter-spacing: -0.5px;
+    color: #fef3c7;
+  }
+  .header-card p {
+    margin: 0;
+    font-size: 13px;
+    color: #cbd5e1;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(251, 191, 36, 0.25);
+    color: #fef3c7;
+    border: 1px solid #fbbf24;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 10px;
+  }
+  h2 {
+    color: #064e3b;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 6px;
+    margin-top: 25px;
+    margin-bottom: 12px;
+    font-size: 16px;
+  }
+  h3 {
+    color: #0f172a;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 12px;
+  }
+  th, td {
+    border: 1px solid #cbd5e1;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  .flowchart-container {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 15px 0;
+    text-align: center;
+  }
+  .code-box {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11.5px;
+    line-height: 1.5;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+  .code-keyword { color: #f472b6; font-weight: bold; }
+  .code-type { color: #38bdf8; }
+  .code-func { color: #4ade80; }
+  .code-comment { color: #94a3b8; font-style: italic; }
+  .code-string { color: #fde047; }
+  .code-num { color: #fb923c; }
+
+  .callout {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 15px 0;
+    font-size: 12px;
+  }
+  .callout-title {
+    font-weight: 700;
+    color: #1d4ed8;
+    margin-bottom: 4px;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+<div class="header-card">
+  <h1>MODUL 2: HAND EVALUATOR & SCORING ENGINE</h1>
+  <p>Mahjong Custom v1.0 — Logika Validasi Wasit & Algoritma Skor untuk Pemula</p>
+  <span class="badge">Backtracking Evaluator &bull; O(1) Matrix &bull; Action Checking &bull; Scoring Engine</span>
+</div>
+
+<h2>1. Gambaran Umum & Konsep Modul 2</h2>
+<p>
+  Modul 2 bertindak sebagai <strong>"Otak Wasit"</strong> dalam permainan. Modul ini bertanggung jawab untuk:
+</p>
+<ul>
+  <li>Mengevaluasi secara instan (< 1 mikrodetik) apakah 14 kartu pemain membentuk susunan <strong>WIN</strong> yang sah.</li>
+  <li>Mendeteksi aksi responsif pemain (<strong>Chow, Pong, Kong</strong>) saat lawan membuang tile.</li>
+  <li>Mengenali pola khusus <em>Special Hands</em> (<strong>Seven Pairs, Pure Suit, All Triplets</strong>).</li>
+  <li>Menghitung akumulasi skor kemenangan berdasarkan Rule Book v1.0.</li>
+</ul>
+
+<h2>2. Diagram Flowchart Logika Evaluator</h2>
+
+<h3>Flowchart 1: Algoritma Pohon Backtracking (Validasi 4 Meld + 1 Pair)</h3>
+<div class="flowchart-container">
+  <svg width="600" height="340" viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg">
+    <!-- Root -->
+    <rect x="210" y="10" width="180" height="40" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+    <text x="300" y="34" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Input: 14 Tile di Tangan</text>
+
+    <!-- Step 1: Matrix -->
+    <line x1="300" y1="50" x2="300" y2="80" stroke="#064e3b" stroke-width="2"/>
+    <rect x="180" y="80" width="240" height="40" rx="6" fill="#064e3b" stroke="#d97706" stroke-width="2"/>
+    <text x="300" y="104" fill="#fef3c7" font-size="11" font-weight="bold" text-anchor="middle">BuildCountsMatrix() [5][10]int</text>
+
+    <!-- Branch: Seven Pairs or Standard -->
+    <line x1="300" y1="120" x2="160" y2="150" stroke="#64748b" stroke-width="2"/>
+    <line x1="300" y1="120" x2="440" y2="150" stroke="#64748b" stroke-width="2"/>
+
+    <!-- Left: Seven Pairs -->
+    <rect x="70" y="150" width="180" height="50" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="160" y="172" fill="#1d4ed8" font-size="10" font-weight="bold" text-anchor="middle">Cek isSevenPairs()</text>
+    <text x="160" y="188" fill="#64748b" font-size="9" text-anchor="middle">Tepat 7 Pasangan?</text>
+
+    <!-- Right: Pair search -->
+    <rect x="350" y="150" width="180" height="50" rx="6" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+    <text x="440" y="172" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">Cari Calon Pair (Count >= 2)</text>
+    <text x="440" y="188" fill="#64748b" font-size="9" text-anchor="middle">Kurangi 2 dari tile terpilih</text>
+
+    <!-- Recursive Backtracking -->
+    <line x1="440" y1="200" x2="440" y2="230" stroke="#064e3b" stroke-width="2"/>
+    <rect x="320" y="230" width="240" height="55" rx="6" fill="#1e293b" stroke="#4ade80" stroke-width="2"/>
+    <text x="440" y="252" fill="#4ade80" font-size="10" font-weight="bold" text-anchor="middle">canDecomposeMelds() Rekursif</text>
+    <text x="440" y="268" fill="#cbd5e1" font-size="9" text-anchor="middle">Pecah jadi Triplet (Pong) / Sequence (Chow)</text>
+
+    <!-- Final Result -->
+    <line x1="160" y1="200" x2="230" y2="300" stroke="#16a34a" stroke-width="2"/>
+    <line x1="440" y1="285" x2="370" y2="300" stroke="#16a34a" stroke-width="2"/>
+    <rect x="220" y="295" width="160" height="35" rx="6" fill="#16a34a" stroke="#ffffff" stroke-width="1.5"/>
+    <text x="300" y="317" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">✅ SAH: MAHJONG WIN</text>
+  </svg>
+</div>
+
+<div class="page-break"></div>
+
+<h3>Flowchart 2: Alur Prioritas Aksi saat Pemain Lain Discard</h3>
+<div class="flowchart-container">
+  <svg width="600" height="240" viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg">
+    <!-- Discard Event -->
+    <rect x="20" y="90" width="110" height="50" rx="6" fill="#0f172a" stroke="#d97706" stroke-width="2"/>
+    <text x="75" y="112" fill="#fef3c7" font-size="10" font-weight="bold" text-anchor="middle">Tile Discarded</text>
+    <text x="75" y="126" fill="#94a3b8" font-size="8" text-anchor="middle">dari Player Lain</text>
+
+    <!-- Arrow to Priority Check -->
+    <line x1="130" y1="115" x2="170" y2="115" stroke="#0f172a" stroke-width="2"/>
+
+    <!-- Priority 1: WIN -->
+    <rect x="170" y="20" width="120" height="45" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="230" y="40" fill="#b91c1c" font-size="10" font-weight="bold" text-anchor="middle">1. WIN (Hu)</text>
+    <text x="230" y="54" fill="#64748b" font-size="8" text-anchor="middle">Prioritas Tertinggi</text>
+
+    <!-- Priority 2: KONG -->
+    <rect x="170" y="75" width="120" height="45" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="230" y="95" fill="#1d4ed8" font-size="10" font-weight="bold" text-anchor="middle">2. KONG</text>
+    <text x="230" y="109" fill="#64748b" font-size="8" text-anchor="middle">Punya 3 Tile Kembar</text>
+
+    <!-- Priority 3: PONG -->
+    <rect x="170" y="130" width="120" height="45" rx="6" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="230" y="150" fill="#15803d" font-size="10" font-weight="bold" text-anchor="middle">3. PONG</text>
+    <text x="230" y="164" fill="#64748b" font-size="8" text-anchor="middle">Punya 2 Tile Kembar</text>
+
+    <!-- Priority 4: CHOW -->
+    <rect x="170" y="185" width="120" height="45" rx="6" fill="#fefce8" stroke="#ca8a04" stroke-width="1.5"/>
+    <text x="230" y="205" fill="#a16207" font-size="10" font-weight="bold" text-anchor="middle">4. CHOW</text>
+    <text x="230" y="219" fill="#64748b" font-size="8" text-anchor="middle">Hanya Kursi Berikutnya</text>
+
+    <!-- Resolution -->
+    <line x1="290" y1="42" x2="350" y2="115" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="290" y1="97" x2="350" y2="115" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="290" y1="152" x2="350" y2="115" stroke="#16a34a" stroke-width="1.5"/>
+    <line x1="290" y1="207" x2="350" y2="115" stroke="#ca8a04" stroke-width="1.5"/>
+
+    <rect x="350" y="85" width="220" height="60" rx="6" fill="#064e3b" stroke="#d97706" stroke-width="2"/>
+    <text x="460" y="110" fill="#fef3c7" font-size="11" font-weight="bold" text-anchor="middle">Server Action Resolution</text>
+    <text x="460" y="126" fill="#cbd5e1" font-size="9" text-anchor="middle">Eksekusi klaim berprioritas tertinggi</text>
+  </svg>
+</div>
+
+<h2>3. Penjelasan Koding Baris per Baris</h2>
+
+<h3>A. Algoritma Backtracking (<code>server/pkg/engine/evaluator.go</code>)</h3>
+<div class="code-box">
+<span class="code-comment">// Mencoba mengambil Triplet (Pong: 3 tile kembar)</span><br>
+<span class="code-keyword">if</span> counts[suit][val] &gt;= <span class="code-num">3</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;counts[suit][val] -= <span class="code-num">3</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span> <span class="code-func">canDecomposeMelds</span>(counts, remainingMelds-<span class="code-num">1</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;counts[suit][val] += <span class="code-num">3</span> <span class="code-comment">// pulihkan state</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> <span class="code-keyword">true</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;counts[suit][val] += <span class="code-num">3</span> <span class="code-comment">// backtrack</span><br>
+}<br>
+<br>
+<span class="code-comment">// Mencoba mengambil Sequence (Chow: val, val+1, val+2)</span><br>
+<span class="code-keyword">if</span> suit &lt;= <span class="code-num">2</span> &amp;&amp; val &lt;= <span class="code-num">7</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span> counts[suit][val+<span class="code-num">1</span>] &gt; <span class="code-num">0</span> &amp;&amp; counts[suit][val+<span class="code-num">2</span>] &gt; <span class="code-num">0</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;counts[suit][val]--<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;counts[suit][val+<span class="code-num">1</span>]--<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;counts[suit][val+<span class="code-num">2</span>]--<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span> <span class="code-func">canDecomposeMelds</span>(counts, remainingMelds-<span class="code-num">1</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;counts[suit][val]++<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;counts[suit][val+<span class="code-num">1</span>]++<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;counts[suit][val+<span class="code-num">2</span>]++<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> <span class="code-keyword">true</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;counts[suit][val]++<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;counts[suit][val+<span class="code-num">1</span>]++<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;counts[suit][val+<span class="code-num">2</span>]++<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+}
+</div>
+
+<div class="callout">
+  <div class="callout-title">💡 Kenapa Teknik Ini Sangat Cerdas?</div>
+  Teknik <strong>Backtracking</strong> mencoba memecah kartu secara berurutan. Jika suatu cabang gagal (misal tile tidak bisa dijadikan Pong), kode otomatis membatalkan pengurangan kartu (<em>backtrack</em>) dan mencoba cabang alternatif (Chow). Hal ini menjamin 100% semua kombinasi kemenangan valid pasti terdeteksi tanpa ada yang luput.
+</div>
+
+<div class="page-break"></div>
+
+<h2>4. Skema Skor & Simulasi Perhitungan</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Kondisi Kemenangan</th>
+      <th>Nilai Poin</th>
+      <th>Keterangan</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Base Win</strong></td>
+      <td>+100</td>
+      <td>Nilai dasar setiap kemenangan sah</td>
+    </tr>
+    <tr>
+      <td><strong>Self Draw Win</strong></td>
+      <td>+30</td>
+      <td>Menang dari tile yang diambil sendiri dari wall</td>
+    </tr>
+    <tr>
+      <td><strong>Discard Win</strong></td>
+      <td>+20</td>
+      <td>Menang dari tile yang dibuang pemain lain</td>
+    </tr>
+    <tr>
+      <td><strong>Seven Pairs</strong></td>
+      <td>+100</td>
+      <td>Tepat 7 pasangan unik (14 kartu tertutup)</td>
+    </tr>
+    <tr>
+      <td><strong>Pure Suit</strong></td>
+      <td>+100</td>
+      <td>Seluruh 14 tile hanya 1 suit tanpa Honor</td>
+    </tr>
+    <tr>
+      <td><strong>All Triplets</strong></td>
+      <td>+50</td>
+      <td>4 Pong/Kong + 1 Pair (tanpa ada Chow)</td>
+    </tr>
+    <tr>
+      <td><strong>1 Flower / Season</strong></td>
+      <td>+10</td>
+      <td>Dihitung per keping bonus tile</td>
+    </tr>
+    <tr>
+      <td><strong>Full 4 Flower</strong></td>
+      <td>+50</td>
+      <td>Memiliki Plum, Orchid, Chrysanthemum, Bamboo</td>
+    </tr>
+    <tr>
+      <td><strong>Full 4 Season</strong></td>
+      <td>+50</td>
+      <td>Memiliki Spring, Summer, Autumn, Winter</td>
+    </tr>
+    <tr>
+      <td><strong>Full 8 Bonus</strong></td>
+      <td>+150</td>
+      <td>Mengumpulkan seluruh 8 Flower & Season</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Contoh Studi Kasus:</h3>
+<p>
+  Pemain A menang dengan pola <strong>Pure Suit</strong> (semua 14 tile Bamboo), menang melalui <strong>Self Draw</strong>, dan memiliki <strong>2 keping Flower</strong>:
+</p>
+<div class="code-box">
+Base Win &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: +100 poin<br>
+Self Draw &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: +30 poin<br>
+Pure Suit Bonus &nbsp;&nbsp;: +100 poin<br>
+2x Flower Bonus &nbsp;&nbsp;: +20 poin (2 x 10)<br>
+------------------------------------<br>
+TOTAL SKOR AKHIR &nbsp;: <strong>250 Poin</strong>
+</div>
+
+<h2>5. Hasil Validasi Unit Test</h2>
+<p>Unit test di <code>server/pkg/engine/evaluator_test.go</code> memvalidasi:</p>
+<ul>
+  <li>✅ <strong>Standard Win:</strong> 4 Meld + 1 Pair terdeteksi sempurna.</li>
+  <li>✅ <strong>Seven Pairs:</strong> 7 pasang unik terdeteksi dan mendapat bonus +100 poin.</li>
+  <li>✅ <strong>Pure Suit & All Triplets:</strong> Terdeteksi akurat dengan bonus masing-masing.</li>
+  <li>✅ <strong>Chow & Pong Checker:</strong> Pengecekan posisi duduk (previous seat) dan ketersediaan tile berjalan 100% benar.</li>
+  <li>✅ <strong>Scoring Calculator:</strong> Perhitungan skor aditif tepat sesuai Rule Book v1.0.</li>
+</ul>
+
+<div style="margin-top: 40px; padding: 15px; border-top: 1px solid #cbd5e1; text-align: center; font-size: 11px; color: #64748b;">
+  Dokumen Resmi &bull; Mahjong Custom v1.0 Game Architecture &bull; Modul 2
+</div>
+
+</body>
+</html>
