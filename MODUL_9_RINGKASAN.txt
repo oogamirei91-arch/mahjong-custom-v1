@@ -1,0 +1,44 @@
+================================================================================
+           RINGKASAN MODUL 9: SINGLE-PLAYER MODE & MAHJONG AI DECISION ENGINE
+                     MAHJONG CUSTOM V1.0 (SOLO OFFLINE & AI BOT)
+================================================================================
+
+1. DESKRIPSI MODUL
+   Modul 9 menambahkan fitur permainan Solo / Latihan Offline melawan 3 Bot AI 
+   cerdas (East Bot, North Bot, West Bot). Bot AI dilengkapi algoritma heuristik 
+   efisiensi ubin (Tile Efficiency & Shanten Analysis) yang mampu mengevaluasi 
+   tangan kartu, membuang ubin yang tidak berguna, dan merespons deklarasi 
+   Chow, Pong, Kong, serta Win (Hu). Fitur ini memungkinkan pemain untuk bermain 
+   secara instan 100% offline kapan saja tanpa koneksi internet atau menunggu antrean.
+
+--------------------------------------------------------------------------------
+2. DAFTAR FILE & SKRIP (AI & SINGLE PLAYER)
+   • server/pkg/engine/ai_bot.go & ai_bot_test.go
+     - Mesin AI Bot sisi backend Go untuk pengisian otomatis slot matchmaking
+       (fallback auto-fill saat pemain manusia kurang).
+   • client/Assets/Scripts/AI/MahjongAIController.cs
+     - Pengendali keputusan bot AI sisi klien Unity (C#).
+     - Algoritma pembuangan ubin berbasis Shanten Priority:
+       1. Prioritas 1: Ubin Angin / Naga (Honors) yang terisolasi (count == 1).
+       2. Prioritas 2: Ubin Terminal (1 atau 9) tanpa pasangan & urutan tetangga.
+       3. Prioritas 3: Ubin biasa yang tidak memiliki koneksi urutan (+-1 / +-2).
+     - Logika Reaksi: Win (100%), Kong (tinggi), Pong (cerdas), Chow (sebelah kiri).
+     - Jeda simulasi berpikir manusiawi (1.0 - 2.0 detik).
+   • client/Assets/Scripts/AI/SinglePlayerAIManager.cs
+     - Manajer siklus permainan lokal solo offline (1 Pemain vs 3 Bot AI).
+     - Mengatur pembagian 144 ubin, kompas LED 15 detik, animasi lemparan ubin,
+       dan evaluasi kemenangan lokal tanpa server.
+   • client/Assets/Scripts/UI/ProceduralLandingAndHUD.cs
+     - Penambahan tombol menu "🤖 LATIHAN SOLO VS 3 BOT AI (OFFLINE)" pada Lobi Utama.
+
+--------------------------------------------------------------------------------
+3. TINGKAT KESULITAN BOT AI
+   • 🥉 Novice (Pemula): Buang ubin terisolasi acak, respon reaksi santai.
+   • 🥈 Expert (Mahir): Efisiensi Shanten cepat, mengenali peluang Pong & Kong.
+   • 🥇 Master VIP: Algoritma defensif, menghindari buangan ubin berisiko tinggi.
+
+--------------------------------------------------------------------------------
+4. STATUS IMPLEMENTASI
+   • Kode AI Go & Unity C#: 100% Selesai & Teruji Unit Test.
+   • Integrasi UI Menu: Terpasang aktif di Landing Page & Lobi Utama.
+================================================================================

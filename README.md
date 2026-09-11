@@ -17,6 +17,7 @@ Game Mahjong 4-Pemain Multiplayer Online bertema **Modern Luxury VIP Emerald Cas
 - **[Modul 6: Unity 3D Scene & Procedural Assets](file:///d:/Project%20SS/Mahjong/MODUL_6_PENJELASAN_DAN_FLOWCHART.pdf)** — Meja beludru zamrud, ubin dual-layer (pearl/jade), kompas LED gyro, atlas generator 2048x2048, kamera isometrik mobile.
 - **[Modul 7: Unity Network Client & WebSocket Controller](file:///d:/Project%20SS/Mahjong/MODUL_7_PENJELASAN_DAN_FLOWCHART.pdf)** — `ClientWebSocket`, thread-safe dispatcher, sinkronisasi event in-game realtime.
 - **[Modul 8: Unity UI Touch Controller, Audio & Android APK](file:///d:/Project%20SS/Mahjong/MODUL_8_PENJELASAN_DAN_FLOWCHART.pdf)** — Kontrol sentuh (tap/drag), Action Bar Chow/Pong/Kong/Win, procedural DSP audio synthesizer, panduan export APK Android.
+- **[Modul 9: Single-Player & Mahjong AI Engine](file:///d:/Project%20SS/Mahjong/MODUL_9_PENJELASAN_DAN_FLOWCHART.pdf)** — Mode Solo Offline 100% mandiri, 3 Bot AI cerdas (East, North, West), heuristik efisiensi Shanten, dan jeda berpikir natural.
 
 ---
 

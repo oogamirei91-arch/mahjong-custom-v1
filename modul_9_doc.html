@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Modul 9: Single-Player Mode & Mahjong AI Decision Engine - Mahjong Custom v1.0</title>
+<style>
+  @page { size: A4; margin: 1.5cm; }
+  body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; color: #1e293b; background-color: #ffffff; line-height: 1.6; margin: 0; padding: 0; font-size: 13px; }
+  .header-card { background: linear-gradient(135deg, #6d28d9 0%, #0f172a 100%); color: #ffffff; padding: 24px 30px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-left: 6px solid #a855f7; }
+  .header-card h1 { margin: 0 0 6px 0; font-size: 24px; letter-spacing: -0.5px; color: #f3e8ff; }
+  .header-card p { margin: 0; font-size: 13px; color: #cbd5e1; }
+  .badge { display: inline-block; background: rgba(168, 85, 247, 0.25); color: #f3e8ff; border: 1px solid #a855f7; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-top: 10px; }
+  h2 { color: #6d28d9; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-size: 16px; }
+  h3 { color: #0f172a; margin-top: 18px; margin-bottom: 8px; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+  th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+  th { background-color: #f1f5f9; color: #0f172a; font-weight: 600; }
+  tr:nth-child(even) { background-color: #f8fafc; }
+  .flowchart-container { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 15px 0; text-align: center; }
+  .code-box { background: #0f172a; color: #f8fafc; padding: 14px 18px; border-radius: 8px; font-family: 'Consolas', 'Courier New', monospace; font-size: 11.5px; line-height: 1.5; overflow-x: auto; margin: 12px 0; }
+  .code-keyword { color: #f472b6; font-weight: bold; }
+  .code-type { color: #38bdf8; }
+  .code-func { color: #4ade80; }
+  .code-comment { color: #94a3b8; font-style: italic; }
+  .code-string { color: #fde047; }
+  .code-num { color: #fb923c; }
+  .callout { background: #faf5ff; border-left: 4px solid #a855f7; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 15px 0; font-size: 12px; }
+  .callout-title { font-weight: 700; color: #6d28d9; margin-bottom: 4px; }
+  .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="header-card">
+  <h1>MODUL 9: SINGLE-PLAYER & MAHJONG AI DECISION ENGINE</h1>
+  <p>Mahjong Custom v1.0 — Mode Solo Offline, Heuristik Efisiensi Shanten & Otak Bot Cerdas (East/North/West)</p>
+  <span class="badge">100% Solo Offline &bull; Shanten Discard Priority &bull; 3 AI Bot Opponents &bull; Human-like Thinking Delay</span>
+</div>
+
+<h2>1. Gambaran Umum Modul 9</h2>
+<p>
+  Modul 9 menambahkan <strong>Mode Single Player (Solo Latihan)</strong> yang memungkinkan pemain menikmati permainan Mahjong secara instan tanpa memerlukan koneksi internet ataupun menunggu antrean pemain lain.
+</p>
+<ul>
+  <li><strong>3 Lawan Bot AI Mandiri:</strong> Pemain (kursi South) bermain melawan 3 bot AI: <em>Bot_Kenji (East)</em>, <em>Bot_Mei (North)</em>, dan <em>Bot_Dragon (West)</em>.</li>
+  <li><strong>Algoritma Heuristik Efisiensi Ubin (Shanten Priority):</strong> Bot menganalisis tangan untuk mendeteksi ubin terisolasi (*isolated tiles*) dan membuang ubin yang memiliki peluang kombinasi paling rendah.</li>
+  <li><strong>Pohon Respon Reaksi:</strong> Bot secara otomatis mengevaluasi buangan lawan untuk mengambil deklarasi <em>Win (Hu)</em> 100% prioritas, <em>Kong</em> (4 ubin), <em>Pong</em> (3 ubin), atau <em>Chow</em> (urutan).</li>
+  <li><strong>Jeda Berpikir Natural (Human-like Thinking):</strong> Bot menyimulasikan waktu berpikir selama 1.0 s/d 2.0 detik agar permainan terasa hidup dan realistis.</li>
+</ul>
+
+<h2>2. Diagram Flowchart Pohon Keputusan AI Bot (Decision Tree)</h2>
+<div class="flowchart-container">
+  <svg width="600" height="230" viewBox="0 0 600 230" xmlns="http://www.w3.org/2000/svg">
+    <!-- Box 1: Turn Start -->
+    <rect x="15" y="40" width="125" height="150" rx="8" fill="#0f172a" stroke="#a855f7" stroke-width="2"/>
+    <text x="77" y="65" fill="#f3e8ff" font-size="11" font-weight="bold" text-anchor="middle">1. Giliran Bot AI</text>
+    <text x="77" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Ambil Ubin (Draw)</text>
+    <text x="77" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">Hitung Matriks [5][10]</text>
+    <text x="77" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">Deteksi Bonus (Bunga)</text>
+    <text x="77" y="150" fill="#a855f7" font-size="9" text-anchor="middle">Evaluasi Kemenangan</text>
+    <text x="77" y="168" fill="#a855f7" font-size="9" text-anchor="middle">Self-Draw (Zimo)</text>
+
+    <!-- Arrow 1 -->
+    <line x1="140" y1="115" x2="165" y2="115" stroke="#a855f7" stroke-width="2"/>
+
+    <!-- Box 2: Discard Heuristic -->
+    <rect x="165" y="40" width="135" height="150" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="2"/>
+    <text x="232" y="65" fill="#93c5fd" font-size="11" font-weight="bold" text-anchor="middle">2. Heuristik Buang</text>
+    <text x="232" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">1. Ubin Angin/Naga Solo</text>
+    <text x="232" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">2. Terminal 1/9 Solo</text>
+    <text x="232" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">3. Ubin Tanpa Urutan</text>
+    <text x="232" y="150" fill="#fde047" font-size="9" text-anchor="middle">Simulasi Pikir 1.5s</text>
+    <text x="232" y="168" fill="#93c5fd" font-size="9" text-anchor="middle">Drop Tile & Sound</text>
+
+    <!-- Arrow 2 -->
+    <line x1="300" y1="115" x2="325" y2="115" stroke="#3b82f6" stroke-width="2"/>
+
+    <!-- Box 3: Opponent Reaction -->
+    <rect x="325" y="40" width="130" height="150" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+    <text x="390" y="65" fill="#a7f3d0" font-size="11" font-weight="bold" text-anchor="middle">3. Evaluasi Reaksi</text>
+    <text x="390" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">Apakah Ada yang Win?</text>
+    <text x="390" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">Win ➔ 100% Eksekusi</text>
+    <text x="390" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">Kong ➔ 4 Ubin Kembar</text>
+    <text x="390" y="150" fill="#fde047" font-size="9" text-anchor="middle">Pong ➔ 70% Peluang</text>
+    <text x="390" y="168" fill="#a7f3d0" font-size="9" text-anchor="middle">Chow ➔ 50% Peluang</text>
+
+    <!-- Arrow 3 -->
+    <line x1="455" y1="115" x2="480" y2="115" stroke="#10b981" stroke-width="2"/>
+
+    <!-- Box 4: Next Turn -->
+    <rect x="480" y="40" width="105" height="150" rx="8" fill="#0f172a" stroke="#ec4899" stroke-width="2"/>
+    <text x="532" y="65" fill="#fbcfe8" font-size="11" font-weight="bold" text-anchor="middle">4. Giliran Maju</text>
+    <text x="532" y="90" fill="#94a3b8" font-size="9" text-anchor="middle">East ➔ North</text>
+    <text x="532" y="110" fill="#cbd5e1" font-size="9" text-anchor="middle">North ➔ West</text>
+    <text x="532" y="130" fill="#cbd5e1" font-size="9" text-anchor="middle">West ➔ South (Anda)</text>
+    <text x="532" y="150" fill="#38bdf8" font-size="9" text-anchor="middle">Kompas LED Update</text>
+    <text x="532" y="168" fill="#ec4899" font-size="9" text-anchor="middle">15s Turn Active</text>
+  </svg>
+</div>
+
+<div class="page-break"></div>
+
+<h2>3. Penjelasan Baris demi Baris Skrip C# AI</h2>
+
+<h3>A. MahjongAIController.cs — Algoritma Heuristik Pembuangan Ubin</h3>
+<div class="code-box">
+<span class="code-keyword">public</span> <span class="code-type">TileData</span> <span class="code-func">DecideDiscard</span>()
+{
+    <span class="code-comment">// 1. Prioritas 1: Ubin Angin & Naga (Honors) yang terisolasi (hanya punya 1 keping)</span>
+    <span class="code-keyword">for</span> (<span class="code-type">int</span> i = <span class="code-num">0</span>; i &lt; Hand.Count; i++)
+    {
+        <span class="code-type">var</span> t = Hand[i];
+        <span class="code-keyword">if</span> ((t.suit == <span class="code-num">3</span> || t.suit == <span class="code-num">4</span>) && counts[t.suit, t.value] == <span class="code-num">1</span>)
+        {
+            <span class="code-keyword">return</span> t; <span class="code-comment">// Buang ubin honor tidak berguna</span>
+        }
+    }
+
+    <span class="code-comment">// 2. Prioritas 2: Ubin Terminal 1 atau 9 yang tidak punya tetangga 2 atau 8</span>
+    ...
+}
+</div>
+
+<h3>B. SinglePlayerAIManager.cs — Siklus Berpikir Bot & Animasi Ubin</h3>
+<div class="code-box">
+<span class="code-keyword">private</span> <span class="code-type">IEnumerator</span> <span class="code-func">ProcessAITurns</span>(<span class="code-type">int</span> nextSeat)
+{
+    <span class="code-comment">// 1. Bot mengambil ubin dari wall & mulai timer kompas</span>
+    DrawTileForBot(activeBot);
+    FindObjectOfType&lt;<span class="code-type">TableCompass</span>&gt;()?.<span class="code-func">StartTurnTimer</span>(currentTurnSeat, <span class="code-num">15f</span>);
+
+    <span class="code-comment">// 2. Simulasi bot berpikir natural (1.2s - 1.8s)</span>
+    <span class="code-type">float</span> thinkTime = activeBot.<span class="code-func">GetSimulatedThinkingTime</span>();
+    <span class="code-keyword">yield return new</span> <span class="code-type">WaitForSeconds</span>(thinkTime);
+
+    <span class="code-comment">// 3. Bot membuang ubin ke tengah meja dengan efek suara klik ubin</span>
+    <span class="code-type">TileData</span> botDiscard = activeBot.<span class="code-func">DecideDiscard</span>();
+    centerDiscards.<span class="code-func">Add</span>(botDiscard);
+    ProceduralAudioSynthesizer.Instance?.<span class="code-func">PlayTileDiscard</span>();
+}
+</div>
+
+<div class="callout">
+  <div class="callout-title">Keunggulan Mode Solo Offline (Zero Latency)</div>
+  Semua kalkulasi ubin dijalankan secara lokal di memori C# Unity, menghasilkan responsivitas instan tanpa lag jaringan dan sangat cocok untuk pemain yang ingin berlatih strategi kapan saja dan di mana saja.
+</div>
+
+<h2>4. Panduan Menjalankan Mode Solo vs AI di Unity</h2>
+<ol>
+  <li>Buka Unity Editor dan buka scene <code>MainGameScene</code>.</li>
+  <li>Klik kanan di Hierarchy ➔ <strong>Create Empty</strong> ➔ Beri nama <code>[SinglePlayerAIManager]</code> ➔ Pasang skrip <code>SinglePlayerAIManager.cs</code>.</li>
+  <li>Tekan tombol <strong>Play (▶️)</strong> di Unity.</li>
+  <li>Klik tombol <strong>"⚡ MAIN SEBAGAI GUEST"</strong> untuk masuk ke Lobi Utama.</li>
+  <li>Klik tombol oranye <strong>"🤖 LATIHAN SOLO VS 3 BOT AI (OFFLINE)"</strong>.</li>
+  <li>Permainan akan langsung membagikan 13 ubin ke tangan Anda dan memulai giliran melawan 3 Bot AI secara instan!</li>
+</ol>
+
+</body>
+</html>
