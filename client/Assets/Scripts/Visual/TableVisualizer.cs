@@ -52,6 +52,33 @@ namespace Mahjong.Visual
         }
 
         /// <summary>
+        /// Menghitung bobot urutan ubin Mahjong standar:
+        /// Characters (Wan 1-9) -> Bamboo (Sou 1-9) -> Dots (Pin 1-9) -> Winds (E/S/W/N) -> Dragons (C/F/P) -> Flowers/Seasons.
+        /// </summary>
+        public static int GetTileSortWeight(int suit, int value)
+        {
+            int suitWeight = 0;
+            switch (suit)
+            {
+                case 2: suitWeight = 100; break; // Characters / Wan (1-9) -> 101 .. 109
+                case 0: suitWeight = 200; break; // Bamboo / Sou (1-9)     -> 201 .. 209
+                case 1: suitWeight = 300; break; // Dots / Pin (1-9)       -> 301 .. 309
+                case 3: suitWeight = 400; break; // Winds (1-4: E,S,W,N)   -> 401 .. 404
+                case 4: suitWeight = 500; break; // Dragons (1-3: C,F,P)   -> 501 .. 503
+                case 5: suitWeight = 600; break; // Flowers (1-4)          -> 601 .. 604
+                case 6: suitWeight = 700; break; // Seasons (1-4)          -> 701 .. 704
+                default: suitWeight = 900; break;
+            }
+            return suitWeight + value;
+        }
+
+        public static void SortHandData(List<TileData> hand)
+        {
+            if (hand == null) return;
+            hand.Sort((a, b) => GetTileSortWeight(a.suit, a.value).CompareTo(GetTileSortWeight(b.suit, b.value)));
+        }
+
+        /// <summary>
         /// Membagikan dan menampilkan 13 ubin di depan layar pemain lokal (South).
         /// Ubin berdiri tegak dan sedikit miring (pitch 28°) menghadap langsung ke kamera pemain.
         /// </summary>
@@ -59,6 +86,9 @@ namespace Mahjong.Visual
         {
             foreach (var t in playerTileObjects) if (t != null) Destroy(t.gameObject);
             playerTileObjects.Clear();
+
+            // Urutkan data ubin tangan secara otomatis
+            SortHandData(hand);
 
             int count = hand.Count;
             float startX = -((count - 1) * tileSpacingX) * 0.5f;
@@ -75,7 +105,7 @@ namespace Mahjong.Visual
             }
 
             ProceduralAudioSynthesizer.Instance?.PlayTileClick();
-            Debug.Log($"[TableVisualizer] Berhasil menampilkan {count} ubin 3D HD menghadap kamera pemain!");
+            Debug.Log($"[TableVisualizer] Berhasil menampilkan & mengurutkan {count} ubin 3D HD pemain!");
         }
 
         /// <summary>
@@ -86,9 +116,9 @@ namespace Mahjong.Visual
             foreach (var o in opponentTileObjects) if (o != null) Destroy(o);
             opponentTileObjects.Clear();
 
-            SpawnOpponentRow(1, countEast, new Vector3(0.36f, handHeightY, 0), Quaternion.Euler(0, -90, 0));   // East (Kanan)
-            SpawnOpponentRow(2, countNorth, new Vector3(0, handHeightY, 0.36f), Quaternion.Euler(0, 0, 0));    // North (Atas)
-            SpawnOpponentRow(3, countWest, new Vector3(-0.36f, handHeightY, 0), Quaternion.Euler(0, 90, 0));    // West (Kiri)
+            SpawnOpponentRow(1, countEast, new Vector3(0.36f, handHeightY, 0), Quaternion.Euler(0, -90, 0));   // East (Kanan - Punggung Giok ke Tengah)
+            SpawnOpponentRow(2, countNorth, new Vector3(0, handHeightY, 0.36f), Quaternion.Euler(0, 180, 0));  // North (Atas - Punggung Giok ke Kamera)
+            SpawnOpponentRow(3, countWest, new Vector3(-0.36f, handHeightY, 0), Quaternion.Euler(0, 90, 0));    // West (Kiri - Punggung Giok ke Tengah)
         }
 
         private void SpawnOpponentRow(int seatIndex, int count, Vector3 centerPos, Quaternion rot)
@@ -125,10 +155,13 @@ namespace Mahjong.Visual
         }
 
         /// <summary>
-        /// Merapikan kembali posisi sisa ubin pemain agar selalu rapi di tengah layar.
+        /// Merapikan dan mengurutkan kembali posisi sisa ubin pemain agar selalu terorganisir rapi di tangan.
         /// </summary>
         private void RealignPlayerHand()
         {
+            // Urutkan objek ubin berdasarkan bobot suit & nilai
+            playerTileObjects.Sort((a, b) => GetTileSortWeight(a.suit, a.value).CompareTo(GetTileSortWeight(b.suit, b.value)));
+
             int count = playerTileObjects.Count;
             if (count == 0) return;
 
@@ -136,14 +169,14 @@ namespace Mahjong.Visual
             for (int i = 0; i < count; i++)
             {
                 Vector3 newPos = new Vector3(startX + (i * tileSpacingX), handHeightY, handCenterZ);
-                playerTileObjects[i].MoveToPositionSmooth(newPos, 0.15f);
+                playerTileObjects[i].MoveToPositionSmooth(newPos, 0.20f);
             }
         }
 
         /// <summary>
         /// Menghapus ubin yang dibuang dari tangan pemain dan menempatkannya di kolam meja sesuai kuadran kursi.
         /// </summary>
-        public void VisualDiscardTile(int seatIndex, TileData data)
+        public void VisualDiscardTile(int seatIndex, TileData data, List<TileData> updatedSortedHand = null)
         {
             if (seatIndex == 0)
             {

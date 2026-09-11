@@ -146,6 +146,8 @@ namespace Mahjong.AI
                 DrawTileForBot(botNorth);
                 DrawTileForBot(botWest);
             }
+
+            Visual.TableVisualizer.SortHandData(playerHand);
         }
 
         private TileData DrawFromWall()
@@ -228,7 +230,11 @@ namespace Mahjong.AI
             {
                 playerHand.Remove(discarded);
                 centerDiscards.Add(discarded);
-                Visual.TableVisualizer.Instance?.VisualDiscardTile(0, discarded);
+                
+                // Urutkan kembali ubin di tangan pemain setelah buang ubin
+                Visual.TableVisualizer.SortHandData(playerHand);
+                Visual.TableVisualizer.Instance?.VisualDiscardTile(0, discarded, playerHand);
+
                 ProceduralLandingAndHUD.Instance?.UpdateTurnStatusHUD("⏳ Lawan sedang berpikir...", false);
                 Debug.Log($"[Solo AI Mode] Pemain membuang: {discarded.name}");
 
