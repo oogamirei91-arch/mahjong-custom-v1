@@ -10,16 +10,20 @@ namespace Mahjong.Visual
     /// TableVisualizer: Mengatur visualisasi peletakan ubin 3D di atas meja kasino.
     /// Membagikan 13 ubin ke tangan pemain (South) menghadap kamera secara tegak & jelas,
     /// menata ulang ubin secara mulus saat dibuang, menempatkan ubin tertutup lawan (East/North/West),
-    /// serta menampilkan ubin buangan di 4 kuadran kolam meja.
+    /// serta menampilkan ubin buangan (Kawa / River) di 4 kuadran kolam meja secara presisi dan rapi.
     /// </summary>
     public class TableVisualizer : MonoBehaviour
     {
         public static TableVisualizer Instance { get; private set; }
 
-        [Header("Pengaturan Posisi & Jarak Ubin HD")]
-        public float tileSpacingX = 0.048f; // Jarak horizontal antar ubin (4.8 cm)
-        public float handCenterZ = -0.27f;  // Jarak tangan dari tengah meja (dekat dan jelas di layar bawah)
-        public float handHeightY = 0.034f;  // Tinggi ubin dari permukaan felt
+        [Header("Pengaturan Posisi & Jarak Ubin Tangan HD")]
+        public float tileSpacingX = 0.048f; // Jarak horizontal antar ubin (4.8 cm -> ada celah bersih 4 mm)
+        public float handCenterZ = -0.285f; // Jarak tangan dari tengah meja (dekat dan jelas di layar bawah)
+        public float handHeightY = 0.033f;  // Tinggi ubin dari permukaan felt
+
+        [Header("Pengaturan Jarak Kolam Buangan (River / Kawa)")]
+        public float pondSpacingX = 0.046f; // Jarak horizontal antar ubin buangan (4.6 cm)
+        public float pondSpacingZ = 0.064f; // Jarak vertikal antar baris buangan (6.4 cm)
 
         // Kontainer Objek Ubin 3D
         private Transform tilesContainer;
@@ -116,9 +120,9 @@ namespace Mahjong.Visual
             foreach (var o in opponentTileObjects) if (o != null) Destroy(o);
             opponentTileObjects.Clear();
 
-            SpawnOpponentRow(1, countEast, new Vector3(0.36f, handHeightY, 0), Quaternion.Euler(0, -90, 0));   // East (Kanan - Punggung Giok ke Tengah)
-            SpawnOpponentRow(2, countNorth, new Vector3(0, handHeightY, 0.36f), Quaternion.Euler(0, 180, 0));  // North (Atas - Punggung Giok ke Kamera)
-            SpawnOpponentRow(3, countWest, new Vector3(-0.36f, handHeightY, 0), Quaternion.Euler(0, 90, 0));    // West (Kiri - Punggung Giok ke Tengah)
+            SpawnOpponentRow(1, countEast, new Vector3(0.38f, handHeightY, 0), Quaternion.Euler(0, -90, 0));   // East (Kanan - Punggung Giok ke Tengah)
+            SpawnOpponentRow(2, countNorth, new Vector3(0, handHeightY, 0.38f), Quaternion.Euler(0, 180, 0));  // North (Atas - Punggung Giok ke Kamera)
+            SpawnOpponentRow(3, countWest, new Vector3(-0.38f, handHeightY, 0), Quaternion.Euler(0, 90, 0));    // West (Kiri - Punggung Giok ke Tengah)
         }
 
         private void SpawnOpponentRow(int seatIndex, int count, Vector3 centerPos, Quaternion rot)
@@ -144,7 +148,7 @@ namespace Mahjong.Visual
         {
             int count = playerTileObjects.Count;
             float startX = -((count - 1) * tileSpacingX) * 0.5f;
-            Vector3 pos = new Vector3(startX + (count * tileSpacingX) + 0.025f, handHeightY, handCenterZ);
+            Vector3 pos = new Vector3(startX + (count * tileSpacingX) + 0.024f, handHeightY, handCenterZ);
             Quaternion rot = Quaternion.Euler(28f, 0f, 0f);
 
             ProceduralTile tileObj = CreateTileGameObject(data, pos, rot, true);
@@ -175,6 +179,7 @@ namespace Mahjong.Visual
 
         /// <summary>
         /// Menghapus ubin yang dibuang dari tangan pemain dan menempatkannya di kolam meja sesuai kuadran kursi.
+        /// Grid Kawa Mahjong: 6 kolom per baris, 3 baris keluar dari arah kompas tengah.
         /// </summary>
         public void VisualDiscardTile(int seatIndex, TileData data, List<TileData> updatedSortedHand = null)
         {
@@ -190,32 +195,32 @@ namespace Mahjong.Visual
             }
 
             int count = seatDiscardCounts[Mathf.Clamp(seatIndex, 0, 3)]++;
-            int col = count % 6;
-            int row = count / 6;
+            int col = count % 6; // Kolom 0..5
+            int row = count / 6; // Baris 0..2
 
             Vector3 pondPos = Vector3.zero;
             Quaternion pondRot = Quaternion.identity;
 
-            float spacingX = 0.048f;
-            float spacingZ = 0.066f;
+            // Offset horizontal 6 ubin yang terpusat di tengah masing-masing kursi
+            float colOffset = (col - 2.5f) * pondSpacingX;
 
-            // Atur posisi 4 kuadran buangan di sekitar kompas tengah meja (Wajah Ubin Menghadap Ke Atas!)
+            // Atur posisi 4 kuadran buangan (River / Kawa) di sekitar kompas tengah meja
             switch (seatIndex)
             {
-                case 0: // South (Bawah): berbaris di bawah kompas menghadap ke atas
-                    pondPos = new Vector3(-0.12f + (col * spacingX), 0.014f, -0.11f - (row * spacingZ));
+                case 0: // South (Bawah): berbaris rapi di bawah kompas
+                    pondPos = new Vector3(colOffset, 0.013f, -0.095f - (row * pondSpacingZ));
                     pondRot = Quaternion.Euler(90f, 0f, 0f);
                     break;
-                case 1: // East (Kanan): berbaris di kanan kompas
-                    pondPos = new Vector3(0.11f + (row * spacingZ), 0.014f, -0.12f + (col * spacingX));
+                case 1: // East (Kanan): berbaris rapi di kanan kompas
+                    pondPos = new Vector3(0.095f + (row * pondSpacingZ), 0.013f, colOffset);
                     pondRot = Quaternion.Euler(90f, -90f, 0f);
                     break;
-                case 2: // North (Atas): berbaris di atas kompas
-                    pondPos = new Vector3(0.12f - (col * spacingX), 0.014f, 0.11f + (row * spacingZ));
+                case 2: // North (Atas): berbaris rapi di atas kompas
+                    pondPos = new Vector3(-colOffset, 0.013f, 0.095f + (row * pondSpacingZ));
                     pondRot = Quaternion.Euler(90f, 180f, 0f);
                     break;
-                case 3: // West (Kiri): berbaris di kiri kompas
-                    pondPos = new Vector3(-0.11f - (row * spacingZ), 0.014f, 0.12f - (col * spacingX));
+                case 3: // West (Kiri): berbaris rapi di kiri kompas
+                    pondPos = new Vector3(-0.095f - (row * pondSpacingZ), 0.013f, -colOffset);
                     pondRot = Quaternion.Euler(90f, 90f, 0f);
                     break;
             }

@@ -5,8 +5,8 @@ namespace Mahjong.Procedural
 {
     /// <summary>
     /// ProceduralTileAtlas: Generator Tekstur Atlas 2D Otomatis Ultra-HD (2048x2048)
-    /// untuk seluruh 144 Ubin Mahjong standar dengan simbol tebal, jernih, kontras tinggi,
-    /// kanji tradisional, bambu berpola, roda pin lingkaran, serta badge indikator di sudut ubin.
+    /// untuk seluruh 144 Ubin Mahjong standar dengan simbol kaligrafi Kanji proporsional,
+    /// pin lingkaran sempurna (aspect-ratio corrected), batang bambu bertekstur, serta corner badge tajam.
     /// 
     /// Format Grid 9 Kolom x 5 Baris:
     /// - Baris 0: Characters / Wan (1 - 9)
@@ -25,13 +25,17 @@ namespace Mahjong.Procedural
 
         public Texture2D GeneratedAtlas { get; private set; }
 
+        // Rasio koreksi aspek: perbandingan cell atlas (227x409) terhadap mesh ubin 3D (0.044 x 0.062)
+        // Ratio = (409.6 / 227.55) * (0.044 / 0.062) = 1.800 * 0.7097 = ~1.277
+        private const float AspectCorrectionY = 1.28f;
+
         // Palette Warna VIP Casino Mahjong
-        private readonly Color colIvoryBase = new Color(0.985f, 0.980f, 0.955f, 1.0f);
-        private readonly Color colBevelGold = new Color(0.86f, 0.72f, 0.38f, 0.95f);
-        private readonly Color colDeepNavy  = new Color(0.06f, 0.18f, 0.58f, 1.0f);
-        private readonly Color colRubyRed   = new Color(0.86f, 0.10f, 0.12f, 1.0f);
-        private readonly Color colJadeGreen = new Color(0.04f, 0.54f, 0.24f, 1.0f);
-        private readonly Color colCharcoal  = new Color(0.12f, 0.12f, 0.14f, 1.0f);
+        private readonly Color colIvoryBase  = new Color(0.985f, 0.980f, 0.955f, 1.0f);
+        private readonly Color colBevelGold  = new Color(0.86f, 0.72f, 0.38f, 0.95f);
+        private readonly Color colDeepNavy   = new Color(0.06f, 0.18f, 0.58f, 1.0f);
+        private readonly Color colRubyRed    = new Color(0.86f, 0.10f, 0.12f, 1.0f);
+        private readonly Color colJadeGreen  = new Color(0.04f, 0.54f, 0.24f, 1.0f);
+        private readonly Color colCharcoal   = new Color(0.12f, 0.12f, 0.14f, 1.0f);
 
         private void Awake()
         {
@@ -49,7 +53,7 @@ namespace Mahjong.Procedural
             GeneratedAtlas.filterMode = FilterMode.Bilinear;
             GeneratedAtlas.wrapMode = TextureWrapMode.Clamp;
 
-            // 1. Bersihkan seluruh bidang dengan warna dasar Ivory Pearl
+            // 1. Bersihkan bidang dengan warna dasar Pearl Ivory
             Color[] clearPixels = new Color[atlasWidth * atlasHeight];
             for (int i = 0; i < clearPixels.Length; i++) clearPixels[i] = colIvoryBase;
             GeneratedAtlas.SetPixels(clearPixels);
@@ -80,10 +84,9 @@ namespace Mahjong.Procedural
 
         private void DrawTileBevelBorder(int startX, int startY, int w, int h)
         {
-            int margin = 5;
+            int margin = 6;
             int borderThick = 4;
 
-            // Garis bingkai luar
             for (int x = margin; x < w - margin; x++)
             {
                 for (int t = 0; t < borderThick; t++)
@@ -133,11 +136,11 @@ namespace Mahjong.Procedural
 
         private void DrawWanTile(int startX, int startY, int cx, int cy, int w, int h, int num)
         {
-            // Gambar Badge Angka di Sudut Kiri Atas (e.g. "1W", "2W"...)
-            DrawCornerBadge(startX + 14, startY + h - 42, $"{num}W", colRubyRed);
+            // Badge Sudut Kiri Atas
+            DrawCornerBadge(startX + 14, startY + h - 38, $"{num}W", colRubyRed);
 
             // Bagian Atas: Angka Kanji (1..9)
-            int numCenterY = cy + 62;
+            int numCenterY = cy + 70;
             DrawKanjiDigit(cx, numCenterY, num, colDeepNavy);
 
             // Bagian Bawah: Karakter Tradisional "萬" (Wan)
@@ -147,55 +150,55 @@ namespace Mahjong.Procedural
 
         private void DrawKanjiDigit(int cx, int cy, int num, Color col)
         {
-            int t = 10; // Tebal garis
+            int t = 10;
             switch (num)
             {
                 case 1: // 一
-                    DrawHLine(cx - 55, cx + 55, cy, t, col);
+                    DrawHLine(cx - 52, cx + 52, cy, t, col);
                     break;
                 case 2: // 二
-                    DrawHLine(cx - 40, cx + 40, cy + 24, t, col);
-                    DrawHLine(cx - 60, cx + 60, cy - 24, t, col);
+                    DrawHLine(cx - 38, cx + 38, cy + (int)(22 * AspectCorrectionY), t, col);
+                    DrawHLine(cx - 56, cx + 56, cy - (int)(22 * AspectCorrectionY), t, col);
                     break;
                 case 3: // 三
-                    DrawHLine(cx - 42, cx + 42, cy + 32, t - 2, col);
-                    DrawHLine(cx - 30, cx + 30, cy, t - 2, col);
-                    DrawHLine(cx - 60, cx + 60, cy - 32, t - 1, col);
+                    DrawHLine(cx - 40, cx + 40, cy + (int)(28 * AspectCorrectionY), t - 1, col);
+                    DrawHLine(cx - 30, cx + 30, cy, t - 1, col);
+                    DrawHLine(cx - 56, cx + 56, cy - (int)(28 * AspectCorrectionY), t, col);
                     break;
                 case 4: // 四
-                    DrawRectOutline(cx - 48, cy - 38, 96, 76, t, col);
-                    DrawVLine(cx - 16, cy - 24, cy + 24, t - 2, col);
-                    DrawVLine(cx + 16, cy - 24, cy + 24, t - 2, col);
-                    DrawHLine(cx - 16, cx + 16, cy - 16, t - 2, col);
+                    DrawRectOutline(cx - 46, cy - (int)(32 * AspectCorrectionY), 92, (int)(64 * AspectCorrectionY), t, col);
+                    DrawVLine(cx - 16, cy - (int)(20 * AspectCorrectionY), cy + (int)(20 * AspectCorrectionY), t - 2, col);
+                    DrawVLine(cx + 16, cy - (int)(20 * AspectCorrectionY), cy + (int)(20 * AspectCorrectionY), t - 2, col);
+                    DrawHLine(cx - 16, cx + 16, cy - (int)(12 * AspectCorrectionY), t - 2, col);
                     break;
                 case 5: // 五
-                    DrawHLine(cx - 50, cx + 50, cy + 35, t, col);
-                    DrawVLine(cx - 24, cy - 30, cy + 35, t, col);
-                    DrawHLine(cx - 24, cx + 30, cy + 4, t, col);
-                    DrawVLine(cx + 30, cy - 35, cy + 4, t, col);
-                    DrawHLine(cx - 58, cx + 58, cy - 35, t, col);
+                    DrawHLine(cx - 48, cx + 48, cy + (int)(30 * AspectCorrectionY), t, col);
+                    DrawVLine(cx - 22, cy - (int)(26 * AspectCorrectionY), cy + (int)(30 * AspectCorrectionY), t, col);
+                    DrawHLine(cx - 22, cx + 28, cy + (int)(4 * AspectCorrectionY), t, col);
+                    DrawVLine(cx + 28, cy - (int)(30 * AspectCorrectionY), cy + (int)(4 * AspectCorrectionY), t, col);
+                    DrawHLine(cx - 54, cx + 54, cy - (int)(30 * AspectCorrectionY), t, col);
                     break;
                 case 6: // 六
-                    DrawVLine(cx, cy + 22, cy + 42, t + 2, col);
-                    DrawHLine(cx - 55, cx + 55, cy + 18, t, col);
-                    DrawLine(cx - 16, cy + 12, cx - 48, cy - 38, t, col);
-                    DrawLine(cx + 16, cy + 12, cx + 48, cy - 38, t, col);
+                    DrawVLine(cx, cy + (int)(18 * AspectCorrectionY), cy + (int)(36 * AspectCorrectionY), t + 2, col);
+                    DrawHLine(cx - 52, cx + 52, cy + (int)(14 * AspectCorrectionY), t, col);
+                    DrawLine(cx - 14, cy + (int)(8 * AspectCorrectionY), cx - 44, cy - (int)(32 * AspectCorrectionY), t, col);
+                    DrawLine(cx + 14, cy + (int)(8 * AspectCorrectionY), cx + 44, cy - (int)(32 * AspectCorrectionY), t, col);
                     break;
                 case 7: // 七
-                    DrawHLine(cx - 54, cx + 54, cy + 8, t, col);
-                    DrawVLine(cx - 6, cy - 36, cy + 36, t, col);
-                    DrawHLine(cx - 6, cx + 42, cy - 36, t, col);
-                    DrawVLine(cx + 42, cy - 36, cy - 12, t, col);
+                    DrawHLine(cx - 50, cx + 50, cy + (int)(6 * AspectCorrectionY), t, col);
+                    DrawVLine(cx - 6, cy - (int)(32 * AspectCorrectionY), cy + (int)(32 * AspectCorrectionY), t, col);
+                    DrawHLine(cx - 6, cx + 38, cy - (int)(32 * AspectCorrectionY), t, col);
+                    DrawVLine(cx + 38, cy - (int)(32 * AspectCorrectionY), cy - (int)(10 * AspectCorrectionY), t, col);
                     break;
                 case 8: // 八
-                    DrawLine(cx - 14, cy + 36, cx - 48, cy - 38, t + 2, col);
-                    DrawLine(cx + 14, cy + 36, cx + 52, cy - 38, t + 2, col);
+                    DrawLine(cx - 14, cy + (int)(30 * AspectCorrectionY), cx - 46, cy - (int)(32 * AspectCorrectionY), t + 2, col);
+                    DrawLine(cx + 14, cy + (int)(30 * AspectCorrectionY), cx + 48, cy - (int)(32 * AspectCorrectionY), t + 2, col);
                     break;
                 case 9: // 九
-                    DrawLine(cx - 22, cy + 38, cx - 48, cy - 38, t + 2, col);
-                    DrawHLine(cx - 40, cx + 32, cy + 18, t, col);
-                    DrawVLine(cx + 32, cy - 36, cy + 18, t, col);
-                    DrawHLine(cx + 32, cx + 55, cy - 36, t, col);
+                    DrawLine(cx - 20, cy + (int)(32 * AspectCorrectionY), cx - 44, cy - (int)(32 * AspectCorrectionY), t + 2, col);
+                    DrawHLine(cx - 36, cx + 30, cy + (int)(14 * AspectCorrectionY), t, col);
+                    DrawVLine(cx + 30, cy - (int)(30 * AspectCorrectionY), cy + (int)(14 * AspectCorrectionY), t, col);
+                    DrawHLine(cx + 30, cx + 50, cy - (int)(30 * AspectCorrectionY), t, col);
                     break;
             }
         }
@@ -203,19 +206,14 @@ namespace Mahjong.Procedural
         private void DrawKanjiWan(int cx, int cy, Color col)
         {
             int t = 9;
-            // Garis horizontal atas
-            DrawHLine(cx - 52, cx + 52, cy + 38, t, col);
-            // Kaki kiri atas melengkung
-            DrawLine(cx - 24, cy + 38, cx - 46, cy + 8, t, col);
-            // Garis horizontal tengah
-            DrawHLine(cx - 42, cx + 42, cy + 8, t, col);
-            // Kotak tengah & silang
-            DrawRectOutline(cx - 36, cy - 36, 72, 44, t - 1, col);
-            DrawVLine(cx, cy - 36, cy + 8, t - 1, col);
-            DrawHLine(cx - 36, cx + 36, cy - 14, t - 1, col);
-            // Kaki bawah
-            DrawLine(cx - 24, cy - 36, cx - 44, cy - 54, t, col);
-            DrawLine(cx + 24, cy - 36, cx + 44, cy - 54, t, col);
+            DrawHLine(cx - 50, cx + 50, cy + (int)(34 * AspectCorrectionY), t, col);
+            DrawLine(cx - 22, cy + (int)(34 * AspectCorrectionY), cx - 42, cy + (int)(8 * AspectCorrectionY), t, col);
+            DrawHLine(cx - 38, cx + 38, cy + (int)(8 * AspectCorrectionY), t, col);
+            DrawRectOutline(cx - 34, cy - (int)(32 * AspectCorrectionY), 68, (int)(40 * AspectCorrectionY), t - 1, col);
+            DrawVLine(cx, cy - (int)(32 * AspectCorrectionY), cy + (int)(8 * AspectCorrectionY), t - 1, col);
+            DrawHLine(cx - 34, cx + 34, cy - (int)(12 * AspectCorrectionY), t - 1, col);
+            DrawLine(cx - 22, cy - (int)(32 * AspectCorrectionY), cx - 42, cy - (int)(48 * AspectCorrectionY), t, col);
+            DrawLine(cx + 22, cy - (int)(32 * AspectCorrectionY), cx + 42, cy - (int)(48 * AspectCorrectionY), t, col);
         }
 
         // =========================================================================
@@ -224,80 +222,79 @@ namespace Mahjong.Procedural
 
         private void DrawBambooTile(int startX, int startY, int cx, int cy, int w, int h, int count)
         {
-            DrawCornerBadge(startX + 14, startY + h - 42, $"{count}B", colJadeGreen);
+            DrawCornerBadge(startX + 14, startY + h - 38, $"{count}B", colJadeGreen);
 
             if (count == 1)
             {
-                // 1 Sou: Burung Merak / Pipit Mahjong Ikonik
                 DrawPeacockBird1Sou(cx, cy);
                 return;
             }
 
             int stickW = 14;
-            int stickH = 68;
+            int stickH = (int)(55 * AspectCorrectionY);
 
             switch (count)
             {
                 case 2:
-                    DrawBambooStick(cx, cy + 55, stickW, stickH, colJadeGreen);
-                    DrawBambooStick(cx, cy - 55, stickW, stickH, colJadeGreen);
+                    DrawBambooStick(cx, cy + (int)(48 * AspectCorrectionY), stickW, stickH, colJadeGreen);
+                    DrawBambooStick(cx, cy - (int)(48 * AspectCorrectionY), stickW, stickH, colJadeGreen);
                     break;
                 case 3:
-                    DrawBambooStick(cx, cy + 65, stickW, stickH - 10, colDeepNavy);
-                    DrawBambooStick(cx - 36, cy - 45, stickW, stickH, colJadeGreen);
-                    DrawBambooStick(cx + 36, cy - 45, stickW, stickH, colJadeGreen);
+                    DrawBambooStick(cx, cy + (int)(56 * AspectCorrectionY), stickW, stickH - 8, colDeepNavy);
+                    DrawBambooStick(cx - 36, cy - (int)(40 * AspectCorrectionY), stickW, stickH, colJadeGreen);
+                    DrawBambooStick(cx + 36, cy - (int)(40 * AspectCorrectionY), stickW, stickH, colJadeGreen);
                     break;
                 case 4:
-                    DrawBambooStick(cx - 36, cy + 55, stickW, stickH, colJadeGreen);
-                    DrawBambooStick(cx + 36, cy + 55, stickW, stickH, colDeepNavy);
-                    DrawBambooStick(cx - 36, cy - 55, stickW, stickH, colDeepNavy);
-                    DrawBambooStick(cx + 36, cy - 55, stickW, stickH, colJadeGreen);
+                    DrawBambooStick(cx - 36, cy + (int)(48 * AspectCorrectionY), stickW, stickH, colJadeGreen);
+                    DrawBambooStick(cx + 36, cy + (int)(48 * AspectCorrectionY), stickW, stickH, colDeepNavy);
+                    DrawBambooStick(cx - 36, cy - (int)(48 * AspectCorrectionY), stickW, stickH, colDeepNavy);
+                    DrawBambooStick(cx + 36, cy - (int)(48 * AspectCorrectionY), stickW, stickH, colJadeGreen);
                     break;
                 case 5:
-                    DrawBambooStick(cx - 42, cy + 60, stickW, stickH - 8, colJadeGreen);
-                    DrawBambooStick(cx + 42, cy + 60, stickW, stickH - 8, colDeepNavy);
+                    DrawBambooStick(cx - 40, cy + (int)(52 * AspectCorrectionY), stickW, stickH - 6, colJadeGreen);
+                    DrawBambooStick(cx + 40, cy + (int)(52 * AspectCorrectionY), stickW, stickH - 6, colDeepNavy);
                     DrawBambooStick(cx, cy, stickW + 2, stickH - 4, colRubyRed);
-                    DrawBambooStick(cx - 42, cy - 60, stickW, stickH - 8, colDeepNavy);
-                    DrawBambooStick(cx + 42, cy - 60, stickW, stickH - 8, colJadeGreen);
+                    DrawBambooStick(cx - 40, cy - (int)(52 * AspectCorrectionY), stickW, stickH - 6, colDeepNavy);
+                    DrawBambooStick(cx + 40, cy - (int)(52 * AspectCorrectionY), stickW, stickH - 6, colJadeGreen);
                     break;
                 case 6:
                     for (int c = 0; c < 3; c++)
                     {
-                        int x = cx - 44 + (c * 44);
-                        DrawBambooStick(x, cy + 55, stickW, stickH - 8, colJadeGreen);
-                        DrawBambooStick(x, cy - 55, stickW, stickH - 8, colJadeGreen);
+                        int x = cx - 42 + (c * 42);
+                        DrawBambooStick(x, cy + (int)(48 * AspectCorrectionY), stickW, stickH - 8, colJadeGreen);
+                        DrawBambooStick(x, cy - (int)(48 * AspectCorrectionY), stickW, stickH - 8, colJadeGreen);
                     }
                     break;
                 case 7:
-                    DrawBambooStick(cx, cy + 78, stickW, 46, colRubyRed);
-                    DrawBambooStick(cx - 44, cy + 18, stickW, 48, colJadeGreen);
-                    DrawBambooStick(cx + 44, cy + 18, stickW, 48, colJadeGreen);
+                    DrawBambooStick(cx, cy + (int)(68 * AspectCorrectionY), stickW, (int)(40 * AspectCorrectionY), colRubyRed);
+                    DrawBambooStick(cx - 42, cy + (int)(16 * AspectCorrectionY), stickW, (int)(42 * AspectCorrectionY), colJadeGreen);
+                    DrawBambooStick(cx + 42, cy + (int)(16 * AspectCorrectionY), stickW, (int)(42 * AspectCorrectionY), colJadeGreen);
                     for (int c = 0; c < 4; c++)
                     {
                         int x = cx - 48 + (c * 32);
-                        DrawBambooStick(x, cy - 62, stickW - 2, 58, colJadeGreen);
+                        DrawBambooStick(x, cy - (int)(54 * AspectCorrectionY), stickW - 2, (int)(50 * AspectCorrectionY), colJadeGreen);
                     }
                     break;
                 case 8:
-                    DrawBambooStick(cx - 48, cy + 72, stickW - 2, 44, colJadeGreen);
-                    DrawBambooStick(cx - 16, cy + 50, stickW - 2, 44, colDeepNavy);
-                    DrawBambooStick(cx + 16, cy + 50, stickW - 2, 44, colDeepNavy);
-                    DrawBambooStick(cx + 48, cy + 72, stickW - 2, 44, colJadeGreen);
+                    DrawBambooStick(cx - 46, cy + (int)(62 * AspectCorrectionY), stickW - 2, (int)(38 * AspectCorrectionY), colJadeGreen);
+                    DrawBambooStick(cx - 15, cy + (int)(44 * AspectCorrectionY), stickW - 2, (int)(38 * AspectCorrectionY), colDeepNavy);
+                    DrawBambooStick(cx + 15, cy + (int)(44 * AspectCorrectionY), stickW - 2, (int)(38 * AspectCorrectionY), colDeepNavy);
+                    DrawBambooStick(cx + 46, cy + (int)(62 * AspectCorrectionY), stickW - 2, (int)(38 * AspectCorrectionY), colJadeGreen);
 
-                    DrawBambooStick(cx - 48, cy - 50, stickW - 2, 44, colJadeGreen);
-                    DrawBambooStick(cx - 16, cy - 72, stickW - 2, 44, colDeepNavy);
-                    DrawBambooStick(cx + 16, cy - 72, stickW - 2, 44, colDeepNavy);
-                    DrawBambooStick(cx + 48, cy - 50, stickW - 2, 44, colJadeGreen);
+                    DrawBambooStick(cx - 46, cy - (int)(44 * AspectCorrectionY), stickW - 2, (int)(38 * AspectCorrectionY), colJadeGreen);
+                    DrawBambooStick(cx - 15, cy - (int)(62 * AspectCorrectionY), stickW - 2, (int)(38 * AspectCorrectionY), colDeepNavy);
+                    DrawBambooStick(cx + 15, cy - (int)(62 * AspectCorrectionY), stickW - 2, (int)(38 * AspectCorrectionY), colDeepNavy);
+                    DrawBambooStick(cx + 46, cy - (int)(44 * AspectCorrectionY), stickW - 2, (int)(38 * AspectCorrectionY), colJadeGreen);
                     break;
                 case 9:
                     for (int r = 0; r < 3; r++)
                     {
-                        int y = cy + 68 - (r * 68);
+                        int y = cy + (int)((58 - (r * 58)) * AspectCorrectionY);
                         Color rowCol = (r == 0) ? colDeepNavy : (r == 1 ? colRubyRed : colJadeGreen);
                         for (int c = 0; c < 3; c++)
                         {
-                            int x = cx - 44 + (c * 44);
-                            DrawBambooStick(x, y, stickW - 2, 50, rowCol);
+                            int x = cx - 42 + (c * 42);
+                            DrawBambooStick(x, y, stickW - 2, (int)(44 * AspectCorrectionY), rowCol);
                         }
                     }
                     break;
@@ -306,31 +303,25 @@ namespace Mahjong.Procedural
 
         private void DrawBambooStick(int cx, int cy, int w, int h, Color col)
         {
-            // Badan batang bambu
             DrawFilledRect(cx - w / 2, cy - h / 2, w, h, col);
-            // Sambungan ruas bambu (knots)
-            DrawFilledCircle(cx, cy, w / 2 + 2, col);
-            DrawFilledCircle(cx, cy + h / 2 - 4, w / 2 + 1, col);
-            DrawFilledCircle(cx, cy - h / 2 + 4, w / 2 + 1, col);
-            // Garis tengah ruas putih
+            DrawProportionalCircle(cx, cy, w / 2 + 2, col);
+            DrawProportionalCircle(cx, cy + h / 2 - 4, w / 2 + 1, col);
+            DrawProportionalCircle(cx, cy - h / 2 + 4, w / 2 + 1, col);
             DrawFilledRect(cx - 2, cy - h / 2 + 8, 4, h - 16, Color.white);
-            DrawFilledCircle(cx, cy, 3, Color.white);
+            DrawProportionalCircle(cx, cy, 3, Color.white);
         }
 
         private void DrawPeacockBird1Sou(int cx, int cy)
         {
-            // Badan Merak
-            DrawFilledCircle(cx, cy - 20, 36, colJadeGreen);
-            DrawFilledCircle(cx, cy + 30, 22, colJadeGreen);
-            // Mahkota & Paruh
-            DrawFilledCircle(cx + 14, cy + 42, 10, colRubyRed);
-            DrawFilledCircle(cx + 8, cy + 34, 4, Color.white);
-            // Ekor Kipas
-            DrawFilledCircle(cx - 28, cy - 10, 16, colRubyRed);
-            DrawFilledCircle(cx + 28, cy - 10, 16, colDeepNavy);
-            DrawFilledCircle(cx - 36, cy + 18, 14, colJadeGreen);
-            DrawFilledCircle(cx + 36, cy + 18, 14, colJadeGreen);
-            DrawRing(cx, cy - 20, 42, colBevelGold, 4);
+            DrawProportionalCircle(cx, cy - (int)(18 * AspectCorrectionY), 32, colJadeGreen);
+            DrawProportionalCircle(cx, cy + (int)(26 * AspectCorrectionY), 20, colJadeGreen);
+            DrawProportionalCircle(cx + 12, cy + (int)(36 * AspectCorrectionY), 9, colRubyRed);
+            DrawProportionalCircle(cx + 7, cy + (int)(30 * AspectCorrectionY), 4, Color.white);
+            DrawProportionalCircle(cx - 26, cy - (int)(8 * AspectCorrectionY), 15, colRubyRed);
+            DrawProportionalCircle(cx + 26, cy - (int)(8 * AspectCorrectionY), 15, colDeepNavy);
+            DrawProportionalCircle(cx - 32, cy + (int)(16 * AspectCorrectionY), 13, colJadeGreen);
+            DrawProportionalCircle(cx + 32, cy + (int)(16 * AspectCorrectionY), 13, colJadeGreen);
+            DrawProportionalRing(cx, cy - (int)(18 * AspectCorrectionY), 38, colBevelGold, 4);
         }
 
         // =========================================================================
@@ -339,74 +330,73 @@ namespace Mahjong.Procedural
 
         private void DrawDotsTile(int startX, int startY, int cx, int cy, int w, int h, int count)
         {
-            DrawCornerBadge(startX + 14, startY + h - 42, $"{count}D", colDeepNavy);
+            DrawCornerBadge(startX + 14, startY + h - 38, $"{count}D", colDeepNavy);
 
-            int r = 26; // Radius pin standar
+            int r = 24;
             switch (count)
             {
                 case 1:
-                    // 1 Pin: Roda Matahari Besar Mahjong
-                    DrawFilledCircle(cx, cy, 68, colRubyRed);
-                    DrawRing(cx, cy, 76, colJadeGreen, 10);
-                    DrawRing(cx, cy, 84, colBevelGold, 4);
-                    DrawFilledCircle(cx, cy, 24, Color.white);
-                    DrawFilledCircle(cx, cy, 14, colRubyRed);
+                    DrawProportionalCircle(cx, cy, 60, colRubyRed);
+                    DrawProportionalRing(cx, cy, 68, colJadeGreen, 9);
+                    DrawProportionalRing(cx, cy, 75, colBevelGold, 4);
+                    DrawProportionalCircle(cx, cy, 22, Color.white);
+                    DrawProportionalCircle(cx, cy, 12, colRubyRed);
                     break;
                 case 2:
-                    DrawOrnatePin(cx, cy + 58, r + 4, colJadeGreen);
-                    DrawOrnatePin(cx, cy - 58, r + 4, colDeepNavy);
+                    DrawOrnatePin(cx, cy + (int)(52 * AspectCorrectionY), r + 4, colJadeGreen);
+                    DrawOrnatePin(cx, cy - (int)(52 * AspectCorrectionY), r + 4, colDeepNavy);
                     break;
                 case 3:
-                    DrawOrnatePin(cx - 44, cy + 62, r + 2, colDeepNavy);
+                    DrawOrnatePin(cx - 40, cy + (int)(56 * AspectCorrectionY), r + 2, colDeepNavy);
                     DrawOrnatePin(cx, cy, r + 2, colRubyRed);
-                    DrawOrnatePin(cx + 44, cy - 62, r + 2, colJadeGreen);
+                    DrawOrnatePin(cx + 40, cy - (int)(56 * AspectCorrectionY), r + 2, colJadeGreen);
                     break;
                 case 4:
-                    DrawOrnatePin(cx - 42, cy + 56, r + 2, colDeepNavy);
-                    DrawOrnatePin(cx + 42, cy + 56, r + 2, colJadeGreen);
-                    DrawOrnatePin(cx - 42, cy - 56, r + 2, colJadeGreen);
-                    DrawOrnatePin(cx + 42, cy - 56, r + 2, colDeepNavy);
+                    DrawOrnatePin(cx - 38, cy + (int)(50 * AspectCorrectionY), r + 2, colDeepNavy);
+                    DrawOrnatePin(cx + 38, cy + (int)(50 * AspectCorrectionY), r + 2, colJadeGreen);
+                    DrawOrnatePin(cx - 38, cy - (int)(50 * AspectCorrectionY), r + 2, colJadeGreen);
+                    DrawOrnatePin(cx + 38, cy - (int)(50 * AspectCorrectionY), r + 2, colDeepNavy);
                     break;
                 case 5:
-                    DrawOrnatePin(cx - 46, cy + 62, r, colDeepNavy);
-                    DrawOrnatePin(cx + 46, cy + 62, r, colJadeGreen);
+                    DrawOrnatePin(cx - 42, cy + (int)(56 * AspectCorrectionY), r, colDeepNavy);
+                    DrawOrnatePin(cx + 42, cy + (int)(56 * AspectCorrectionY), r, colJadeGreen);
                     DrawOrnatePin(cx, cy, r + 4, colRubyRed);
-                    DrawOrnatePin(cx - 46, cy - 62, r, colJadeGreen);
-                    DrawOrnatePin(cx + 46, cy - 62, r, colDeepNavy);
+                    DrawOrnatePin(cx - 42, cy - (int)(56 * AspectCorrectionY), r, colJadeGreen);
+                    DrawOrnatePin(cx + 42, cy - (int)(56 * AspectCorrectionY), r, colDeepNavy);
                     break;
                 case 6:
                     for (int row = 0; row < 3; row++)
                     {
-                        int y = cy + 62 - (row * 62);
-                        DrawOrnatePin(cx - 42, y, r, colJadeGreen);
-                        DrawOrnatePin(cx + 42, y, r, colRubyRed);
+                        int y = cy + (int)((54 - (row * 54)) * AspectCorrectionY);
+                        DrawOrnatePin(cx - 38, y, r, colJadeGreen);
+                        DrawOrnatePin(cx + 38, y, r, colRubyRed);
                     }
                     break;
                 case 7:
-                    DrawOrnatePin(cx - 42, cy + 74, r - 3, colJadeGreen);
-                    DrawOrnatePin(cx, cy + 48, r - 3, colJadeGreen);
-                    DrawOrnatePin(cx + 42, cy + 22, r - 3, colJadeGreen);
-                    DrawOrnatePin(cx - 40, cy - 30, r - 2, colRubyRed);
-                    DrawOrnatePin(cx + 40, cy - 30, r - 2, colRubyRed);
-                    DrawOrnatePin(cx - 40, cy - 76, r - 2, colRubyRed);
-                    DrawOrnatePin(cx + 40, cy - 76, r - 2, colRubyRed);
+                    DrawOrnatePin(cx - 38, cy + (int)(66 * AspectCorrectionY), r - 3, colJadeGreen);
+                    DrawOrnatePin(cx, cy + (int)(44 * AspectCorrectionY), r - 3, colJadeGreen);
+                    DrawOrnatePin(cx + 38, cy + (int)(20 * AspectCorrectionY), r - 3, colJadeGreen);
+                    DrawOrnatePin(cx - 36, cy - (int)(26 * AspectCorrectionY), r - 2, colRubyRed);
+                    DrawOrnatePin(cx + 36, cy - (int)(26 * AspectCorrectionY), r - 2, colRubyRed);
+                    DrawOrnatePin(cx - 36, cy - (int)(68 * AspectCorrectionY), r - 2, colRubyRed);
+                    DrawOrnatePin(cx + 36, cy - (int)(68 * AspectCorrectionY), r - 2, colRubyRed);
                     break;
                 case 8:
                     for (int row = 0; row < 4; row++)
                     {
-                        int y = cy + 72 - (row * 48);
-                        DrawOrnatePin(cx - 42, y, r - 4, colDeepNavy);
-                        DrawOrnatePin(cx + 42, y, r - 4, colDeepNavy);
+                        int y = cy + (int)((64 - (row * 42)) * AspectCorrectionY);
+                        DrawOrnatePin(cx - 38, y, r - 4, colDeepNavy);
+                        DrawOrnatePin(cx + 38, y, r - 4, colDeepNavy);
                     }
                     break;
                 case 9:
                     for (int row = 0; row < 3; row++)
                     {
-                        int y = cy + 64 - (row * 64);
+                        int y = cy + (int)((56 - (row * 56)) * AspectCorrectionY);
                         Color rowCol = (row == 0) ? colDeepNavy : (row == 1 ? colRubyRed : colJadeGreen);
                         for (int col = 0; col < 3; col++)
                         {
-                            int x = cx - 44 + (col * 44);
+                            int x = cx - 40 + (col * 40);
                             DrawOrnatePin(x, y, r - 3, rowCol);
                         }
                     }
@@ -416,10 +406,10 @@ namespace Mahjong.Procedural
 
         private void DrawOrnatePin(int cx, int cy, int r, Color col)
         {
-            DrawFilledCircle(cx, cy, r, col);
-            DrawRing(cx, cy, r + 4, colBevelGold, 2);
-            DrawFilledCircle(cx, cy, r / 3 + 1, Color.white);
-            DrawFilledCircle(cx, cy, r / 5, col);
+            DrawProportionalCircle(cx, cy, r, col);
+            DrawProportionalRing(cx, cy, r + 3, colBevelGold, 2);
+            DrawProportionalCircle(cx, cy, r / 3 + 1, Color.white);
+            DrawProportionalCircle(cx, cy, r / 5, col);
         }
 
         // =========================================================================
@@ -432,34 +422,34 @@ namespace Mahjong.Procedural
             switch (colIdx)
             {
                 case 0: // East (東)
-                    DrawCornerBadge(startX + 14, startY + h - 42, "E", colDeepNavy);
+                    DrawCornerBadge(startX + 14, startY + h - 38, "E", colDeepNavy);
                     DrawKanjiEast(cx, cy, colDeepNavy);
                     break;
                 case 1: // South (南)
-                    DrawCornerBadge(startX + 14, startY + h - 42, "S", colDeepNavy);
+                    DrawCornerBadge(startX + 14, startY + h - 38, "S", colDeepNavy);
                     DrawKanjiSouth(cx, cy, colDeepNavy);
                     break;
                 case 2: // West (西)
-                    DrawCornerBadge(startX + 14, startY + h - 42, "W", colDeepNavy);
+                    DrawCornerBadge(startX + 14, startY + h - 38, "W", colDeepNavy);
                     DrawKanjiWest(cx, cy, colDeepNavy);
                     break;
                 case 3: // North (北)
-                    DrawCornerBadge(startX + 14, startY + h - 42, "N", colDeepNavy);
+                    DrawCornerBadge(startX + 14, startY + h - 38, "N", colDeepNavy);
                     DrawKanjiNorth(cx, cy, colDeepNavy);
                     break;
                 case 4: // Red Dragon (中 - Chun)
-                    DrawCornerBadge(startX + 14, startY + h - 42, "C", colRubyRed);
-                    DrawRectOutline(cx - 50, cy - 36, 100, 72, t + 2, colRubyRed);
-                    DrawVLine(cx, cy - 80, cy + 80, t + 4, colRubyRed);
+                    DrawCornerBadge(startX + 14, startY + h - 38, "C", colRubyRed);
+                    DrawRectOutline(cx - 46, cy - (int)(32 * AspectCorrectionY), 92, (int)(64 * AspectCorrectionY), t + 2, colRubyRed);
+                    DrawVLine(cx, cy - (int)(72 * AspectCorrectionY), cy + (int)(72 * AspectCorrectionY), t + 4, colRubyRed);
                     break;
                 case 5: // Green Dragon (發 - Fa)
-                    DrawCornerBadge(startX + 14, startY + h - 42, "F", colJadeGreen);
+                    DrawCornerBadge(startX + 14, startY + h - 38, "F", colJadeGreen);
                     DrawKanjiFa(cx, cy, colJadeGreen);
                     break;
                 case 6: // White Dragon (白 - Bai / Blank Frame)
-                    DrawCornerBadge(startX + 14, startY + h - 42, "P", colDeepNavy);
-                    DrawRectOutline(cx - 58, cy - 78, 116, 156, t + 2, colDeepNavy);
-                    DrawRectOutline(cx - 46, cy - 66, 92, 132, 4, colBevelGold);
+                    DrawCornerBadge(startX + 14, startY + h - 38, "P", colDeepNavy);
+                    DrawRectOutline(cx - 52, cy - (int)(70 * AspectCorrectionY), 104, (int)(140 * AspectCorrectionY), t + 2, colDeepNavy);
+                    DrawRectOutline(cx - 42, cy - (int)(60 * AspectCorrectionY), 84, (int)(120 * AspectCorrectionY), 4, colBevelGold);
                     break;
             }
         }
@@ -467,61 +457,57 @@ namespace Mahjong.Procedural
         private void DrawKanjiEast(int cx, int cy, Color col)
         {
             int t = 10;
-            DrawHLine(cx - 58, cx + 58, cy + 54, t, col);
-            DrawRectOutline(cx - 44, cy - 14, 88, 54, t, col);
-            DrawHLine(cx - 44, cx + 44, cy + 13, t, col);
-            DrawVLine(cx, cy - 75, cy + 75, t + 2, col);
-            DrawLine(cx - 18, cy - 20, cx - 52, cy - 68, t, col);
-            DrawLine(cx + 18, cy - 20, cx + 52, cy - 68, t, col);
+            DrawHLine(cx - 52, cx + 52, cy + (int)(48 * AspectCorrectionY), t, col);
+            DrawRectOutline(cx - 40, cy - (int)(12 * AspectCorrectionY), 80, (int)(48 * AspectCorrectionY), t, col);
+            DrawHLine(cx - 40, cx + 40, cy + (int)(12 * AspectCorrectionY), t, col);
+            DrawVLine(cx, cy - (int)(68 * AspectCorrectionY), cy + (int)(68 * AspectCorrectionY), t + 2, col);
+            DrawLine(cx - 16, cy - (int)(18 * AspectCorrectionY), cx - 46, cy - (int)(60 * AspectCorrectionY), t, col);
+            DrawLine(cx + 16, cy - (int)(18 * AspectCorrectionY), cx + 46, cy - (int)(60 * AspectCorrectionY), t, col);
         }
 
         private void DrawKanjiSouth(int cx, int cy, Color col)
         {
             int t = 9;
-            DrawHLine(cx - 46, cx + 46, cy + 62, t, col);
-            DrawVLine(cx, cy + 44, cy + 76, t, col);
-            DrawRectOutline(cx - 52, cy - 65, 104, 105, t, col);
-            DrawVLine(cx - 18, cy - 40, cy + 20, t, col);
-            DrawVLine(cx + 18, cy - 40, cy + 20, t, col);
-            DrawHLine(cx - 36, cx + 36, cy - 10, t, col);
+            DrawHLine(cx - 42, cx + 42, cy + (int)(56 * AspectCorrectionY), t, col);
+            DrawVLine(cx, cy + (int)(40 * AspectCorrectionY), cy + (int)(68 * AspectCorrectionY), t, col);
+            DrawRectOutline(cx - 48, cy - (int)(58 * AspectCorrectionY), 96, (int)(94 * AspectCorrectionY), t, col);
+            DrawVLine(cx - 16, cy - (int)(36 * AspectCorrectionY), cy + (int)(18 * AspectCorrectionY), t, col);
+            DrawVLine(cx + 16, cy - (int)(36 * AspectCorrectionY), cy + (int)(18 * AspectCorrectionY), t, col);
+            DrawHLine(cx - 32, cx + 32, cy - (int)(10 * AspectCorrectionY), t, col);
         }
 
         private void DrawKanjiWest(int cx, int cy, Color col)
         {
             int t = 10;
-            DrawHLine(cx - 56, cx + 56, cy + 58, t, col);
-            DrawRectOutline(cx - 48, cy - 60, 96, 106, t, col);
-            DrawVLine(cx - 18, cy - 40, cy + 40, t, col);
-            DrawVLine(cx + 18, cy - 40, cy + 40, t, col);
-            DrawHLine(cx - 32, cx + 32, cy - 20, t, col);
+            DrawHLine(cx - 50, cx + 50, cy + (int)(52 * AspectCorrectionY), t, col);
+            DrawRectOutline(cx - 44, cy - (int)(54 * AspectCorrectionY), 88, (int)(95 * AspectCorrectionY), t, col);
+            DrawVLine(cx - 16, cy - (int)(36 * AspectCorrectionY), cy + (int)(36 * AspectCorrectionY), t, col);
+            DrawVLine(cx + 16, cy - (int)(36 * AspectCorrectionY), cy + (int)(36 * AspectCorrectionY), t, col);
+            DrawHLine(cx - 28, cx + 28, cy - (int)(18 * AspectCorrectionY), t, col);
         }
 
         private void DrawKanjiNorth(int cx, int cy, Color col)
         {
             int t = 10;
-            // Kiri
-            DrawVLine(cx - 24, cy - 60, cy + 60, t, col);
-            DrawHLine(cx - 52, cx - 24, cy + 8, t, col);
-            DrawLine(cx - 52, cy - 48, cx - 24, cy - 8, t, col);
-            // Kanan
-            DrawLine(cx + 16, cy + 56, cx + 16, cy - 35, t, col);
-            DrawHLine(cx + 16, cx + 52, cy - 35, t, col);
-            DrawVLine(cx + 52, cy - 35, cy + 15, t, col);
+            DrawVLine(cx - 22, cy - (int)(54 * AspectCorrectionY), cy + (int)(54 * AspectCorrectionY), t, col);
+            DrawHLine(cx - 46, cx - 22, cy + (int)(8 * AspectCorrectionY), t, col);
+            DrawLine(cx - 46, cy - (int)(42 * AspectCorrectionY), cx - 22, cy - (int)(8 * AspectCorrectionY), t, col);
+            DrawLine(cx + 14, cy + (int)(50 * AspectCorrectionY), cx + 14, cy - (int)(32 * AspectCorrectionY), t, col);
+            DrawHLine(cx + 14, cx + 46, cy - (int)(32 * AspectCorrectionY), t, col);
+            DrawVLine(cx + 46, cy - (int)(32 * AspectCorrectionY), cy + (int)(14 * AspectCorrectionY), t, col);
         }
 
         private void DrawKanjiFa(int cx, int cy, Color col)
         {
             int t = 9;
-            // Atas
-            DrawLine(cx - 45, cy + 65, cx, cy + 40, t, col);
-            DrawLine(cx + 45, cy + 65, cx, cy + 40, t, col);
-            DrawHLine(cx - 48, cx + 48, cy + 30, t, col);
-            // Tengah & Bawah
-            DrawVLine(cx - 24, cy - 65, cy + 20, t, col);
-            DrawVLine(cx + 24, cy - 65, cy + 20, t, col);
-            DrawHLine(cx - 44, cx + 44, cy - 10, t, col);
-            DrawLine(cx - 16, cy - 10, cx - 48, cy - 58, t, col);
-            DrawLine(cx + 16, cy - 10, cx + 48, cy - 58, t, col);
+            DrawLine(cx - 40, cy + (int)(58 * AspectCorrectionY), cx, cy + (int)(36 * AspectCorrectionY), t, col);
+            DrawLine(cx + 40, cy + (int)(58 * AspectCorrectionY), cx, cy + (int)(36 * AspectCorrectionY), t, col);
+            DrawHLine(cx - 42, cx + 42, cy + (int)(26 * AspectCorrectionY), t, col);
+            DrawVLine(cx - 22, cy - (int)(58 * AspectCorrectionY), cy + (int)(18 * AspectCorrectionY), t, col);
+            DrawVLine(cx + 22, cy - (int)(58 * AspectCorrectionY), cy + (int)(18 * AspectCorrectionY), t, col);
+            DrawHLine(cx - 38, cx + 38, cy - (int)(10 * AspectCorrectionY), t, col);
+            DrawLine(cx - 14, cy - (int)(10 * AspectCorrectionY), cx - 42, cy - (int)(52 * AspectCorrectionY), t, col);
+            DrawLine(cx + 14, cy - (int)(10 * AspectCorrectionY), cx + 42, cy - (int)(52 * AspectCorrectionY), t, col);
         }
 
         // =========================================================================
@@ -532,29 +518,27 @@ namespace Mahjong.Procedural
         {
             if (colIdx < 4)
             {
-                // Bunga 1..4 (Plum, Orchid, Chrysanthemum, Bamboo)
-                DrawCornerBadge(startX + 14, startY + h - 42, $"F{colIdx + 1}", colRubyRed);
-                DrawFilledCircle(cx, cy, 48, colRubyRed);
-                DrawRing(cx, cy, 58, colBevelGold, 5);
+                DrawCornerBadge(startX + 14, startY + h - 38, $"F{colIdx + 1}", colRubyRed);
+                DrawProportionalCircle(cx, cy, 42, colRubyRed);
+                DrawProportionalRing(cx, cy, 50, colBevelGold, 4);
                 DrawFlowerPetals(cx, cy, colJadeGreen);
             }
             else if (colIdx < 8)
             {
-                // Musim 1..4 (Spring, Summer, Autumn, Winter)
-                DrawCornerBadge(startX + 14, startY + h - 42, $"S{colIdx - 3}", colDeepNavy);
-                DrawFilledCircle(cx, cy, 48, colDeepNavy);
-                DrawRing(cx, cy, 58, colBevelGold, 5);
+                DrawCornerBadge(startX + 14, startY + h - 38, $"S{colIdx - 3}", colDeepNavy);
+                DrawProportionalCircle(cx, cy, 42, colDeepNavy);
+                DrawProportionalRing(cx, cy, 50, colBevelGold, 4);
                 DrawFlowerPetals(cx, cy, colRubyRed);
             }
         }
 
         private void DrawFlowerPetals(int cx, int cy, Color petalCol)
         {
-            DrawFilledCircle(cx, cy + 32, 16, petalCol);
-            DrawFilledCircle(cx, cy - 32, 16, petalCol);
-            DrawFilledCircle(cx + 32, cy, 16, petalCol);
-            DrawFilledCircle(cx - 32, cy, 16, petalCol);
-            DrawFilledCircle(cx, cy, 14, Color.white);
+            DrawProportionalCircle(cx, cy + (int)(28 * AspectCorrectionY), 14, petalCol);
+            DrawProportionalCircle(cx, cy - (int)(28 * AspectCorrectionY), 14, petalCol);
+            DrawProportionalCircle(cx + 28, cy, 14, petalCol);
+            DrawProportionalCircle(cx - 28, cy, 14, petalCol);
+            DrawProportionalCircle(cx, cy, 12, Color.white);
         }
 
         // =========================================================================
@@ -567,7 +551,7 @@ namespace Mahjong.Procedural
             for (int i = 0; i < text.Length; i++)
             {
                 DrawBitmapChar5x7(cursorX, y, text[i], col, 3);
-                cursorX += 18; // Spasi antar huruf
+                cursorX += 17;
             }
         }
 
@@ -576,6 +560,8 @@ namespace Mahjong.Procedural
             byte[] rows = GetGlyphRows(c);
             if (rows == null) return;
 
+            int scaleY = Mathf.Max(1, Mathf.RoundToInt(scale * AspectCorrectionY));
+
             for (int r = 0; r < 7; r++)
             {
                 byte rowByte = rows[r];
@@ -583,7 +569,7 @@ namespace Mahjong.Procedural
                 {
                     if ((rowByte & (1 << (4 - colBit))) != 0)
                     {
-                        DrawFilledRect(startX + (colBit * scale), startY - (r * scale), scale, scale, col);
+                        DrawFilledRect(startX + (colBit * scale), startY - (r * scaleY), scale, scaleY, col);
                     }
                 }
             }
@@ -616,14 +602,61 @@ namespace Mahjong.Procedural
         }
 
         // =========================================================================
-        // PRIMITIF GRAFIK & RASTERIZER GARIS/KOTAK/LINGKARAN
+        // PRIMITIF GRAFIK ASPECT-CORRECTED (LINGKARAN & GARIS)
         // =========================================================================
+
+        private void DrawProportionalCircle(int cx, int cy, int r, Color col)
+        {
+            int rx = r;
+            int ry = Mathf.RoundToInt(r * AspectCorrectionY);
+            int rx2 = rx * rx;
+            int ry2 = ry * ry;
+
+            for (int dy = -ry; dy <= ry; dy++)
+            {
+                int dy2 = dy * dy;
+                for (int dx = -rx; dx <= rx; dx++)
+                {
+                    if ((float)(dx * dx) / rx2 + (float)(dy2) / ry2 <= 1.0f)
+                    {
+                        SetPixelSafe(cx + dx, cy + dy, col);
+                    }
+                }
+            }
+        }
+
+        private void DrawProportionalRing(int cx, int cy, int r, Color col, int thickness)
+        {
+            int rxOuter = r;
+            int ryOuter = Mathf.RoundToInt(r * AspectCorrectionY);
+            int rxInner = Mathf.Max(1, r - thickness);
+            int ryInner = Mathf.Max(1, Mathf.RoundToInt((r - thickness) * AspectCorrectionY));
+
+            float rxO2 = rxOuter * rxOuter;
+            float ryO2 = ryOuter * ryOuter;
+            float rxI2 = rxInner * rxInner;
+            float ryI2 = ryInner * ryInner;
+
+            for (int dy = -ryOuter; dy <= ryOuter; dy++)
+            {
+                int dy2 = dy * dy;
+                for (int dx = -rxOuter; dx <= rxOuter; dx++)
+                {
+                    float dOuter = (float)(dx * dx) / rxO2 + (float)(dy2) / ryO2;
+                    float dInner = (float)(dx * dx) / rxI2 + (float)(dy2) / ryI2;
+                    if (dOuter <= 1.0f && dInner >= 1.0f)
+                    {
+                        SetPixelSafe(cx + dx, cy + dy, col);
+                    }
+                }
+            }
+        }
 
         private void DrawHLine(int x0, int x1, int y, int thickness, Color col)
         {
             int minX = Mathf.Min(x0, x1);
             int maxX = Mathf.Max(x0, x1);
-            int ht = thickness / 2;
+            int ht = Mathf.Max(1, Mathf.RoundToInt((thickness / 2f) * AspectCorrectionY));
             for (int dy = -ht; dy <= ht; dy++)
             {
                 for (int x = minX; x <= maxX; x++)
@@ -655,12 +688,14 @@ namespace Mahjong.Procedural
             int sy = y0 < y1 ? 1 : -1;
             int err = dx - dy;
 
-            int ht = thickness / 2;
+            int htX = thickness / 2;
+            int htY = Mathf.Max(1, Mathf.RoundToInt((thickness / 2f) * AspectCorrectionY));
+
             while (true)
             {
-                for (int ox = -ht; ox <= ht; ox++)
+                for (int ox = -htX; ox <= htX; ox++)
                 {
-                    for (int oy = -ht; oy <= ht; oy++)
+                    for (int oy = -htY; oy <= htY; oy++)
                     {
                         SetPixelSafe(x0 + ox, y0 + oy, col);
                     }
@@ -675,8 +710,9 @@ namespace Mahjong.Procedural
 
         private void DrawRectOutline(int x, int y, int w, int h, int thickness, Color col)
         {
-            DrawFilledRect(x, y, w, thickness, col);                     // Bawah
-            DrawFilledRect(x, y + h - thickness, w, thickness, col);     // Atas
+            int thickY = Mathf.Max(1, Mathf.RoundToInt(thickness * AspectCorrectionY));
+            DrawFilledRect(x, y, w, thickY, col);                         // Bawah
+            DrawFilledRect(x, y + h - thickY, w, thickY, col);             // Atas
             DrawFilledRect(x, y, thickness, h, col);                     // Kiri
             DrawFilledRect(x + w - thickness, y, thickness, h, col);     // Kanan
         }
@@ -688,40 +724,6 @@ namespace Mahjong.Procedural
                 for (int dx = 0; dx < w; dx++)
                 {
                     SetPixelSafe(x + dx, y + dy, col);
-                }
-            }
-        }
-
-        private void DrawFilledCircle(int cx, int cy, int r, Color col)
-        {
-            int r2 = r * r;
-            for (int dy = -r; dy <= r; dy++)
-            {
-                int dy2 = dy * dy;
-                for (int dx = -r; dx <= r; dx++)
-                {
-                    if (dx * dx + dy2 <= r2)
-                    {
-                        SetPixelSafe(cx + dx, cy + dy, col);
-                    }
-                }
-            }
-        }
-
-        private void DrawRing(int cx, int cy, int r, Color col, int thickness)
-        {
-            int rOuter2 = r * r;
-            int rInner2 = (r - thickness) * (r - thickness);
-            for (int dy = -r; dy <= r; dy++)
-            {
-                int dy2 = dy * dy;
-                for (int dx = -r; dx <= r; dx++)
-                {
-                    int d2 = dx * dx + dy2;
-                    if (d2 <= rOuter2 && d2 >= rInner2)
-                    {
-                        SetPixelSafe(cx + dx, cy + dy, col);
-                    }
                 }
             }
         }

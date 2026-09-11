@@ -19,9 +19,9 @@ namespace Mahjong.Procedural
         public string tileName;
 
         [Header("Dimensi Ubin 3D (Rasio Standar Mahjong HD)")]
-        public float tileWidth = 0.046f;    // Lebar X (4.6 cm)
-        public float tileHeight = 0.064f;   // Panjang Y (6.4 cm)
-        public float tileThickness = 0.026f;// Tebal Z (2.6 cm)
+        public float tileWidth = 0.044f;    // Lebar X (4.4 cm)
+        public float tileHeight = 0.062f;   // Panjang Y (6.2 cm)
+        public float tileThickness = 0.024f;// Tebal Z (2.4 cm)
 
         [Header("State Interaksi")]
         public bool isSelected = false;
