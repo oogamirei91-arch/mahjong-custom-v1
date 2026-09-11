@@ -180,6 +180,20 @@ namespace Mahjong.Procedural
 
         private void UpdateTimerVisual()
         {
+            // Update HUD teks giliran dengan hitung mundur detik
+            if (activeSeatIndex == 0)
+            {
+                int sec = Mathf.CeilToInt(remainingTime);
+                if (remainingTime <= 4.0f)
+                {
+                    UI.ProceduralLandingAndHUD.Instance?.UpdateTurnStatusHUD($"🔴 SISA WAKTU ({sec}s)! Memilih otomatis...", true);
+                }
+                else
+                {
+                    UI.ProceduralLandingAndHUD.Instance?.UpdateTurnStatusHUD($"🟢 GILIRAN ANDA! ({sec}s) - Pilih ubin lalu buang", true);
+                }
+            }
+
             // Efek perubahan warna LED saat waktu menipis (< 5 detik berubah kuning/merah)
             if (activeLedMat != null)
             {
@@ -203,10 +217,13 @@ namespace Mahjong.Procedural
 
         private void OnTimerExpired()
         {
-            Debug.Log($"[TableCompass] Waktu giliran habis untuk Seat {activeSeatIndex}! Memanggil auto-discard...");
+            Debug.Log($"[TableCompass] Waktu giliran 15 detik habis untuk Seat {activeSeatIndex}! Membuang ubin secara otomatis...");
             if (activeSeatIndex == 0)
             {
-                AI.SinglePlayerAIManager.Instance?.AutoDiscardForPlayer();
+                if (AI.SinglePlayerAIManager.Instance != null && AI.SinglePlayerAIManager.Instance.isGameActive)
+                {
+                    AI.SinglePlayerAIManager.Instance.AutoDiscardForPlayer();
+                }
             }
         }
     }

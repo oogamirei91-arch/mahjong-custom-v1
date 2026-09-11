@@ -19,6 +19,10 @@ namespace Mahjong.Procedural
     {
         public static ProceduralTileAtlas Instance { get; private set; }
 
+        [Header("Kustom Sprite / Texture Atlas (Opsional)")]
+        [Tooltip("Jika diisi dengan Texture2D / Sprite Sheet buatan sendiri (Grid 9x5), game akan memakai gambar ini secara langsung!")]
+        public Texture2D customTileAtlasTexture;
+
         [Header("Pengaturan Resolusi Tekstur")]
         public int atlasWidth = 2048;
         public int atlasHeight = 2048;
@@ -48,12 +52,25 @@ namespace Mahjong.Procedural
         [ContextMenu("Regenerate Full Atlas")]
         public void GenerateFullAtlas()
         {
+            // 1. Cek apakah ada Custom Texture yang di-assign via Inspector atau ditaruh di Resources
+            if (customTileAtlasTexture == null)
+            {
+                customTileAtlasTexture = Resources.Load<Texture2D>("CustomMahjongAtlas");
+            }
+
+            if (customTileAtlasTexture != null)
+            {
+                GeneratedAtlas = customTileAtlasTexture;
+                Debug.Log("[ProceduralTileAtlas] Menggunakan Custom Sprite / Texture Atlas Impor: " + customTileAtlasTexture.name);
+                return;
+            }
+
             GeneratedAtlas = new Texture2D(atlasWidth, atlasHeight, TextureFormat.RGBA32, true);
             GeneratedAtlas.name = "Tex_Mahjong_Procedural_Atlas";
             GeneratedAtlas.filterMode = FilterMode.Bilinear;
             GeneratedAtlas.wrapMode = TextureWrapMode.Clamp;
 
-            // 1. Bersihkan bidang dengan warna dasar Pearl Ivory
+            // 2. Bersihkan bidang dengan warna dasar Pearl Ivory
             Color[] clearPixels = new Color[atlasWidth * atlasHeight];
             for (int i = 0; i < clearPixels.Length; i++) clearPixels[i] = colIvoryBase;
             GeneratedAtlas.SetPixels(clearPixels);
