@@ -204,6 +204,10 @@ namespace Mahjong.Procedural
         private void OnTimerExpired()
         {
             Debug.Log($"[TableCompass] Waktu giliran habis untuk Seat {activeSeatIndex}! Memanggil auto-discard...");
+            if (activeSeatIndex == 0)
+            {
+                AI.SinglePlayerAIManager.Instance?.AutoDiscardForPlayer();
+            }
         }
     }
 }

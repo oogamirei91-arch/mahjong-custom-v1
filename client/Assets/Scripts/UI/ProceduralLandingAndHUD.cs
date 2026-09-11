@@ -8,7 +8,7 @@ namespace Mahjong.UI
 {
     /// <summary>
     /// ProceduralLandingAndHUD: Generator Antarmuka Otomatis (Landing Page, Login/Register Modal, 
-    /// Main Menu Lobby, Custom Room Code Input, dan Friend List HUD).
+    /// Main Menu Lobby, Custom Room Code Input, Friend List HUD, dan In-Game Turn Action HUD).
     /// Menggunakan tema "Modern Luxury VIP Casino" dengan sentuhan emas dan emerald glassmorphism.
     /// </summary>
     public class ProceduralLandingAndHUD : MonoBehaviour
@@ -26,6 +26,7 @@ namespace Mahjong.UI
         private GameObject panelFriendListModal;
         private GameObject panelActionBarHUD;
         private GameObject panelVictoryModal;
+        private GameObject panelInGameHUD;
 
         // Komponen Input & Text
         private InputField inputUsername;
@@ -35,6 +36,76 @@ namespace Mahjong.UI
         private Text txtCustomRoomDisplay;
         private InputField inputJoinCode;
         private Text txtVictoryDetails;
+
+        // Komponen In-Game HUD
+        private Text txtInGameTurnStatus;
+        private Button btnDiscardSelected;
+        private Text txtDiscardButtonLabel;
+
+        /// <summary>
+        /// Otomatis dijalankan saat scene dimuat agar UI selalu muncul walaupun belum ditaruh manual di Hierarchy!
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void AutoInitializeAllManagers()
+        {
+            Camera cam = Camera.main;
+            if (cam == null) cam = Object.FindFirstObjectByType<Camera>();
+            if (cam != null)
+            {
+                if (cam.GetComponent<Visual.CameraController>() == null)
+                    cam.gameObject.AddComponent<Visual.CameraController>();
+                if (cam.GetComponent<TouchInputHandler>() == null)
+                    cam.gameObject.AddComponent<TouchInputHandler>();
+            }
+
+            if (Object.FindFirstObjectByType<Procedural.ProceduralTable>() == null)
+            {
+                GameObject tableObj = new GameObject("[ProceduralTable]");
+                tableObj.AddComponent<Procedural.ProceduralTable>();
+                DontDestroyOnLoad(tableObj);
+            }
+            if (Object.FindFirstObjectByType<Procedural.TableCompass>() == null)
+            {
+                GameObject compassObj = new GameObject("[TableCompass]");
+                compassObj.AddComponent<Procedural.TableCompass>();
+                DontDestroyOnLoad(compassObj);
+            }
+            if (Object.FindFirstObjectByType<Procedural.ProceduralTileAtlas>() == null)
+            {
+                GameObject atlasObj = new GameObject("[ProceduralTileAtlas]");
+                atlasObj.AddComponent<Procedural.ProceduralTileAtlas>();
+                DontDestroyOnLoad(atlasObj);
+            }
+            if (Object.FindFirstObjectByType<GameNetworkManager>() == null)
+            {
+                GameObject netObj = new GameObject("[GameNetworkManager]");
+                netObj.AddComponent<GameNetworkManager>();
+                DontDestroyOnLoad(netObj);
+            }
+            if (Object.FindFirstObjectByType<Visual.TableVisualizer>() == null)
+            {
+                GameObject visObj = new GameObject("[TableVisualizer]");
+                visObj.AddComponent<Visual.TableVisualizer>();
+                DontDestroyOnLoad(visObj);
+            }
+            if (Object.FindFirstObjectByType<AI.SinglePlayerAIManager>() == null)
+            {
+                GameObject aiObj = new GameObject("[SinglePlayerAIManager]");
+                aiObj.AddComponent<AI.SinglePlayerAIManager>();
+                DontDestroyOnLoad(aiObj);
+            }
+            if (Object.FindFirstObjectByType<Audio.ProceduralAudioSynthesizer>() == null)
+            {
+                GameObject audioObj = new GameObject("[AudioManager]");
+                audioObj.AddComponent<Audio.ProceduralAudioSynthesizer>();
+                DontDestroyOnLoad(audioObj);
+            }
+            if (Object.FindFirstObjectByType<ProceduralLandingAndHUD>() == null)
+            {
+                GameObject canvasObj = new GameObject("[Canvas_UI]", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(ProceduralLandingAndHUD));
+                DontDestroyOnLoad(canvasObj);
+            }
+        }
 
         private void Awake()
         {
@@ -46,13 +117,13 @@ namespace Mahjong.UI
             BuildMainMenuLobbyUI();
             BuildCustomRoomModalUI();
             BuildFriendListModalUI();
+            BuildInGameHUD();
             BuildActionBarHUD();
             BuildVictoryModalUI();
         }
 
         private void Start()
         {
-            // Hubungkan dengan GameNetworkManager
             if (GameNetworkManager.Instance != null)
             {
                 GameNetworkManager.Instance.OnAuthResult += OnAuthResultReceived;
@@ -67,22 +138,21 @@ namespace Mahjong.UI
 
         private void SetupCanvas()
         {
-            // Pastikan EventSystem aktif agar input keyboard & klik mouse/touch bekerja
             if (UnityEngine.EventSystems.EventSystem.current == null)
             {
-                GameObject eventSystemObj = new GameObject("EventSystem");
-                eventSystemObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                eventSystemObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+                GameObject eventSystemObj = new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.EventSystems.StandaloneInputModule));
+                DontDestroyOnLoad(eventSystemObj);
             }
 
             canvas = gameObject.GetComponent<Canvas>();
             if (canvas == null) canvas = gameObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
 
             canvasScaler = gameObject.GetComponent<CanvasScaler>();
             if (canvasScaler == null) canvasScaler = gameObject.AddComponent<CanvasScaler>();
             canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            canvasScaler.referenceResolution = new Vector2(1080, 1920); // Portrait / Mobile Responsive
+            canvasScaler.referenceResolution = new Vector2(1080, 1920);
             canvasScaler.matchWidthOrHeight = 0.5f;
 
             graphicRaycaster = gameObject.GetComponent<GraphicRaycaster>();
@@ -95,28 +165,23 @@ namespace Mahjong.UI
 
         private void BuildLandingLoginUI()
         {
-            panelLandingLogin = CreatePanel("Panel_LandingLogin", new Color(0.04f, 0.12f, 0.08f, 0.92f));
+            panelLandingLogin = CreatePanel("Panel_LandingLogin", new Color(0.04f, 0.12f, 0.08f, 0.96f));
 
-            // Logo & Judul Game
-            CreateText(panelLandingLogin.transform, "MAHJONG VIP 🀄", 48, FontStyle.Bold, new Color(1.0f, 0.84f, 0.0f), new Vector2(0, 380), new Vector2(800, 100));
-            CreateText(panelLandingLogin.transform, "Casual Multiplayer • 4-Player 3D Board Game", 22, FontStyle.Italic, new Color(0.8f, 0.9f, 0.8f), new Vector2(0, 320), new Vector2(800, 60));
+            CreateText(panelLandingLogin.transform, "MAHJONG VIP 🀄", 52, FontStyle.Bold, new Color(1.0f, 0.84f, 0.0f), new Vector2(0, 420), new Vector2(900, 110));
+            CreateText(panelLandingLogin.transform, "Casual Multiplayer • 4-Player 3D Board Game", 24, FontStyle.Italic, new Color(0.8f, 0.95f, 0.85f), new Vector2(0, 350), new Vector2(900, 60));
 
-            // Box Card Form Login
-            GameObject card = CreateCard(panelLandingLogin.transform, new Vector2(760, 580), new Vector2(0, -20));
+            GameObject card = CreateCard(panelLandingLogin.transform, new Vector2(800, 640), new Vector2(0, -30));
 
-            CreateText(card.transform, "MASUK / DAFTAR AKUN", 28, FontStyle.Bold, Color.white, new Vector2(0, 220), new Vector2(600, 60));
+            CreateText(card.transform, "MASUK / DAFTAR AKUN", 30, FontStyle.Bold, Color.white, new Vector2(0, 240), new Vector2(700, 60));
 
-            // Input Fields
-            inputUsername = CreateInputField(card.transform, "Username...", new Vector2(0, 120), new Vector2(620, 75));
-            inputPassword = CreateInputField(card.transform, "Password...", new Vector2(0, 25), new Vector2(620, 75), true);
+            inputUsername = CreateInputField(card.transform, "Username...", new Vector2(0, 140), new Vector2(660, 80));
+            inputPassword = CreateInputField(card.transform, "Password...", new Vector2(0, 40), new Vector2(660, 80), true);
 
-            // Status Error / Info Text
-            txtAuthStatus = CreateText(card.transform, "Silakan login atau mainkan sebagai Tamu (Guest)", 18, FontStyle.Normal, new Color(0.9f, 0.8f, 0.4f), new Vector2(0, -50), new Vector2(620, 50));
+            txtAuthStatus = CreateText(card.transform, "Silakan login atau mainkan sebagai Tamu (Guest)", 20, FontStyle.Normal, new Color(1.0f, 0.85f, 0.4f), new Vector2(0, -45), new Vector2(660, 50));
 
-            // Buttons
-            CreateButton(card.transform, "LOGIN", new Color(0.1f, 0.55f, 0.25f), new Vector2(-160, -135), new Vector2(280, 75), OnClickLogin);
-            CreateButton(card.transform, "REGISTER", new Color(0.2f, 0.4f, 0.7f), new Vector2(160, -135), new Vector2(280, 75), OnClickRegister);
-            CreateButton(card.transform, "⚡ MAIN SEBAGAI GUEST", new Color(0.85f, 0.65f, 0.15f), new Vector2(0, -225), new Vector2(600, 70), OnClickGuestPlay);
+            CreateButton(card.transform, "LOGIN", new Color(0.1f, 0.55f, 0.25f), new Vector2(-170, -135), new Vector2(300, 80), OnClickLogin);
+            CreateButton(card.transform, "REGISTER", new Color(0.2f, 0.4f, 0.7f), new Vector2(170, -135), new Vector2(300, 80), OnClickRegister);
+            CreateButton(card.transform, "⚡ MAIN SEBAGAI GUEST", new Color(0.85f, 0.65f, 0.15f), new Vector2(0, -235), new Vector2(640, 75), OnClickGuestPlay);
         }
 
         // =========================================================================
@@ -127,13 +192,11 @@ namespace Mahjong.UI
         {
             panelMainMenuLobby = CreatePanel("Panel_MainMenuLobby", Color.clear);
 
-            // Top Bar Profile HUD
-            GameObject topBar = CreateCard(panelMainMenuLobby.transform, new Vector2(1000, 110), new Vector2(0, 850));
-            topBar.GetComponent<Image>().color = new Color(0.05f, 0.15f, 0.1f, 0.95f);
-            txtTopBarProfile = CreateText(topBar.transform, "👑 Player_VIP | 🏆 1,000 Trofi | 🥇 Gold Master", 24, FontStyle.Bold, new Color(1.0f, 0.85f, 0.2f), new Vector2(-120, 0), new Vector2(700, 80));
+            GameObject topBar = CreateCard(panelMainMenuLobby.transform, new Vector2(1000, 120), new Vector2(0, 840));
+            topBar.GetComponent<Image>().color = new Color(0.05f, 0.15f, 0.1f, 0.98f);
+            txtTopBarProfile = CreateText(topBar.transform, "👑 Player_VIP | 🏆 1,000 Trofi | 🥇 Gold Master", 26, FontStyle.Bold, new Color(1.0f, 0.85f, 0.2f), new Vector2(-120, 0), new Vector2(700, 80));
             CreateButton(topBar.transform, "🚪 Logout", new Color(0.6f, 0.2f, 0.2f), new Vector2(380, 0), new Vector2(180, 65), ShowLandingScreen);
 
-            // Main Menu Buttons Card (Tengah Bawah)
             GameObject menuCard = CreateCard(panelMainMenuLobby.transform, new Vector2(850, 580), new Vector2(0, -520));
 
             CreateText(menuCard.transform, "PILIH MODE PERMAINAN", 28, FontStyle.Bold, new Color(1f, 0.84f, 0f), new Vector2(0, 230), new Vector2(700, 60));
@@ -145,7 +208,62 @@ namespace Mahjong.UI
         }
 
         // =========================================================================
-        // 3. CUSTOM ROOM MODAL (VIP CODE)
+        // 3. IN-GAME TURN HUD & DISCARD ACTION BUTTON
+        // =========================================================================
+
+        private void BuildInGameHUD()
+        {
+            panelInGameHUD = CreatePanel("Panel_InGameHUD", Color.clear);
+
+            // Banner Status Giliran (Atas)
+            GameObject banner = CreateCard(panelInGameHUD.transform, new Vector2(780, 75), new Vector2(0, 840));
+            banner.GetComponent<Image>().color = new Color(0.03f, 0.15f, 0.08f, 0.92f);
+            txtInGameTurnStatus = CreateText(banner.transform, "🟢 GILIRAN ANDA! (Pilih ubin lalu buang)", 24, FontStyle.Bold, new Color(1f, 0.92f, 0.4f), Vector2.zero, new Vector2(750, 65));
+
+            // Tombol Buang Ubin Terpilih (Kanan Bawah)
+            btnDiscardSelected = CreateButton(panelInGameHUD.transform, "🔥 BUANG UBIN TERPILIH", new Color(0.85f, 0.25f, 0.15f), new Vector2(0, -420), new Vector2(460, 85), () =>
+            {
+                TouchInputHandler.Instance?.ExecuteDiscardSelectedTile();
+            });
+            txtDiscardButtonLabel = btnDiscardSelected.GetComponentInChildren<Text>();
+
+            // Tombol Menu / Kembali ke Lobby (Kiri Atas)
+            CreateButton(panelInGameHUD.transform, "⚙️ Menu", new Color(0.2f, 0.25f, 0.3f, 0.9f), new Vector2(-420, 840), new Vector2(160, 65), ShowMainMenuLobby);
+
+            panelInGameHUD.SetActive(false);
+        }
+
+        public void UpdateTurnStatusHUD(string status, bool isPlayerTurn)
+        {
+            if (txtInGameTurnStatus != null)
+            {
+                txtInGameTurnStatus.text = status;
+                txtInGameTurnStatus.color = isPlayerTurn ? new Color(0.3f, 1.0f, 0.5f) : new Color(1.0f, 0.85f, 0.3f);
+            }
+        }
+
+        public void OnTileSelectedHUD(Procedural.ProceduralTile tile)
+        {
+            if (btnDiscardSelected != null && tile != null)
+            {
+                btnDiscardSelected.gameObject.SetActive(true);
+                if (txtDiscardButtonLabel != null)
+                {
+                    txtDiscardButtonLabel.text = $"🔥 BUANG: {tile.tileName}";
+                }
+            }
+        }
+
+        public void OnTileDiscardedHUD()
+        {
+            if (btnDiscardSelected != null)
+            {
+                btnDiscardSelected.gameObject.SetActive(false);
+            }
+        }
+
+        // =========================================================================
+        // 4. CUSTOM ROOM MODAL (VIP CODE)
         // =========================================================================
 
         private void BuildCustomRoomModalUI()
@@ -167,7 +285,7 @@ namespace Mahjong.UI
         }
 
         // =========================================================================
-        // 4. FRIEND LIST MODAL
+        // 5. FRIEND LIST MODAL
         // =========================================================================
 
         private void BuildFriendListModalUI()
@@ -179,7 +297,6 @@ namespace Mahjong.UI
 
             CreateText(card.transform, "Teman Online:", 22, FontStyle.Bold, Color.white, new Vector2(-220, 240), new Vector2(250, 50));
 
-            // Contoh Daftar Teman Mockup
             CreateText(card.transform, "🟢 Alex_VIP (In Lobby) — 🏆 1,450 [UNDANG MABAR]", 20, FontStyle.Normal, new Color(0.7f, 1f, 0.7f), new Vector2(0, 160), new Vector2(650, 50));
             CreateText(card.transform, "🟢 Dewi_Mahjong (In Game) — 🏆 2,100", 20, FontStyle.Normal, new Color(0.9f, 0.9f, 0.5f), new Vector2(0, 100), new Vector2(650, 50));
             CreateText(card.transform, "⚪ Budi_Dragon (Offline)", 20, FontStyle.Normal, Color.gray, new Vector2(0, 40), new Vector2(650, 50));
@@ -189,7 +306,7 @@ namespace Mahjong.UI
         }
 
         // =========================================================================
-        // 5. IN-GAME ACTION BAR HUD (CHOW, PONG, KONG, WIN, PASS)
+        // 6. IN-GAME ACTION BAR HUD (CHOW, PONG, KONG, WIN, PASS)
         // =========================================================================
 
         private void BuildActionBarHUD()
@@ -208,7 +325,7 @@ namespace Mahjong.UI
         }
 
         // =========================================================================
-        // 6. VICTORY / ROUND END MODAL
+        // 7. VICTORY / ROUND END MODAL
         // =========================================================================
 
         private void BuildVictoryModalUI()
@@ -231,22 +348,34 @@ namespace Mahjong.UI
 
         public void ShowLandingScreen()
         {
-            panelLandingLogin.SetActive(true);
-            panelMainMenuLobby.SetActive(false);
-            panelCustomRoomModal.SetActive(false);
-            panelFriendListModal.SetActive(false);
-            panelActionBarHUD.SetActive(false);
-            panelVictoryModal.SetActive(false);
+            if (panelLandingLogin) panelLandingLogin.SetActive(true);
+            if (panelMainMenuLobby) panelMainMenuLobby.SetActive(false);
+            if (panelCustomRoomModal) panelCustomRoomModal.SetActive(false);
+            if (panelFriendListModal) panelFriendListModal.SetActive(false);
+            if (panelInGameHUD) panelInGameHUD.SetActive(false);
+            if (panelActionBarHUD) panelActionBarHUD.SetActive(false);
+            if (panelVictoryModal) panelVictoryModal.SetActive(false);
         }
 
         public void ShowMainMenuLobby()
         {
-            panelLandingLogin.SetActive(false);
-            panelMainMenuLobby.SetActive(true);
-            panelCustomRoomModal.SetActive(false);
-            panelFriendListModal.SetActive(false);
-            panelActionBarHUD.SetActive(false);
-            panelVictoryModal.SetActive(false);
+            if (panelLandingLogin) panelLandingLogin.SetActive(false);
+            if (panelMainMenuLobby) panelMainMenuLobby.SetActive(true);
+            if (panelCustomRoomModal) panelCustomRoomModal.SetActive(false);
+            if (panelFriendListModal) panelFriendListModal.SetActive(false);
+            if (panelInGameHUD) panelInGameHUD.SetActive(false);
+            if (panelActionBarHUD) panelActionBarHUD.SetActive(false);
+            if (panelVictoryModal) panelVictoryModal.SetActive(false);
+        }
+
+        public void ShowInGameHUD()
+        {
+            if (panelLandingLogin) panelLandingLogin.SetActive(false);
+            if (panelMainMenuLobby) panelMainMenuLobby.SetActive(false);
+            if (panelCustomRoomModal) panelCustomRoomModal.SetActive(false);
+            if (panelFriendListModal) panelFriendListModal.SetActive(false);
+            if (panelInGameHUD) panelInGameHUD.SetActive(true);
+            if (btnDiscardSelected) btnDiscardSelected.gameObject.SetActive(false);
         }
 
         private void OnClickLogin()
@@ -281,7 +410,7 @@ namespace Mahjong.UI
         {
             ProceduralAudioSynthesizer.Instance?.PlayButtonPop();
             panelMainMenuLobby.SetActive(false);
-            panelActionBarHUD.SetActive(false);
+            ShowInGameHUD();
             Debug.Log("[Lobby] Masuk ke antrean Ranked Matchmaking...");
             GameNetworkManager.Instance?.JoinRankedQueue();
         }
@@ -289,8 +418,7 @@ namespace Mahjong.UI
         private void OnClickSoloAIMatch()
         {
             ProceduralAudioSynthesizer.Instance?.PlayButtonPop();
-            panelMainMenuLobby.SetActive(false);
-            panelLandingLogin.SetActive(false);
+            ShowInGameHUD();
             if (Mahjong.AI.SinglePlayerAIManager.Instance != null)
             {
                 Mahjong.AI.SinglePlayerAIManager.Instance.StartSoloGame(Mahjong.AI.AIDifficultyLevel.Expert);
@@ -327,7 +455,7 @@ namespace Mahjong.UI
                 ProceduralAudioSynthesizer.Instance?.PlayButtonPop();
                 GameNetworkManager.Instance?.JoinCustomRoom(code);
                 panelCustomRoomModal.SetActive(false);
-                panelMainMenuLobby.SetActive(false);
+                ShowInGameHUD();
             }
         }
 
@@ -357,8 +485,7 @@ namespace Mahjong.UI
 
         private void OnMatchFoundReceived(string roomId)
         {
-            panelMainMenuLobby.SetActive(false);
-            panelLandingLogin.SetActive(false);
+            ShowInGameHUD();
         }
 
         private void OnCustomRoomCreatedReceived(string roomCode)
@@ -380,99 +507,126 @@ namespace Mahjong.UI
         }
 
         // =========================================================================
-        // HELPER PEMBUATAN UI PROCEDURAL
+        // HELPER PEMBUATAN UI PROCEDURAL & FONT
         // =========================================================================
+
+        private static Font GetSafeFont()
+        {
+            Font f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (f == null) f = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            if (f == null)
+            {
+                try { f = Font.CreateDynamicFontFromOSFont("Arial", 24); } catch { }
+            }
+            if (f == null)
+            {
+                try { f = Font.CreateDynamicFontFromOSFont("Segoe UI", 24); } catch { }
+            }
+            if (f == null)
+            {
+                try { f = Font.CreateDynamicFontFromOSFont("Sans-Serif", 24); } catch { }
+            }
+            if (f == null)
+            {
+                Font[] allFonts = Resources.FindObjectsOfTypeAll<Font>();
+                if (allFonts != null && allFonts.Length > 0) f = allFonts[0];
+            }
+            return f;
+        }
 
         private GameObject CreatePanel(string name, Color color)
         {
-            GameObject obj = new GameObject(name);
+            GameObject obj = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             obj.transform.SetParent(transform, false);
-            RectTransform rect = obj.AddComponent<RectTransform>();
+            RectTransform rect = obj.GetComponent<RectTransform>();
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
 
-            Image img = obj.AddComponent<Image>();
+            Image img = obj.GetComponent<Image>();
             img.color = color;
             return obj;
         }
 
         private GameObject CreateCard(Transform parent, Vector2 size, Vector2 anchoredPos)
         {
-            GameObject card = new GameObject("Card_Glass");
+            GameObject card = new GameObject("Card_Glass", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             card.transform.SetParent(parent, false);
-            RectTransform rect = card.AddComponent<RectTransform>();
+            RectTransform rect = card.GetComponent<RectTransform>();
             rect.sizeDelta = size;
             rect.anchoredPosition = anchoredPos;
 
-            Image img = card.AddComponent<Image>();
+            Image img = card.GetComponent<Image>();
             img.color = new Color(0.06f, 0.18f, 0.12f, 0.94f); // Emerald Dark Glass
             return card;
         }
 
         private Text CreateText(Transform parent, string content, int fontSize, FontStyle style, Color color, Vector2 anchoredPos, Vector2 size)
         {
-            GameObject textObj = new GameObject("Text_" + content);
+            string safeName = "Text_" + (content.Length > 15 ? content.Substring(0, 15) : content);
+            GameObject textObj = new GameObject(safeName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
             textObj.transform.SetParent(parent, false);
-            RectTransform rect = textObj.AddComponent<RectTransform>();
+            RectTransform rect = textObj.GetComponent<RectTransform>();
             rect.anchoredPosition = anchoredPos;
             rect.sizeDelta = size;
 
-            Text txt = textObj.AddComponent<Text>();
+            Text txt = textObj.GetComponent<Text>();
             txt.text = content;
             txt.fontSize = fontSize;
             txt.fontStyle = style;
             txt.color = color;
             txt.alignment = TextAnchor.MiddleCenter;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (txt.font == null) txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            txt.horizontalOverflow = HorizontalWrapMode.Overflow;
+            txt.verticalOverflow = VerticalWrapMode.Overflow;
+            txt.font = GetSafeFont();
             return txt;
         }
 
         private InputField CreateInputField(Transform parent, string placeholder, Vector2 anchoredPos, Vector2 size, bool isPassword = false)
         {
-            GameObject inputObj = new GameObject("Input_" + placeholder);
+            GameObject inputObj = new GameObject("Input_" + placeholder, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(InputField));
             inputObj.transform.SetParent(parent, false);
-            RectTransform rect = inputObj.AddComponent<RectTransform>();
+            RectTransform rect = inputObj.GetComponent<RectTransform>();
             rect.anchoredPosition = anchoredPos;
             rect.sizeDelta = size;
 
-            Image bg = inputObj.AddComponent<Image>();
+            Image bg = inputObj.GetComponent<Image>();
             bg.color = new Color(0.03f, 0.08f, 0.05f, 0.9f);
 
-            InputField input = inputObj.AddComponent<InputField>();
+            InputField input = inputObj.GetComponent<InputField>();
 
-            // Text placeholder
-            GameObject phObj = new GameObject("Placeholder");
+            GameObject phObj = new GameObject("Placeholder", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
             phObj.transform.SetParent(inputObj.transform, false);
-            RectTransform phRect = phObj.AddComponent<RectTransform>();
+            RectTransform phRect = phObj.GetComponent<RectTransform>();
             phRect.anchorMin = Vector2.zero; phRect.anchorMax = Vector2.one;
             phRect.offsetMin = new Vector2(20, 0); phRect.offsetMax = new Vector2(-20, 0);
-            Text phText = phObj.AddComponent<Text>();
+            Text phText = phObj.GetComponent<Text>();
             phText.text = placeholder;
             phText.fontSize = 22;
             phText.fontStyle = FontStyle.Italic;
             phText.color = new Color(0.6f, 0.7f, 0.6f, 0.6f);
             phText.alignment = TextAnchor.MiddleLeft;
-            phText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (phText.font == null) phText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            phText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            phText.verticalOverflow = VerticalWrapMode.Overflow;
+            phText.font = GetSafeFont();
 
-            // Text input
-            GameObject txtObj = new GameObject("Text");
+            GameObject txtObj = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
             txtObj.transform.SetParent(inputObj.transform, false);
-            RectTransform txtRect = txtObj.AddComponent<RectTransform>();
+            RectTransform txtRect = txtObj.GetComponent<RectTransform>();
             txtRect.anchorMin = Vector2.zero; txtRect.anchorMax = Vector2.one;
             txtRect.offsetMin = new Vector2(20, 0); txtRect.offsetMax = new Vector2(-20, 0);
-            Text text = txtObj.AddComponent<Text>();
+            Text text = txtObj.GetComponent<Text>();
             text.fontSize = 24;
             text.color = Color.white;
             text.alignment = TextAnchor.MiddleLeft;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (text.font == null) text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.font = GetSafeFont();
 
             input.textComponent = text;
             input.placeholder = phText;
+            input.targetGraphic = bg;
             if (isPassword) input.contentType = InputField.ContentType.Password;
 
             return input;
@@ -480,37 +634,38 @@ namespace Mahjong.UI
 
         private Button CreateButton(Transform parent, string label, Color btnColor, Vector2 anchoredPos, Vector2 size, UnityEngine.Events.UnityAction onClick)
         {
-            GameObject btnObj = new GameObject("Btn_" + label);
+            GameObject btnObj = new GameObject("Btn_" + label, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
             btnObj.transform.SetParent(parent, false);
-            RectTransform rect = btnObj.AddComponent<RectTransform>();
+            RectTransform rect = btnObj.GetComponent<RectTransform>();
             rect.anchoredPosition = anchoredPos;
             rect.sizeDelta = size;
 
-            Image img = btnObj.AddComponent<Image>();
+            Image img = btnObj.GetComponent<Image>();
             img.color = btnColor;
 
-            Button btn = btnObj.AddComponent<Button>();
+            Button btn = btnObj.GetComponent<Button>();
+            btn.targetGraphic = img;
             ColorBlock cb = btn.colors;
             cb.highlightedColor = btnColor * 1.2f;
             cb.pressedColor = btnColor * 0.8f;
             btn.colors = cb;
             if (onClick != null) btn.onClick.AddListener(onClick);
 
-            // Label Text
-            GameObject txtObj = new GameObject("Label");
+            GameObject txtObj = new GameObject("Label", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
             txtObj.transform.SetParent(btnObj.transform, false);
-            RectTransform txtRect = txtObj.AddComponent<RectTransform>();
+            RectTransform txtRect = txtObj.GetComponent<RectTransform>();
             txtRect.anchorMin = Vector2.zero; txtRect.anchorMax = Vector2.one;
             txtRect.offsetMin = Vector2.zero; txtRect.offsetMax = Vector2.zero;
 
-            Text txt = txtObj.AddComponent<Text>();
+            Text txt = txtObj.GetComponent<Text>();
             txt.text = label;
             txt.fontSize = 24;
             txt.fontStyle = FontStyle.Bold;
             txt.color = Color.white;
             txt.alignment = TextAnchor.MiddleCenter;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (txt.font == null) txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            txt.horizontalOverflow = HorizontalWrapMode.Overflow;
+            txt.verticalOverflow = VerticalWrapMode.Overflow;
+            txt.font = GetSafeFont();
 
             return btn;
         }

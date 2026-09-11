@@ -8,7 +8,7 @@ namespace Mahjong.Visual
 {
     /// <summary>
     /// TableVisualizer: Mengatur visualisasi peletakan ubin 3D di atas meja kasino.
-    /// Membagikan 13 ubin ke tangan pemain (South) menghadap kamera,
+    /// Membagikan 13 ubin ke tangan pemain (South) menghadap kamera secara tegak & jelas,
     /// menempatkan ubin tertutup lawan (East/North/West), serta menampilkan ubin buangan di tengah meja.
     /// </summary>
     public class TableVisualizer : MonoBehaviour
@@ -16,9 +16,9 @@ namespace Mahjong.Visual
         public static TableVisualizer Instance { get; private set; }
 
         [Header("Pengaturan Posisi & Jarak Ubin")]
-        public float tileSpacingX = 0.032f; // Jarak horizontal antar ubin (3.2 cm)
+        public float tileSpacingX = 0.034f; // Jarak horizontal antar ubin (3.4 cm)
         public float handCenterZ = -0.36f;  // Jarak tangan dari tengah meja
-        public float handHeightY = 0.022f;  // Tinggi ubin dari permukaan felt
+        public float handHeightY = 0.024f;  // Tinggi ubin dari permukaan felt
 
         // Kontainer Objek Ubin 3D
         private Transform tilesContainer;
@@ -49,10 +49,10 @@ namespace Mahjong.Visual
 
         /// <summary>
         /// Membagikan dan menampilkan 13 ubin di depan layar pemain lokal (South).
+        /// Ubin berdiri tegak dan sedikit miring (pitch 22°) menghadap langsung ke kamera pemain.
         /// </summary>
         public void SpawnPlayerHand(List<TileData> hand)
         {
-            // Hapus ubin tangan lama
             foreach (var t in playerTileObjects) if (t != null) Destroy(t.gameObject);
             playerTileObjects.Clear();
 
@@ -63,8 +63,8 @@ namespace Mahjong.Visual
             {
                 TileData data = hand[i];
                 Vector3 pos = new Vector3(startX + (i * tileSpacingX), handHeightY, handCenterZ);
-                // Sedikit miring ke belakang (rotasi X -15 derajat) agar menghadap kamera pemain
-                Quaternion rot = Quaternion.Euler(-18f, 0, 0);
+                // Miring 22 derajat ke belakang agar wajah ubin menghadap tegak lurus ke sudut pandang kamera 48 derajat
+                Quaternion rot = Quaternion.Euler(22f, 0f, 0f);
 
                 ProceduralTile tileObj = CreateTileGameObject(data, pos, rot, true);
                 tileObj.SaveDefaultPosition(pos);
@@ -72,7 +72,7 @@ namespace Mahjong.Visual
             }
 
             ProceduralAudioSynthesizer.Instance?.PlayTileClick();
-            Debug.Log($"[TableVisualizer] Berhasil menampilkan {count} ubin 3D di tangan pemain!");
+            Debug.Log($"[TableVisualizer] Berhasil menampilkan {count} ubin 3D menghadap kamera pemain!");
         }
 
         /// <summary>
@@ -83,9 +83,10 @@ namespace Mahjong.Visual
             foreach (var o in opponentTileObjects) if (o != null) Destroy(o);
             opponentTileObjects.Clear();
 
-            SpawnOpponentRow(1, countEast, new Vector3(0.36f, handHeightY, 0), Quaternion.Euler(0, -90, -18));  // East (Kanan)
-            SpawnOpponentRow(2, countNorth, new Vector3(0, handHeightY, 0.36f), Quaternion.Euler(0, 180, -18)); // North (Atas)
-            SpawnOpponentRow(3, countWest, new Vector3(-0.36f, handHeightY, 0), Quaternion.Euler(0, 90, -18));   // West (Kiri)
+            // Lawan berdiri membelakangi tengah meja (menampilkan punggung giok hijau ke pemain)
+            SpawnOpponentRow(1, countEast, new Vector3(0.36f, handHeightY, 0), Quaternion.Euler(0, -90, 0));   // East (Kanan)
+            SpawnOpponentRow(2, countNorth, new Vector3(0, handHeightY, 0.36f), Quaternion.Euler(0, 180, 0));  // North (Atas)
+            SpawnOpponentRow(3, countWest, new Vector3(-0.36f, handHeightY, 0), Quaternion.Euler(0, 90, 0));    // West (Kiri)
         }
 
         private void SpawnOpponentRow(int seatIndex, int count, Vector3 centerPos, Quaternion rot)
@@ -111,9 +112,8 @@ namespace Mahjong.Visual
         {
             int count = playerTileObjects.Count;
             float startX = -((count - 1) * tileSpacingX) * 0.5f;
-            // Diberi jarak ekstra 1.5 cm di sebelah kanan tangan
-            Vector3 pos = new Vector3(startX + (count * tileSpacingX) + 0.015f, handHeightY, handCenterZ);
-            Quaternion rot = Quaternion.Euler(-18f, 0, 0);
+            Vector3 pos = new Vector3(startX + (count * tileSpacingX) + 0.018f, handHeightY, handCenterZ);
+            Quaternion rot = Quaternion.Euler(22f, 0f, 0f);
 
             ProceduralTile tileObj = CreateTileGameObject(data, pos, rot, true);
             tileObj.SaveDefaultPosition(pos);
@@ -143,11 +143,11 @@ namespace Mahjong.Visual
             int col = discardCount % 6;
             int row = discardCount / 6;
 
-            float pondStartX = -0.08f;
-            float pondStartZ = 0.08f;
-            Vector3 pondPos = new Vector3(pondStartX + (col * 0.032f), 0.012f, pondStartZ - (row * 0.042f));
-            // Ubin berbaring rata di atas meja menghadap ke atas (Rotasi X 90 derajat)
-            Quaternion pondRot = Quaternion.Euler(90f, 0, 0);
+            float pondStartX = -0.10f;
+            float pondStartZ = 0.16f;
+            Vector3 pondPos = new Vector3(pondStartX + (col * 0.035f), 0.012f, pondStartZ - (row * 0.046f));
+            // Ubin berbaring rata di atas meja dengan wajah menghadap ke atas (Rotasi X -90 derajat)
+            Quaternion pondRot = Quaternion.Euler(-90f, 0, 0);
 
             ProceduralTile pondTile = CreateTileGameObject(data, pondPos, pondRot, false);
             discardPondObjects.Add(pondTile);

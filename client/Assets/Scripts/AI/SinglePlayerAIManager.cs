@@ -205,23 +205,44 @@ namespace Mahjong.AI
                 Visual.TableVisualizer.Instance?.AddDrawnTile(drawn);
             }
             FindObjectOfType<TableCompass>()?.StartTurnTimer(0, 15f);
+            ProceduralLandingAndHUD.Instance?.UpdateTurnStatusHUD("🟢 GILIRAN ANDA! (Pilih ubin lalu buang)", true);
             Debug.Log($"[Solo AI Mode] Giliran Pemain (South)! Total Ubin: {playerHand.Count}");
         }
 
         public void OnPlayerDiscardTile(int tileId)
         {
-            if (!isGameActive || currentTurnSeat != 0) return;
+            if (!isGameActive) return;
+            if (currentTurnSeat != 0)
+            {
+                Debug.LogWarning("[Solo AI Mode] Sedang giliran bot lawan, tunggu sebentar...");
+                return;
+            }
 
             TileData discarded = playerHand.Find(t => t.id == tileId);
+            if (discarded == null && playerHand.Count > 0)
+            {
+                discarded = playerHand[playerHand.Count - 1]; // Fallback ke ubin terakhir jika ID tidak cocok
+            }
+
             if (discarded != null)
             {
                 playerHand.Remove(discarded);
                 centerDiscards.Add(discarded);
                 Visual.TableVisualizer.Instance?.VisualDiscardTile(0, discarded);
+                ProceduralLandingAndHUD.Instance?.UpdateTurnStatusHUD("⏳ Lawan sedang berpikir...", false);
                 Debug.Log($"[Solo AI Mode] Pemain membuang: {discarded.name}");
 
-                // Periksa apakah ada Bot yang bisa menang / Pong
-                StartCoroutine(ProcessAITurns(1)); // Lanjut ke Bot East
+                // Lanjut ke giliran Bot East
+                StartCoroutine(ProcessAITurns(1));
+            }
+        }
+
+        public void AutoDiscardForPlayer()
+        {
+            if (isGameActive && currentTurnSeat == 0 && playerHand.Count > 0)
+            {
+                TileData lastTile = playerHand[playerHand.Count - 1];
+                OnPlayerDiscardTile(lastTile.id);
             }
         }
 
@@ -237,9 +258,10 @@ namespace Mahjong.AI
                 // 1. Bot mengambil ubin dari wall
                 DrawTileForBot(activeBot);
                 FindObjectOfType<TableCompass>()?.StartTurnTimer(currentTurnSeat, 15f);
+                ProceduralLandingAndHUD.Instance?.UpdateTurnStatusHUD($"⏳ {activeBot.BotName} sedang giliran...", false);
 
-                // 2. Simulasi bot berpikir (1.2s - 1.8s)
-                float thinkTime = activeBot.GetSimulatedThinkingTime();
+                // 2. Simulasi bot berpikir (0.8s - 1.4s)
+                float thinkTime = Mathf.Clamp(activeBot.GetSimulatedThinkingTime(), 0.8f, 1.4f);
                 yield return new WaitForSeconds(thinkTime);
 
                 // 3. Bot memilih ubin buangan
@@ -257,6 +279,7 @@ namespace Mahjong.AI
                 {
                     isGameActive = false;
                     Debug.Log("[Solo AI Mode] Ubin Wall Habis! Ronde Berakhir Seri (Draw).");
+                    ProceduralLandingAndHUD.Instance?.UpdateTurnStatusHUD("🏁 Ronde Selesai (Seri)", false);
                     yield break;
                 }
 

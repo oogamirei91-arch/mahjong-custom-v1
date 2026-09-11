@@ -5,24 +5,30 @@ using Mahjong.Network;
 namespace Mahjong.UI
 {
     /// <summary>
-    /// TouchInputHandler: Pengendali Interaksi Layar Sentuh Mobile (Android / iOS) & Mouse.
-    /// Mendukung tap untuk memilih ubin (terangkat 1.8 cm) dan gesture drag-ke-atas untuk membuang ubin (Discard).
+    /// TouchInputHandler: Pengendali Interaksi Layar Sentuh Mobile (Android / iOS), Simulator, & Mouse.
+    /// Mendukung tap untuk memilih ubin (terangkat 2.2 cm), gesture drag-ke-atas untuk membuang ubin (Discard),
+    /// dan tombol aksi cepat di layar.
     /// </summary>
-    [RequireComponent(typeof(Camera))]
     public class TouchInputHandler : MonoBehaviour
     {
+        public static TouchInputHandler Instance { get; private set; }
+
         [Header("Pengaturan Input & Toleransi")]
         public LayerMask tileLayerMask = ~0; // Layer ubin 3D
-        public float dragDiscardThreshold = 40.0f; // Jarak piksel geser ke atas untuk memicu Discard
+        public float dragDiscardThreshold = 35.0f; // Jarak piksel geser ke atas untuk memicu Discard
+
+        public ProceduralTile SelectedTile { get; private set; } = null;
 
         private Camera mainCam;
-        private ProceduralTile selectedTile = null;
         private Vector2 touchStartScreenPos;
         private bool isDragging = false;
 
         private void Awake()
         {
+            if (Instance == null) Instance = this;
             mainCam = GetComponent<Camera>();
+            if (mainCam == null) mainCam = Camera.main;
+            if (mainCam == null) mainCam = Object.FindFirstObjectByType<Camera>();
         }
 
         private void Update()
@@ -32,7 +38,13 @@ namespace Mahjong.UI
 
         private void HandleMobileOrMouseInput()
         {
-            // Input Mouse (PC / Unity Editor) atau Touch (Android / iOS)
+            if (mainCam == null)
+            {
+                mainCam = Camera.main ?? Object.FindFirstObjectByType<Camera>();
+                if (mainCam == null) return;
+            }
+
+            // Input Mouse (PC / Unity Editor / Simulator) atau Touch (Android / iOS)
             bool inputDown = Input.GetMouseButtonDown(0);
             bool inputUp   = Input.GetMouseButtonUp(0);
             Vector2 currentScreenPos = Input.mousePosition;
@@ -40,8 +52,8 @@ namespace Mahjong.UI
             if (Input.touchCount > 0)
             {
                 Touch touch = Input.GetTouch(0);
-                inputDown = (touch.phase == TouchPhase.Began);
-                inputUp   = (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled);
+                if (touch.phase == TouchPhase.Began) inputDown = true;
+                if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled) inputUp = true;
                 currentScreenPos = touch.position;
             }
 
@@ -58,32 +70,41 @@ namespace Mahjong.UI
                     if (tile != null && tile.isInteractive)
                     {
                         // Jika ubin yang sama di-tap untuk kedua kalinya -> Lakukan Discard langsung
-                        if (selectedTile == tile)
+                        if (SelectedTile == tile)
                         {
                             ExecuteDiscard(tile);
                             return;
                         }
 
                         // Batalkan seleksi ubin sebelumnya
-                        if (selectedTile != null) selectedTile.SetSelected(false);
+                        if (SelectedTile != null) SelectedTile.SetSelected(false);
 
                         // Pilih ubin baru
-                        selectedTile = tile;
-                        selectedTile.SetSelected(true);
+                        SelectedTile = tile;
+                        SelectedTile.SetSelected(true);
                         Audio.ProceduralAudioSynthesizer.Instance?.PlayTileClick();
+                        ProceduralLandingAndHUD.Instance?.OnTileSelectedHUD(tile);
                     }
                 }
             }
 
             // 2. Sentuhan Dilepas (Release / Drag-Up Check)
-            if (inputUp && selectedTile != null)
+            if (inputUp && SelectedTile != null)
             {
                 float deltaY = currentScreenPos.y - touchStartScreenPos.y;
                 if (deltaY > dragDiscardThreshold)
                 {
                     // Pemain menggeser ubin ke atas layar (Gesture Discard ke tengah meja)
-                    ExecuteDiscard(selectedTile);
+                    ExecuteDiscard(SelectedTile);
                 }
+            }
+        }
+
+        public void ExecuteDiscardSelectedTile()
+        {
+            if (SelectedTile != null)
+            {
+                ExecuteDiscard(SelectedTile);
             }
         }
 
@@ -92,6 +113,8 @@ namespace Mahjong.UI
             if (tile == null) return;
 
             Debug.Log($"[TouchInputHandler] Membuang Ubin: {tile.tileName} (ID: {tile.tileId})");
+
+            ProceduralLandingAndHUD.Instance?.OnTileDiscardedHUD();
 
             // Rute aksi ke SinglePlayer AI jika mode Solo aktif, atau ke Network Manager jika Online
             if (AI.SinglePlayerAIManager.Instance != null && AI.SinglePlayerAIManager.Instance.isGameActive)
@@ -105,15 +128,16 @@ namespace Mahjong.UI
 
             tile.SetSelected(false);
             tile.isInteractive = false;
-            selectedTile = null;
+            SelectedTile = null;
         }
 
         public void DeselectCurrentTile()
         {
-            if (selectedTile != null)
+            if (SelectedTile != null)
             {
-                selectedTile.SetSelected(false);
-                selectedTile = null;
+                SelectedTile.SetSelected(false);
+                SelectedTile = null;
+                ProceduralLandingAndHUD.Instance?.OnTileDiscardedHUD();
             }
         }
     }
