@@ -19,9 +19,9 @@ namespace Mahjong.Procedural
         public string tileName;
 
         [Header("Dimensi Ubin 3D (Rasio Standar Mahjong)")]
-        public float tileWidth = 0.032f;    // Lebar X (3.2 cm)
-        public float tileHeight = 0.042f;   // Panjang Y (4.2 cm)
-        public float tileThickness = 0.022f;// Tebal Z (2.2 cm)
+        public float tileWidth = 0.024f;    // Lebar X (2.4 cm)
+        public float tileHeight = 0.034f;   // Panjang Y (3.4 cm)
+        public float tileThickness = 0.016f;// Tebal Z (1.6 cm)
 
         [Header("State Interaksi")]
         public bool isSelected = false;
@@ -138,7 +138,7 @@ namespace Mahjong.Procedural
             mesh.RecalculateBounds();
 
             meshFilter.sharedMesh = mesh;
-            boxCollider.size = new Vector3(tileWidth * 1.2f, tileHeight * 1.2f, tileThickness * 2.0f);
+            boxCollider.size = new Vector3(tileWidth * 1.3f, tileHeight * 1.3f, tileThickness * 2.5f);
             boxCollider.center = Vector3.zero;
 
             SetupMaterials();
@@ -162,7 +162,7 @@ namespace Mahjong.Procedural
                 color = Color.white,
                 mainTexture = atlas
             };
-            frontMat.SetFloat("_Glossiness", 0.4f);
+            frontMat.SetFloat("_Glossiness", 0.35f);
 
             // Material Punggung: Jade Green (Giok Hijau Zamrud Mewah)
             Material jadeMat = new Material(Shader.Find("Standard"))
@@ -241,7 +241,7 @@ namespace Mahjong.Procedural
         }
 
         /// <summary>
-        /// Animasi ketika pemain memilih (tap) ubin: Ubin terangkat naik 2.2 cm.
+        /// Animasi ketika pemain memilih (tap) ubin: Ubin terangkat naik 2.0 cm.
         /// </summary>
         public void SetSelected(bool selected)
         {
@@ -249,7 +249,7 @@ namespace Mahjong.Procedural
             isSelected = selected;
 
             if (activeAnimCoroutine != null) StopCoroutine(activeAnimCoroutine);
-            Vector3 targetPos = isSelected ? defaultLocalPos + new Vector3(0, 0.022f, 0) : defaultLocalPos;
+            Vector3 targetPos = isSelected ? defaultLocalPos + new Vector3(0, 0.020f, 0) : defaultLocalPos;
             activeAnimCoroutine = StartCoroutine(AnimateLocalPosition(targetPos, 0.12f));
         }
 
@@ -257,6 +257,13 @@ namespace Mahjong.Procedural
         {
             defaultLocalPos = pos;
             transform.localPosition = pos;
+        }
+
+        public void MoveToPositionSmooth(Vector3 newPos, float duration = 0.18f)
+        {
+            defaultLocalPos = newPos;
+            if (activeAnimCoroutine != null) StopCoroutine(activeAnimCoroutine);
+            activeAnimCoroutine = StartCoroutine(AnimateLocalPosition(newPos, duration));
         }
 
         private IEnumerator AnimateLocalPosition(Vector3 target, float duration)

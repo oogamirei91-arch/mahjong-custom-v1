@@ -215,20 +215,20 @@ namespace Mahjong.UI
         {
             panelInGameHUD = CreatePanel("Panel_InGameHUD", Color.clear);
 
-            // Banner Status Giliran (Atas)
-            GameObject banner = CreateCard(panelInGameHUD.transform, new Vector2(780, 75), new Vector2(0, 840));
-            banner.GetComponent<Image>().color = new Color(0.03f, 0.15f, 0.08f, 0.92f);
-            txtInGameTurnStatus = CreateText(banner.transform, "🟢 GILIRAN ANDA! (Pilih ubin lalu buang)", 24, FontStyle.Bold, new Color(1f, 0.92f, 0.4f), Vector2.zero, new Vector2(750, 65));
+            // Tombol Menu / Kembali ke Lobby (Kiri Atas)
+            CreateButton(panelInGameHUD.transform, "⚙️ Menu", new Color(0.2f, 0.25f, 0.3f, 0.95f), new Vector2(-440, 840), new Vector2(140, 65), ShowMainMenuLobby);
 
-            // Tombol Buang Ubin Terpilih (Kanan Bawah)
-            btnDiscardSelected = CreateButton(panelInGameHUD.transform, "🔥 BUANG UBIN TERPILIH", new Color(0.85f, 0.25f, 0.15f), new Vector2(0, -420), new Vector2(460, 85), () =>
+            // Banner Status Giliran (Tengah Atas)
+            GameObject banner = CreateCard(panelInGameHUD.transform, new Vector2(680, 65), new Vector2(80, 840));
+            banner.GetComponent<Image>().color = new Color(0.03f, 0.15f, 0.08f, 0.95f);
+            txtInGameTurnStatus = CreateText(banner.transform, "🟢 GILIRAN ANDA! (Pilih ubin lalu buang)", 22, FontStyle.Bold, new Color(1f, 0.92f, 0.4f), Vector2.zero, new Vector2(660, 60));
+
+            // Tombol Buang Ubin Terpilih (Tengah Bawah)
+            btnDiscardSelected = CreateButton(panelInGameHUD.transform, "🔥 BUANG UBIN TERPILIH", new Color(0.85f, 0.25f, 0.15f), new Vector2(0, -380), new Vector2(460, 80), () =>
             {
                 TouchInputHandler.Instance?.ExecuteDiscardSelectedTile();
             });
             txtDiscardButtonLabel = btnDiscardSelected.GetComponentInChildren<Text>();
-
-            // Tombol Menu / Kembali ke Lobby (Kiri Atas)
-            CreateButton(panelInGameHUD.transform, "⚙️ Menu", new Color(0.2f, 0.25f, 0.3f, 0.9f), new Vector2(-420, 840), new Vector2(160, 65), ShowMainMenuLobby);
 
             panelInGameHUD.SetActive(false);
         }

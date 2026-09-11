@@ -12,8 +12,8 @@ namespace Mahjong.Procedural
     public class TableCompass : MonoBehaviour
     {
         [Header("Pengaturan Tampilan Visual")]
-        public float compassRadius = 0.08f; // Radius 8 cm di tengah meja
-        public float compassHeight = 0.015f;
+        public float compassRadius = 0.048f; // Radius 4.8 cm di tengah meja
+        public float compassHeight = 0.007f; // Tebal piringan 0.7 cm
 
         [Header("LED Penunjuk Angin (East, South, West, North)")]
         public MeshRenderer ledEast;

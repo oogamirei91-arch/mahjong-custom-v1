@@ -9,22 +9,25 @@ namespace Mahjong.Visual
     /// <summary>
     /// TableVisualizer: Mengatur visualisasi peletakan ubin 3D di atas meja kasino.
     /// Membagikan 13 ubin ke tangan pemain (South) menghadap kamera secara tegak & jelas,
-    /// menempatkan ubin tertutup lawan (East/North/West), serta menampilkan ubin buangan di tengah meja.
+    /// menata ulang ubin secara mulus saat dibuang, menempatkan ubin tertutup lawan (East/North/West),
+    /// serta menampilkan ubin buangan di 4 kuadran kolam meja.
     /// </summary>
     public class TableVisualizer : MonoBehaviour
     {
         public static TableVisualizer Instance { get; private set; }
 
         [Header("Pengaturan Posisi & Jarak Ubin")]
-        public float tileSpacingX = 0.034f; // Jarak horizontal antar ubin (3.4 cm)
-        public float handCenterZ = -0.36f;  // Jarak tangan dari tengah meja
-        public float handHeightY = 0.024f;  // Tinggi ubin dari permukaan felt
+        public float tileSpacingX = 0.026f; // Jarak horizontal antar ubin (2.6 cm)
+        public float handCenterZ = -0.32f;  // Jarak tangan dari tengah meja (pas di layar bawah)
+        public float handHeightY = 0.022f;  // Tinggi ubin dari permukaan felt
 
         // Kontainer Objek Ubin 3D
         private Transform tilesContainer;
         private List<ProceduralTile> playerTileObjects = new List<ProceduralTile>();
         private List<GameObject> opponentTileObjects = new List<GameObject>();
         private List<ProceduralTile> discardPondObjects = new List<ProceduralTile>();
+
+        private int[] seatDiscardCounts = new int[4];
 
         private void Awake()
         {
@@ -45,6 +48,7 @@ namespace Mahjong.Visual
             playerTileObjects.Clear();
             opponentTileObjects.Clear();
             discardPondObjects.Clear();
+            for (int i = 0; i < 4; i++) seatDiscardCounts[i] = 0;
         }
 
         /// <summary>
@@ -63,7 +67,6 @@ namespace Mahjong.Visual
             {
                 TileData data = hand[i];
                 Vector3 pos = new Vector3(startX + (i * tileSpacingX), handHeightY, handCenterZ);
-                // Miring 22 derajat ke belakang agar wajah ubin menghadap tegak lurus ke sudut pandang kamera 48 derajat
                 Quaternion rot = Quaternion.Euler(22f, 0f, 0f);
 
                 ProceduralTile tileObj = CreateTileGameObject(data, pos, rot, true);
@@ -83,10 +86,9 @@ namespace Mahjong.Visual
             foreach (var o in opponentTileObjects) if (o != null) Destroy(o);
             opponentTileObjects.Clear();
 
-            // Lawan berdiri membelakangi tengah meja (menampilkan punggung giok hijau ke pemain)
-            SpawnOpponentRow(1, countEast, new Vector3(0.36f, handHeightY, 0), Quaternion.Euler(0, -90, 0));   // East (Kanan)
-            SpawnOpponentRow(2, countNorth, new Vector3(0, handHeightY, 0.36f), Quaternion.Euler(0, 180, 0));  // North (Atas)
-            SpawnOpponentRow(3, countWest, new Vector3(-0.36f, handHeightY, 0), Quaternion.Euler(0, 90, 0));    // West (Kiri)
+            SpawnOpponentRow(1, countEast, new Vector3(0.32f, handHeightY, 0), Quaternion.Euler(0, -90, 0));   // East (Kanan)
+            SpawnOpponentRow(2, countNorth, new Vector3(0, handHeightY, 0.32f), Quaternion.Euler(0, 180, 0));  // North (Atas)
+            SpawnOpponentRow(3, countWest, new Vector3(-0.32f, handHeightY, 0), Quaternion.Euler(0, 90, 0));    // West (Kiri)
         }
 
         private void SpawnOpponentRow(int seatIndex, int count, Vector3 centerPos, Quaternion rot)
@@ -112,7 +114,7 @@ namespace Mahjong.Visual
         {
             int count = playerTileObjects.Count;
             float startX = -((count - 1) * tileSpacingX) * 0.5f;
-            Vector3 pos = new Vector3(startX + (count * tileSpacingX) + 0.018f, handHeightY, handCenterZ);
+            Vector3 pos = new Vector3(startX + (count * tileSpacingX) + 0.015f, handHeightY, handCenterZ);
             Quaternion rot = Quaternion.Euler(22f, 0f, 0f);
 
             ProceduralTile tileObj = CreateTileGameObject(data, pos, rot, true);
@@ -123,11 +125,26 @@ namespace Mahjong.Visual
         }
 
         /// <summary>
-        /// Menghapus ubin yang dibuang dari tangan pemain dan menempatkannya di tengah meja (Discard Pond).
+        /// Merapikan kembali posisi sisa ubin pemain agar selalu rapi di tengah layar.
+        /// </summary>
+        private void RealignPlayerHand()
+        {
+            int count = playerTileObjects.Count;
+            if (count == 0) return;
+
+            float startX = -((count - 1) * tileSpacingX) * 0.5f;
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 newPos = new Vector3(startX + (i * tileSpacingX), handHeightY, handCenterZ);
+                playerTileObjects[i].MoveToPositionSmooth(newPos, 0.15f);
+            }
+        }
+
+        /// <summary>
+        /// Menghapus ubin yang dibuang dari tangan pemain dan menempatkannya di kolam meja sesuai kuadran kursi.
         /// </summary>
         public void VisualDiscardTile(int seatIndex, TileData data)
         {
-            // Jika pemain lokal yang membuang, hapus dari list tangan
             if (seatIndex == 0)
             {
                 ProceduralTile found = playerTileObjects.Find(t => t.tileId == data.id);
@@ -136,18 +153,39 @@ namespace Mahjong.Visual
                     playerTileObjects.Remove(found);
                     Destroy(found.gameObject);
                 }
+                RealignPlayerHand();
             }
 
-            // Tempatkan ubin terbuka di area buangan tengah meja (Discard Pond 6 kolom)
-            int discardCount = discardPondObjects.Count;
-            int col = discardCount % 6;
-            int row = discardCount / 6;
+            int count = seatDiscardCounts[Mathf.Clamp(seatIndex, 0, 3)]++;
+            int col = count % 6;
+            int row = count / 6;
 
-            float pondStartX = -0.10f;
-            float pondStartZ = 0.16f;
-            Vector3 pondPos = new Vector3(pondStartX + (col * 0.035f), 0.012f, pondStartZ - (row * 0.046f));
-            // Ubin berbaring rata di atas meja dengan wajah menghadap ke atas (Rotasi X -90 derajat)
-            Quaternion pondRot = Quaternion.Euler(-90f, 0, 0);
+            Vector3 pondPos = Vector3.zero;
+            Quaternion pondRot = Quaternion.identity;
+
+            float spacingX = 0.026f;
+            float spacingZ = 0.036f;
+
+            // Atur posisi 4 kuadran buangan di sekitar kompas tengah meja
+            switch (seatIndex)
+            {
+                case 0: // South (Bawah): berbaris di bawah kompas menghadap ke atas
+                    pondPos = new Vector3(-0.065f + (col * spacingX), 0.008f, -0.075f - (row * spacingZ));
+                    pondRot = Quaternion.Euler(-90f, 0, 0);
+                    break;
+                case 1: // East (Kanan): berbaris di kanan kompas
+                    pondPos = new Vector3(0.075f + (row * spacingZ), 0.008f, -0.065f + (col * spacingX));
+                    pondRot = Quaternion.Euler(-90f, -90, 0);
+                    break;
+                case 2: // North (Atas): berbaris di atas kompas
+                    pondPos = new Vector3(0.065f - (col * spacingX), 0.008f, 0.075f + (row * spacingZ));
+                    pondRot = Quaternion.Euler(-90f, 180, 0);
+                    break;
+                case 3: // West (Kiri): berbaris di kiri kompas
+                    pondPos = new Vector3(-0.075f - (row * spacingZ), 0.008f, 0.065f - (col * spacingX));
+                    pondRot = Quaternion.Euler(-90f, 90, 0);
+                    break;
+            }
 
             ProceduralTile pondTile = CreateTileGameObject(data, pondPos, pondRot, false);
             discardPondObjects.Add(pondTile);
