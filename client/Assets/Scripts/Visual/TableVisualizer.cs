@@ -87,7 +87,7 @@ namespace Mahjong.Visual
             opponentTileObjects.Clear();
 
             SpawnOpponentRow(1, countEast, new Vector3(0.36f, handHeightY, 0), Quaternion.Euler(0, -90, 0));   // East (Kanan)
-            SpawnOpponentRow(2, countNorth, new Vector3(0, handHeightY, 0.36f), Quaternion.Euler(0, 180, 0));  // North (Atas)
+            SpawnOpponentRow(2, countNorth, new Vector3(0, handHeightY, 0.36f), Quaternion.Euler(0, 0, 0));    // North (Atas)
             SpawnOpponentRow(3, countWest, new Vector3(-0.36f, handHeightY, 0), Quaternion.Euler(0, 90, 0));    // West (Kiri)
         }
 
@@ -163,27 +163,27 @@ namespace Mahjong.Visual
             Vector3 pondPos = Vector3.zero;
             Quaternion pondRot = Quaternion.identity;
 
-            float spacingX = 0.046f;
-            float spacingZ = 0.064f;
+            float spacingX = 0.048f;
+            float spacingZ = 0.066f;
 
-            // Atur posisi 4 kuadran buangan di sekitar kompas tengah meja
+            // Atur posisi 4 kuadran buangan di sekitar kompas tengah meja (Wajah Ubin Menghadap Ke Atas!)
             switch (seatIndex)
             {
                 case 0: // South (Bawah): berbaris di bawah kompas menghadap ke atas
-                    pondPos = new Vector3(-0.115f + (col * spacingX), 0.012f, -0.11f - (row * spacingZ));
-                    pondRot = Quaternion.Euler(-90f, 0, 0);
+                    pondPos = new Vector3(-0.12f + (col * spacingX), 0.014f, -0.11f - (row * spacingZ));
+                    pondRot = Quaternion.Euler(90f, 0f, 0f);
                     break;
                 case 1: // East (Kanan): berbaris di kanan kompas
-                    pondPos = new Vector3(0.11f + (row * spacingZ), 0.012f, -0.115f + (col * spacingX));
-                    pondRot = Quaternion.Euler(-90f, -90, 0);
+                    pondPos = new Vector3(0.11f + (row * spacingZ), 0.014f, -0.12f + (col * spacingX));
+                    pondRot = Quaternion.Euler(90f, -90f, 0f);
                     break;
                 case 2: // North (Atas): berbaris di atas kompas
-                    pondPos = new Vector3(0.115f - (col * spacingX), 0.012f, 0.11f + (row * spacingZ));
-                    pondRot = Quaternion.Euler(-90f, 180, 0);
+                    pondPos = new Vector3(0.12f - (col * spacingX), 0.014f, 0.11f + (row * spacingZ));
+                    pondRot = Quaternion.Euler(90f, 180f, 0f);
                     break;
                 case 3: // West (Kiri): berbaris di kiri kompas
-                    pondPos = new Vector3(-0.11f - (row * spacingZ), 0.012f, 0.115f - (col * spacingX));
-                    pondRot = Quaternion.Euler(-90f, 90, 0);
+                    pondPos = new Vector3(-0.11f - (row * spacingZ), 0.014f, 0.12f - (col * spacingX));
+                    pondRot = Quaternion.Euler(90f, 90f, 0f);
                     break;
             }
 
