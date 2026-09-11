@@ -61,8 +61,14 @@ namespace Mahjong.AI
             botNorth.Difficulty = diff;
             botWest.Difficulty = diff;
 
+            // Bersihkan meja & bagikan ubin
+            Visual.TableVisualizer.Instance?.ClearAllTiles();
             GenerateFullDeckAndShuffle();
             DealHands();
+
+            // Tampilkan ubin 3D di meja
+            Visual.TableVisualizer.Instance?.SpawnPlayerHand(playerHand);
+            Visual.TableVisualizer.Instance?.SpawnOpponentHands(botEast.Hand.Count, botNorth.Hand.Count, botWest.Hand.Count);
 
             isGameActive = true;
             currentTurnSeat = 0; // Pemain lokal (South) mulai pertama
@@ -151,19 +157,20 @@ namespace Mahjong.AI
             return t;
         }
 
-        private void DrawTileForPlayer()
+        private TileData DrawTileForPlayer()
         {
             TileData t = DrawFromWall();
-            if (t == null) return;
+            if (t == null) return null;
 
             if (t.is_bonus)
             {
                 playerBonusTiles.Add(t);
-                DrawTileForPlayer(); // Ambil ubin pengganti (flower replacement)
+                return DrawTileForPlayer(); // Ambil ubin pengganti (flower replacement)
             }
             else
             {
                 playerHand.Add(t);
+                return t;
             }
         }
 
@@ -192,7 +199,11 @@ namespace Mahjong.AI
             if (!isGameActive) return;
             currentTurnSeat = 0;
 
-            DrawTileForPlayer();
+            TileData drawn = DrawTileForPlayer();
+            if (drawn != null)
+            {
+                Visual.TableVisualizer.Instance?.AddDrawnTile(drawn);
+            }
             FindObjectOfType<TableCompass>()?.StartTurnTimer(0, 15f);
             Debug.Log($"[Solo AI Mode] Giliran Pemain (South)! Total Ubin: {playerHand.Count}");
         }
@@ -206,7 +217,7 @@ namespace Mahjong.AI
             {
                 playerHand.Remove(discarded);
                 centerDiscards.Add(discarded);
-                ProceduralAudioSynthesizer.Instance?.PlayTileDiscard();
+                Visual.TableVisualizer.Instance?.VisualDiscardTile(0, discarded);
                 Debug.Log($"[Solo AI Mode] Pemain membuang: {discarded.name}");
 
                 // Periksa apakah ada Bot yang bisa menang / Pong
@@ -237,7 +248,7 @@ namespace Mahjong.AI
                 {
                     activeBot.Hand.Remove(botDiscard);
                     centerDiscards.Add(botDiscard);
-                    ProceduralAudioSynthesizer.Instance?.PlayTileDiscard();
+                    Visual.TableVisualizer.Instance?.VisualDiscardTile(currentTurnSeat, botDiscard);
                     Debug.Log($"[Solo AI Mode] {activeBot.BotName} membuang: {botDiscard.name}");
                 }
 

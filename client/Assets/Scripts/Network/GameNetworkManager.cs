@@ -223,6 +223,9 @@ namespace Mahjong.Network
                     case NetworkAction.NOTIF_DEAL_HANDS:
                         var dealData = JsonUtility.FromJson<DealHandsPayload>(env.payload);
                         localSeatIndex = dealData.seat_index;
+                        Visual.TableVisualizer.Instance?.ClearAllTiles();
+                        Visual.TableVisualizer.Instance?.SpawnPlayerHand(dealData.hand_tiles);
+                        Visual.TableVisualizer.Instance?.SpawnOpponentHands();
                         OnHandsDealt?.Invoke(dealData);
                         break;
 
@@ -232,11 +235,16 @@ namespace Mahjong.Network
                         {
                             tableCompass.StartTurnTimer(turnData.active_seat_index, turnData.turn_duration);
                         }
+                        if (turnData.active_seat_index == localSeatIndex && turnData.drawn_tile != null && turnData.drawn_tile.id >= 0)
+                        {
+                            Visual.TableVisualizer.Instance?.AddDrawnTile(turnData.drawn_tile);
+                        }
                         OnTurnStarted?.Invoke(turnData);
                         break;
 
                     case NetworkAction.NOTIF_TILE_DISCARDED:
                         var discardData = JsonUtility.FromJson<DiscardPayload>(env.payload);
+                        Visual.TableVisualizer.Instance?.VisualDiscardTile(discardData.seat_index, discardData.tile);
                         OnTileDiscarded?.Invoke(discardData);
                         break;
 

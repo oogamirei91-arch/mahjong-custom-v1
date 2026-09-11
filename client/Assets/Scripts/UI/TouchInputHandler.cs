@@ -92,10 +92,16 @@ namespace Mahjong.UI
             if (tile == null) return;
 
             Debug.Log($"[TouchInputHandler] Membuang Ubin: {tile.tileName} (ID: {tile.tileId})");
-            Audio.ProceduralAudioSynthesizer.Instance?.PlayTileDiscard();
 
-            // Kirim aksi ke Authoritative Server
-            GameNetworkManager.Instance?.DiscardTile(tile.tileId);
+            // Rute aksi ke SinglePlayer AI jika mode Solo aktif, atau ke Network Manager jika Online
+            if (AI.SinglePlayerAIManager.Instance != null && AI.SinglePlayerAIManager.Instance.isGameActive)
+            {
+                AI.SinglePlayerAIManager.Instance.OnPlayerDiscardTile(tile.tileId);
+            }
+            else
+            {
+                GameNetworkManager.Instance?.DiscardTile(tile.tileId);
+            }
 
             tile.SetSelected(false);
             tile.isInteractive = false;
