@@ -57,7 +57,7 @@ namespace Mahjong.UI
             Screen.autorotateToPortraitUpsideDown = false;
 
             Camera cam = Camera.main;
-            if (cam == null) cam = Object.FindFirstObjectByType<Camera>();
+            if (cam == null) cam = Object.FindAnyObjectByType<Camera>();
             if (cam != null)
             {
                 if (cam.GetComponent<Visual.CameraController>() == null)
@@ -66,49 +66,49 @@ namespace Mahjong.UI
                     cam.gameObject.AddComponent<TouchInputHandler>();
             }
 
-            if (Object.FindFirstObjectByType<Procedural.ProceduralTable>() == null)
+            if (Object.FindAnyObjectByType<Procedural.ProceduralTable>() == null)
             {
                 GameObject tableObj = new GameObject("[ProceduralTable]");
                 tableObj.AddComponent<Procedural.ProceduralTable>();
                 DontDestroyOnLoad(tableObj);
             }
-            if (Object.FindFirstObjectByType<Procedural.TableCompass>() == null)
+            if (Object.FindAnyObjectByType<Procedural.TableCompass>() == null)
             {
                 GameObject compassObj = new GameObject("[TableCompass]");
                 compassObj.AddComponent<Procedural.TableCompass>();
                 DontDestroyOnLoad(compassObj);
             }
-            if (Object.FindFirstObjectByType<Procedural.ProceduralTileAtlas>() == null)
+            if (Object.FindAnyObjectByType<Procedural.ProceduralTileAtlas>() == null)
             {
                 GameObject atlasObj = new GameObject("[ProceduralTileAtlas]");
                 atlasObj.AddComponent<Procedural.ProceduralTileAtlas>();
                 DontDestroyOnLoad(atlasObj);
             }
-            if (Object.FindFirstObjectByType<GameNetworkManager>() == null)
+            if (Object.FindAnyObjectByType<GameNetworkManager>() == null)
             {
                 GameObject netObj = new GameObject("[GameNetworkManager]");
                 netObj.AddComponent<GameNetworkManager>();
                 DontDestroyOnLoad(netObj);
             }
-            if (Object.FindFirstObjectByType<Visual.TableVisualizer>() == null)
+            if (Object.FindAnyObjectByType<Visual.TableVisualizer>() == null)
             {
                 GameObject visObj = new GameObject("[TableVisualizer]");
                 visObj.AddComponent<Visual.TableVisualizer>();
                 DontDestroyOnLoad(visObj);
             }
-            if (Object.FindFirstObjectByType<AI.SinglePlayerAIManager>() == null)
+            if (Object.FindAnyObjectByType<AI.SinglePlayerAIManager>() == null)
             {
                 GameObject aiObj = new GameObject("[SinglePlayerAIManager]");
                 aiObj.AddComponent<AI.SinglePlayerAIManager>();
                 DontDestroyOnLoad(aiObj);
             }
-            if (Object.FindFirstObjectByType<Audio.ProceduralAudioSynthesizer>() == null)
+            if (Object.FindAnyObjectByType<Audio.ProceduralAudioSynthesizer>() == null)
             {
                 GameObject audioObj = new GameObject("[AudioManager]");
                 audioObj.AddComponent<Audio.ProceduralAudioSynthesizer>();
                 DontDestroyOnLoad(audioObj);
             }
-            if (Object.FindFirstObjectByType<ProceduralLandingAndHUD>() == null)
+            if (Object.FindAnyObjectByType<ProceduralLandingAndHUD>() == null)
             {
                 GameObject canvasObj = new GameObject("[Canvas_UI]", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(ProceduralLandingAndHUD));
                 DontDestroyOnLoad(canvasObj);

@@ -32,7 +32,7 @@ namespace Mahjong.Editor
 
             // 1. Setup Main Camera
             Camera cam = Camera.main;
-            if (cam == null) cam = Object.FindFirstObjectByType<Camera>();
+            if (cam == null) cam = Object.FindAnyObjectByType<Camera>();
             if (cam != null)
             {
                 cam.transform.position = new Vector3(0, 0.72f, -0.68f);
@@ -53,71 +53,71 @@ namespace Mahjong.Editor
             }
 
             // 2. Setup Directional Light
-            Light dirLight = Object.FindFirstObjectByType<Light>();
+            Light dirLight = Object.FindAnyObjectByType<Light>();
             if (dirLight == null)
             {
                 GameObject lightObj = new GameObject("Directional Light");
                 dirLight = lightObj.AddComponent<Light>();
                 dirLight.type = LightType.Directional;
                 dirLight.color = new Color(1f, 0.96f, 0.88f);
-                dirLight.intensity = 1.2f;
+                dirLight.intensity = 1.15f;
                 lightObj.transform.rotation = Quaternion.Euler(50f, -30f, 0);
                 sceneModified = true;
             }
 
             // 3. Setup EventSystem
-            if (Object.FindFirstObjectByType<EventSystem>() == null)
+            if (Object.FindAnyObjectByType<EventSystem>() == null)
             {
                 GameObject esObj = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
                 sceneModified = true;
             }
 
             // 4. Setup 3D Table & Compass & Atlas
-            if (Object.FindFirstObjectByType<ProceduralTable>() == null)
+            if (Object.FindAnyObjectByType<ProceduralTable>() == null)
             {
                 GameObject tableObj = new GameObject("[ProceduralTable]", typeof(ProceduralTable));
                 sceneModified = true;
             }
 
-            if (Object.FindFirstObjectByType<TableCompass>() == null)
+            if (Object.FindAnyObjectByType<TableCompass>() == null)
             {
                 GameObject compassObj = new GameObject("[TableCompass]", typeof(TableCompass));
                 sceneModified = true;
             }
 
-            if (Object.FindFirstObjectByType<ProceduralTileAtlas>() == null)
+            if (Object.FindAnyObjectByType<ProceduralTileAtlas>() == null)
             {
                 GameObject atlasObj = new GameObject("[ProceduralTileAtlas]", typeof(ProceduralTileAtlas));
                 sceneModified = true;
             }
 
             // 5. Setup Network & Logic Managers
-            if (Object.FindFirstObjectByType<GameNetworkManager>() == null)
+            if (Object.FindAnyObjectByType<GameNetworkManager>() == null)
             {
                 GameObject netObj = new GameObject("[GameNetworkManager]", typeof(GameNetworkManager));
                 sceneModified = true;
             }
 
-            if (Object.FindFirstObjectByType<TableVisualizer>() == null)
+            if (Object.FindAnyObjectByType<TableVisualizer>() == null)
             {
                 GameObject visObj = new GameObject("[TableVisualizer]", typeof(TableVisualizer));
                 sceneModified = true;
             }
 
-            if (Object.FindFirstObjectByType<SinglePlayerAIManager>() == null)
+            if (Object.FindAnyObjectByType<SinglePlayerAIManager>() == null)
             {
                 GameObject aiObj = new GameObject("[SinglePlayerAIManager]", typeof(SinglePlayerAIManager));
                 sceneModified = true;
             }
 
-            if (Object.FindFirstObjectByType<ProceduralAudioSynthesizer>() == null)
+            if (Object.FindAnyObjectByType<ProceduralAudioSynthesizer>() == null)
             {
                 GameObject audioObj = new GameObject("[AudioManager]", typeof(ProceduralAudioSynthesizer));
                 sceneModified = true;
             }
 
             // 6. Setup Canvas UI (Landing Page & HUD)
-            if (Object.FindFirstObjectByType<ProceduralLandingAndHUD>() == null)
+            if (Object.FindAnyObjectByType<ProceduralLandingAndHUD>() == null)
             {
                 GameObject canvasObj = new GameObject("[Canvas_UI]", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(ProceduralLandingAndHUD));
                 sceneModified = true;

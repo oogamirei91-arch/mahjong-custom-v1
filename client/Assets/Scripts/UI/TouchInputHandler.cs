@@ -28,7 +28,7 @@ namespace Mahjong.UI
             if (Instance == null) Instance = this;
             mainCam = GetComponent<Camera>();
             if (mainCam == null) mainCam = Camera.main;
-            if (mainCam == null) mainCam = Object.FindFirstObjectByType<Camera>();
+            if (mainCam == null) mainCam = Object.FindAnyObjectByType<Camera>();
         }
 
         private void Update()
@@ -40,7 +40,7 @@ namespace Mahjong.UI
         {
             if (mainCam == null)
             {
-                mainCam = Camera.main ?? Object.FindFirstObjectByType<Camera>();
+                mainCam = Camera.main ?? Object.FindAnyObjectByType<Camera>();
                 if (mainCam == null) return;
             }
 

@@ -206,7 +206,7 @@ namespace Mahjong.AI
             {
                 Visual.TableVisualizer.Instance?.AddDrawnTile(drawn);
             }
-            FindObjectOfType<TableCompass>()?.StartTurnTimer(0, 15f);
+            Object.FindAnyObjectByType<TableCompass>()?.StartTurnTimer(0, 15f);
             ProceduralLandingAndHUD.Instance?.UpdateTurnStatusHUD("🟢 GILIRAN ANDA! (Pilih ubin lalu buang)", true);
             Debug.Log($"[Solo AI Mode] Giliran Pemain (South)! Total Ubin: {playerHand.Count}");
         }
@@ -228,6 +228,7 @@ namespace Mahjong.AI
 
             if (discarded != null)
             {
+                Object.FindAnyObjectByType<TableCompass>()?.StopTimer();
                 playerHand.Remove(discarded);
                 centerDiscards.Add(discarded);
                 
@@ -263,7 +264,7 @@ namespace Mahjong.AI
 
                 // 1. Bot mengambil ubin dari wall
                 DrawTileForBot(activeBot);
-                FindObjectOfType<TableCompass>()?.StartTurnTimer(currentTurnSeat, 15f);
+                Object.FindAnyObjectByType<TableCompass>()?.StartTurnTimer(currentTurnSeat, 15f);
                 ProceduralLandingAndHUD.Instance?.UpdateTurnStatusHUD($"⏳ {activeBot.BotName} sedang giliran...", false);
 
                 // 2. Simulasi bot berpikir (0.8s - 1.4s)
