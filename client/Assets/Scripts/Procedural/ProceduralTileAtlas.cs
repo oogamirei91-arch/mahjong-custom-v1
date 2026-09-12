@@ -102,22 +102,27 @@ namespace Mahjong.Procedural
         private void DrawTileBevelBorder(int startX, int startY, int w, int h)
         {
             int margin = 6;
-            int borderThick = 4;
+            int borderThick = 5;
+
+            // Highlight atas dan kiri (Ivory Bright Light)
+            Color colHighlight = new Color(1.0f, 1.0f, 0.98f, 1.0f);
+            // Shadow bawah dan kanan (Bevel Drop Shadow)
+            Color colShadow = new Color(0.84f, 0.78f, 0.70f, 1.0f);
 
             for (int x = margin; x < w - margin; x++)
             {
                 for (int t = 0; t < borderThick; t++)
                 {
-                    SetPixelSafe(startX + x, startY + margin + t, colBevelGold);
-                    SetPixelSafe(startX + x, startY + h - margin - 1 - t, colBevelGold);
+                    SetPixelSafe(startX + x, startY + margin + t, colShadow); // Bawah
+                    SetPixelSafe(startX + x, startY + h - margin - 1 - t, colHighlight); // Atas
                 }
             }
             for (int y = margin; y < h - margin; y++)
             {
                 for (int t = 0; t < borderThick; t++)
                 {
-                    SetPixelSafe(startX + margin + t, startY + y, colBevelGold);
-                    SetPixelSafe(startX + w - margin - 1 - t, startY + y, colBevelGold);
+                    SetPixelSafe(startX + margin + t, startY + y, colHighlight); // Kiri
+                    SetPixelSafe(startX + w - margin - 1 - t, startY + y, colShadow); // Kanan
                 }
             }
         }

@@ -1,0 +1,25 @@
+{
+  "name": "Mahjong VIP 3D - Classic 144 Tiles",
+  "short_name": "Mahjong 3D",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#061510",
+  "theme_color": "#061510",
+  "description": "Permainan Mahjong 3D Klasik 144 Ubin dengan grafis fisik dual-layer giok zamrud, kompas digital 15 detik, dan bot AI cerdas.",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "casino", "board"]
+}

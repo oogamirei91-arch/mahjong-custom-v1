@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <meta name="theme-color" content="#061510">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Mahjong VIP 3D - Classic 144 Tiles</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase JavaScript SDK CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="app-root">
+        <!-- 1. LANDING & LOGIN SCREEN -->
+        <div id="screen-landing" class="screen-view active">
+            <div class="landing-card">
+                <h1 class="game-logo-title">🀄 MAHJONG VIP 3D</h1>
+                <p class="game-tagline">Classic 144 Tiles &bull; Emerald Casino Edition</p>
+
+                <!-- Login Method Tabs (Guest, Google, Email) -->
+                <div class="login-tabs">
+                    <button class="login-tab-btn active" id="tab-btn-guest">👤 Tamu</button>
+                    <button class="login-tab-btn" id="tab-btn-google">🔴 Google</button>
+                    <button class="login-tab-btn" id="tab-btn-email">📧 Email</button>
+                </div>
+
+                <!-- Status / Error Feedback Message -->
+                <div id="login-status-msg" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 14px; text-align: center; transition: all 0.3s ease;"></div>
+
+                <!-- Tab 1: Guest Login & Register -->
+                <div class="login-tab-content active" id="tab-content-guest">
+                    <div class="input-group" style="margin-bottom: 12px;">
+                        <label class="input-label" for="input-guest-name">Nama Pemain (Nickname)</label>
+                        <input type="text" id="input-guest-name" class="vip-input" placeholder="Masukkan Nickname..." value="VIP Player" maxlength="15">
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <button id="btn-login-guest" class="btn-vip-primary" style="flex: 1; padding: 12px 10px; font-size: 0.95rem;">MASUK TAMU</button>
+                        <button id="btn-register-guest" class="btn-vip-primary" style="flex: 1; padding: 12px 10px; font-size: 0.95rem; background: rgba(0, 255, 136, 0.2); border: 1px solid var(--jade-accent); color: var(--jade-accent);">DAFTAR TAMU</button>
+                    </div>
+                    <p style="font-size: 0.75rem; color: rgba(255,255,255,0.6); text-align: center; margin: 0;">
+                        ℹ️ Cek akun tamu perangkat di Supabase. Jika belum ada, silakan klik <b>DAFTAR TAMU</b> (+10,000 Chips).
+                    </p>
+                </div>
+
+                <!-- Tab 2: Google Sign-In -->
+                <div class="login-tab-content" id="tab-content-google">
+                    <p style="font-size: 0.85rem; color: rgba(255,255,255,0.75); margin-bottom: 16px; text-align: center;">
+                        Masuk & sinkronkan data profil Anda secara instan dengan Akun Google (+50,000 Chips VIP).
+                    </p>
+                    <button id="btn-login-google" class="btn-google-signin">
+                        <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                        </svg>
+                        <span>Lanjutkan dengan Google</span>
+                    </button>
+                </div>
+
+                <!-- Tab 3: Email Login & Register -->
+                <div class="login-tab-content" id="tab-content-email">
+                    <div class="input-group" style="margin-bottom: 12px;">
+                        <label class="input-label" for="input-email-address">Alamat Email</label>
+                        <input type="email" id="input-email-address" class="vip-input" placeholder="nama@email.com">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 16px;">
+                        <label class="input-label" for="input-email-password">Kata Sandi</label>
+                        <input type="password" id="input-email-password" class="vip-input" placeholder="Masukkan sandi...">
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <button id="btn-login-email" class="btn-vip-primary" style="flex: 1; padding: 12px 10px; font-size: 0.95rem;">MASUK</button>
+                        <button id="btn-register-email" class="btn-vip-primary" style="flex: 1; padding: 12px 10px; font-size: 0.95rem; background: rgba(0, 255, 136, 0.2); border: 1px solid var(--jade-accent); color: var(--jade-accent);">DAFTAR</button>
+                    </div>
+                    <p style="font-size: 0.75rem; color: rgba(255,255,255,0.6); text-align: center; margin: 0;">
+                        ℹ️ Belum punya akun? Klik <b>DAFTAR</b> untuk registrasi akun baru (+25,000 Chips).
+                    </p>
+                </div>
+
+                <!-- Footer note -->
+                <div class="login-footer-info">
+                    <span>🔒 Database Cloud Supabase PostgreSQL Aktif & Terlindungi</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. LOBBY SCREEN (4 MODE CARDS) -->
+        <div id="screen-lobby" class="screen-view">
+            <header class="lobby-header">
+                <div class="player-profile-badge">
+                    <div class="profile-avatar" id="header-avatar">👑</div>
+                    <div class="profile-info">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <div class="profile-name">VIP Player</div>
+                            <span id="header-auth-badge" class="auth-tag tag-guest">👤 Tamu</span>
+                            <span id="header-rank-tier" class="rank-tier-tag">Novice 🥉</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="profile-coin-wrap">
+                                <span>🪙</span>
+                                <span class="profile-coins">50,000</span>
+                            </div>
+                            <div class="profile-coin-wrap" style="background: rgba(255, 215, 0, 0.12); border-color: rgba(255, 215, 0, 0.3);">
+                                <span>🏆</span>
+                                <span id="header-trophies" style="color: var(--gold-bright); font-weight: 800; font-size: 0.9rem;">0 Pts</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 style="font-family: var(--font-heading); color: var(--gold-bright); font-size: 1.4rem; letter-spacing: 1px;">
+                    PILIH MODE PERMAINAN
+                </h2>
+
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="hud-btn" id="btn-lobby-leaderboard" title="Papan Peringkat Global" style="background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(0,255,136,0.15)); border-color: var(--gold-bright); color: var(--gold-bright); font-size: 1.1rem;">🏆</button>
+                    <button class="hud-btn" id="btn-lobby-rules" title="Panduan Aturan" onclick="document.getElementById('modal-rules').classList.add('active')">📖</button>
+                    <button class="hud-btn" id="btn-lobby-settings" title="Pengaturan" onclick="document.getElementById('modal-settings').classList.add('active')">⚙️</button>
+                </div>
+            </header>
+
+            <main class="lobby-modes-grid">
+                <!-- Card 1: Practice vs AI -->
+                <div class="mode-card" id="card-mode-ai">
+                    <div class="mode-icon">🤖</div>
+                    <h3 class="mode-title">Latihan vs AI</h3>
+                    <p class="mode-desc">Bermain santai offline melawan 3 bot cerdas (Kenji, Mei, Dragon).</p>
+                </div>
+
+                <!-- Card 2: Custom VIP Room -->
+                <div class="mode-card" id="card-mode-custom">
+                    <div class="mode-icon">🗝️</div>
+                    <h3 class="mode-title">Ruangan VIP</h3>
+                    <p class="mode-desc">Buat meja privat dengan kode unik 6-digit untuk mabar teman & bot.</p>
+                </div>
+
+                <!-- Card 3: Quick Online Match -->
+                <div class="mode-card" id="card-mode-quick">
+                    <div class="mode-icon">⚡</div>
+                    <h3 class="mode-title">Match Cepat</h3>
+                    <p class="mode-desc">Auto-matchmaking online instan melalui WebSocket Server.</p>
+                </div>
+
+                <!-- Card 4: Tournament Championship -->
+                <div class="mode-card" id="card-mode-tournament">
+                    <div class="mode-icon">🏆</div>
+                    <h3 class="mode-title">Turnamen VIP</h3>
+                    <p class="mode-desc">Taruhan tinggi dengan aturan klasik dan piala bergengsi.</p>
+                </div>
+            </main>
+        </div>
+
+        <!-- 3. RUANG TUNGGU VIP (VIP WAITING ROOM) -->
+        <div id="screen-vip-room" class="screen-view">
+            <header class="vip-room-header">
+                <div class="room-code-badge">
+                    <span class="room-label">KODE RUANGAN:</span>
+                    <span id="vip-display-room-code" class="room-code-val">#------</span>
+                    <button id="btn-copy-room-code" class="btn-copy-code" title="Salin Kode Ruangan">📋 Salin Kode</button>
+                    <button id="btn-copy-room-link" class="btn-copy-code btn-copy-link" title="Salin Link Invite">🔗 Salin Link</button>
+                </div>
+
+                <div class="room-mode-info">
+                    <span style="color: var(--gold-bright); font-weight: 700; font-size: 1.1rem; letter-spacing: 1px;">🀄 MEJA VIP 4 KURSI</span>
+                    <span style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">(15s Turn-Based &bull; Real-Time Multi-Player)</span>
+                </div>
+
+                <button id="btn-leave-vip-room" class="btn-leave-room">🚪 KELUAR</button>
+            </header>
+
+            <!-- 4 Slots / Kursi Pemain -->
+            <div class="vip-slots-grid">
+                <!-- Slot 1: South (Host) -->
+                <div class="player-slot-card slot-active" id="vip-slot-0">
+                    <div class="slot-chair-tag">KURSI 1 (SOUTH)</div>
+                    <div class="slot-avatar" id="vip-slot-0-avatar">👑</div>
+                    <div class="slot-name" id="vip-slot-0-name">VIP Player</div>
+                    <div class="slot-status badge-host" id="vip-slot-0-status">🟢 HOST (SIAP)</div>
+                    <div class="slot-role-tag">Pemain Utama</div>
+                </div>
+
+                <!-- Slot 2: East (Kanan) -->
+                <div class="player-slot-card" id="vip-slot-1">
+                    <div class="slot-chair-tag">KURSI 2 (EAST)</div>
+                    <div class="slot-avatar" id="vip-slot-1-avatar">🤖</div>
+                    <div class="slot-name" id="vip-slot-1-name">Bot AI: Kenji</div>
+                    <div class="slot-status badge-bot" id="vip-slot-1-status">🤖 BOT OTOMATIS</div>
+                    <button class="btn-slot-toggle" id="btn-slot-1-toggle" title="Ubah jenis pemain slot ini">🔄 Ganti Pemain/Bot</button>
+                </div>
+
+                <!-- Slot 3: North (Atas) -->
+                <div class="player-slot-card" id="vip-slot-2">
+                    <div class="slot-chair-tag">KURSI 3 (NORTH)</div>
+                    <div class="slot-avatar" id="vip-slot-2-avatar">🤖</div>
+                    <div class="slot-name" id="vip-slot-2-name">Bot AI: Mei</div>
+                    <div class="slot-status badge-bot" id="vip-slot-2-status">🤖 BOT OTOMATIS</div>
+                    <button class="btn-slot-toggle" id="btn-slot-2-toggle" title="Ubah jenis pemain slot ini">🔄 Ganti Pemain/Bot</button>
+                </div>
+
+                <!-- Slot 4: West (Kiri) -->
+                <div class="player-slot-card" id="vip-slot-3">
+                    <div class="slot-chair-tag">KURSI 4 (WEST)</div>
+                    <div class="slot-avatar" id="vip-slot-3-avatar">🤖</div>
+                    <div class="slot-name" id="vip-slot-3-name">Bot AI: Dragon</div>
+                    <div class="slot-status badge-bot" id="vip-slot-3-status">🤖 BOT OTOMATIS</div>
+                    <button class="btn-slot-toggle" id="btn-slot-3-toggle" title="Ubah jenis pemain slot ini">🔄 Ganti Pemain/Bot</button>
+                </div>
+            </div>
+
+            <!-- Bottom Control Panel: Dynamic Status & Start Game Button -->
+            <div class="vip-room-footer">
+                <div class="vip-balance-info" id="vip-match-summary">
+                    <span style="font-size: 1.15rem; margin-right: 6px;">👥</span>
+                    <span>Status Meja: </span>
+                    <strong id="vip-player-count-text" style="color: var(--gold-bright); margin: 0 8px;">1 Pemain Asli + 3 Bot AI</strong>
+                    <span id="vip-rule-note" style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">(Kursi kosong otomatis diisi Bot)</span>
+                </div>
+
+                <div style="display: flex; gap: 14px; align-items: center;">
+                    <button id="btn-vip-invite" class="btn-vip-invite">
+                        <span>📲</span>
+                        <span>Undang Teman</span>
+                    </button>
+                    <button id="btn-start-vip-game" class="btn-vip-start">
+                        <span>▶️</span>
+                        <span id="btn-start-text">MULAI PERMAINAN</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. IN-GAME SCREEN & 3D VIEWPORT -->
+        <div id="screen-game" class="screen-view">
+            <!-- 15s Turn Timer Top Bar -->
+            <div class="timer-bar-container">
+                <div id="hud-timer-bar" class="timer-bar-fill"></div>
+            </div>
+
+            <!-- Top HUD Overlay -->
+            <div class="game-hud-top">
+                <div class="hud-pill">
+                    <span>🀄 Tembok Ubin:</span>
+                    <span id="hud-wall-count" style="color: var(--gold-bright); font-weight: 800;">91</span>
+                </div>
+
+                <div class="hud-pill" style="font-family: var(--font-heading); color: var(--gold-bright); letter-spacing: 1px;">
+                    <span id="hud-round-name">東一局 (East 1)</span>
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    <button class="hud-btn" id="btn-hud-rules" title="Panduan Aturan">📖</button>
+                    <button class="hud-btn" id="btn-hud-settings" title="Pengaturan">⚙️</button>
+                    <button class="hud-btn" id="btn-hud-quit" title="Keluar ke Lobby" style="color: #ff6666;">🚪</button>
+                </div>
+            </div>
+
+            <!-- 3D Three.js Canvas Container -->
+            <div id="canvas-container"></div>
+
+            <!-- Bottom Floating Action Bar (Chow, Pong, Kong, Win, Pass) -->
+            <div class="game-hud-bottom">
+                <div id="hud-action-bar">
+                    <button id="btn-action-chow" class="btn-action">CHOW (吃)</button>
+                    <button id="btn-action-pong" class="btn-action">PONG (碰)</button>
+                    <button id="btn-action-kong" class="btn-action">KONG (槓)</button>
+                    <button id="btn-action-win" class="btn-action btn-action-win">HU! (胡牌)</button>
+                    <button id="btn-action-pass" class="btn-action btn-action-pass">LEWAT (Pass)</button>
+                </div>
+            </div>
+
+            <!-- Sort Hand Floating Button -->
+            <button id="btn-hud-sort" class="btn-sort-floating">
+                <span>🔄</span>
+                <span>Urutkan Ubin</span>
+            </button>
+        </div>
+
+        <!-- MODAL: CUSTOM ROOM (BUAT / JOIN) -->
+        <div id="modal-custom-room" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <span style="font-size: 1.4rem;">🗝️</span>
+                    <h2 class="modal-title">RUANGAN VIP PRIVATE</h2>
+                    <button class="modal-close-icon btn-modal-close">&times;</button>
+                </div>
+                
+                <p class="modal-subtitle">Mainkan Mahjong bersama teman dengan kode meja</p>
+
+                <div style="margin-bottom: 20px;">
+                    <button id="btn-create-room" class="btn-vip-primary" style="margin-bottom: 16px;">
+                        ➕ BUAT RUANG TUNGGU BARU
+                    </button>
+                    
+                    <div style="display: flex; align-items: center; margin: 12px 0; color: rgba(255,255,255,0.4);">
+                        <hr style="flex: 1; border-color: rgba(255,255,255,0.2);">
+                        <span style="padding: 0 10px; font-size: 0.85rem;">ATAU</span>
+                        <hr style="flex: 1; border-color: rgba(255,255,255,0.2);">
+                    </div>
+
+                    <input type="text" id="input-room-code" class="vip-input" placeholder="Masukkan 6 Digit Kode..." maxlength="6" style="text-align: center; text-transform: uppercase; font-size: 1.3rem; letter-spacing: 3px; margin-bottom: 14px;">
+                    <button id="btn-join-room" class="btn-vip-primary" style="background: linear-gradient(135deg, #0e9146 0%, #054f24 100%); color: #ffffff;">
+                        🚪 GABUNG KE RUANG TUNGGU
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: WINNER / RONDE SELESAI -->
+        <div id="modal-winner" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <span style="font-size: 1.6rem;">🏆</span>
+                    <h2 id="winner-title" class="modal-title">VICTORY! HU</h2>
+                </div>
+                
+                <p id="winner-name" class="modal-subtitle">Selamat! Anda Memenangkan Ronde Ini!</p>
+                <div id="winner-score" class="modal-score">+140 Poin</div>
+                <div id="winner-breakdown"></div>
+
+                <button id="btn-play-again" class="btn-vip-primary">MAIN LAGI</button>
+            </div>
+        </div>
+
+        <!-- MODAL: PANDUAN ATURAN LENGKAP (MAHJONG CUSTOM RULE BOOK v1.0) -->
+        <div id="modal-rules" class="modal-overlay">
+            <div class="modal-box" style="max-width: 680px; text-align: left; max-height: 85vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <span style="font-size: 1.4rem;">📖</span>
+                    <h2 class="modal-title">MAHJONG CUSTOM &bull; RULE BOOK v1.0</h2>
+                    <button class="modal-close-icon btn-modal-close">&times;</button>
+                </div>
+                
+                <div style="font-size: 0.9rem; line-height: 1.65; color: #e8ece9; display: flex; flex-direction: column; gap: 16px; margin-top: 10px; margin-bottom: 24px;">
+                    <div>
+                        <h3 style="color: var(--gold-bright); font-size: 1.05rem; margin-bottom: 4px;">1. TUJUAN PERMAINAN</h3>
+                        <p>Menyusun ubin menjadi kombinasi sah (4 Melds + 1 Pair, atau Seven Pairs) dan menjadi pemain pertama yang mencapai <strong>WIN / HU (和牌)</strong> dengan total 14 ubin aktif.</p>
+                    </div>
+
+                    <div>
+                        <h3 style="color: var(--gold-bright); font-size: 1.05rem; margin-bottom: 4px;">2. KOMPOSISI 144 UBIN</h3>
+                        <ul style="margin-left: 20px; list-style-type: square;">
+                            <li><strong>Number Tiles (108 ubin):</strong> Bamboo (1-9) x 4, Character/Wan (1-9) x 4, Circle/Dot (1-9) x 4.</li>
+                            <li><strong>Honor Tiles (28 ubin):</strong> Angin (East, South, West, North) x 4 &bull; Naga (Red, Green, White) x 4.</li>
+                            <li><strong>Bonus Tiles (8 ubin):</strong> 4 Bunga (Plum, Orchid, Chrysanthemum, Bamboo) & 4 Musim (Spring, Summer, Autumn, Winter).</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 style="color: var(--gold-bright); font-size: 1.05rem; margin-bottom: 4px;">3. MEKANIK FLOWER & SEASON</h3>
+                        <p>Bunga & Musim tidak digunakan dalam hand normal. Saat ditarik, ubin otomatis masuk ke <strong>Bonus Area</strong> dan pemain mengambil replacement tile dari Dead Wall.</p>
+                    </div>
+
+                    <div>
+                        <h3 style="color: var(--gold-bright); font-size: 1.05rem; margin-bottom: 4px;">4. URUTAN & GILIRAN (TURN-BASED)</h3>
+                        <p>Urutan permainan searah jarum jam: <strong>East &rarr; South &rarr; West &rarr; North &rarr; East</strong>. Setiap giliran memiliki <strong>15 detik</strong> dengan auto-discard.</p>
+                    </div>
+
+                    <div>
+                        <h3 style="color: var(--gold-bright); font-size: 1.05rem; margin-bottom: 4px;">5. AKSI KOMBINASI (MELDS)</h3>
+                        <ul style="margin-left: 20px; list-style-type: square;">
+                            <li><strong>Chow (吃):</strong> 3 angka berurutan suit sama. Hanya boleh dari buangan pemain tepat sebelumnya.</li>
+                            <li><strong>Pong (碰):</strong> 3 ubin kembar dari pemain mana pun.</li>
+                            <li><strong>Kong (槓):</strong> 4 ubin kembar (Concealed, Open, Added) + 1 replacement tile.</li>
+                            <li><strong>Prioritas:</strong> WIN &gt; KONG &gt; PONG &gt; CHOW.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 style="color: var(--gold-bright); font-size: 1.05rem; margin-bottom: 4px;">6. SCORING RESMI (Rule Book v1.0)</h3>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 0.85rem; border: 1px solid rgba(212,175,55,0.3);">
+                            <thead>
+                                <tr style="background: rgba(212,175,55,0.2); color: var(--gold-bright);">
+                                    <th style="padding: 6px 10px; border: 1px solid rgba(212,175,55,0.3); text-align: left;">Kondisi Menang</th>
+                                    <th style="padding: 6px 10px; border: 1px solid rgba(212,175,55,0.3); text-align: right;">Poin</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1);">Normal Win (Base Win)</td><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); text-align: right; color: var(--jade-accent);">+100</td></tr>
+                                <tr><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1);">Self Draw Win (Tsumo)</td><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); text-align: right; color: var(--jade-accent);">+30</td></tr>
+                                <tr><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1);">Discard Win (Ron)</td><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); text-align: right; color: var(--jade-accent);">+20</td></tr>
+                                <tr><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1);">All Triplets (Semua Pong/Kong)</td><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); text-align: right; color: var(--jade-accent);">+50</td></tr>
+                                <tr><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1);">Seven Pairs (7 Pasang)</td><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); text-align: right; color: var(--jade-accent);">+100</td></tr>
+                                <tr><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1);">Pure Suit (Satu Warna Tanpa Honor)</td><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); text-align: right; color: var(--jade-accent);">+100</td></tr>
+                                <tr><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1);">1 Ubin Bunga / Musim</td><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); text-align: right; color: var(--jade-accent);">+10</td></tr>
+                                <tr><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1);">Full 4 Flower Set</td><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); text-align: right; color: var(--jade-accent);">+50</td></tr>
+                                <tr><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1);">Full 4 Season Set</td><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); text-align: right; color: var(--jade-accent);">+50</td></tr>
+                                <tr><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1);">Full 8 Bonus (Bunga + Musim Lengkap)</td><td style="padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); text-align: right; color: var(--jade-accent);">+150</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <button class="btn-vip-primary btn-modal-close">TUTUP PANDUAN</button>
+            </div>
+        </div>
+
+        <!-- MODAL: PAPAN PERINGKAT GLOBAL SUPABASE (LEADERBOARD) -->
+        <div id="modal-leaderboard" class="modal-overlay">
+            <div class="modal-box" style="max-width: 650px;">
+                <div class="modal-header">
+                    <span style="font-size: 1.4rem;">🏆</span>
+                    <h2 class="modal-title">PAPAN PERINGKAT GLOBAL</h2>
+                    <button class="modal-close-icon btn-modal-close">&times;</button>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Top Master Mahjong &bull; Supabase Live Sync</span>
+                    <span class="sync-status-indicator"><span class="sync-dot"></span> Cloud Active</span>
+                </div>
+
+                <div class="leaderboard-container">
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">Rank</th>
+                                <th>Pemain</th>
+                                <th>Gelar Tier</th>
+                                <th style="text-align: right;">Trofi</th>
+                                <th style="text-align: right;">Chips</th>
+                                <th style="text-align: right;">Win%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-rows">
+                            <!-- Diisi secara dinamis oleh JavaScript dari Supabase -->
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 20px; color: rgba(255,255,255,0.6);">
+                                    ⏳ Memuat data peringkat dari Supabase...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <button class="btn-vip-primary btn-modal-close">TUTUP LEADERBOARD</button>
+            </div>
+        </div>
+
+        <!-- MODAL: PENGATURAN / OPTIONS (SETTINGS) -->
+        <div id="modal-settings" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <span style="font-size: 1.4rem;">⚙️</span>
+                    <h2 class="modal-title">PENGATURAN VIP</h2>
+                    <button class="modal-close-icon btn-modal-close">&times;</button>
+                </div>
+
+                <div class="settings-list">
+                    <!-- Option 1: SFX -->
+                    <div class="settings-item">
+                        <div class="settings-label">
+                            <span>🔊</span>
+                            <span>Efek Suara (SFX)</span>
+                        </div>
+                        <label class="switch-container">
+                            <input type="checkbox" id="toggle-sound" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Option 2: BGM -->
+                    <div class="settings-item">
+                        <div class="settings-label">
+                            <span>🎵</span>
+                            <span>Musik Latar (BGM)</span>
+                        </div>
+                        <label class="switch-container">
+                            <input type="checkbox" id="toggle-bgm" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Option 3: Auto-Sort -->
+                    <div class="settings-item">
+                        <div class="settings-label">
+                            <span>🔄</span>
+                            <span>Auto-Urutkan Tangan</span>
+                        </div>
+                        <label class="switch-container">
+                            <input type="checkbox" id="toggle-autosort" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Option 4: Graphics -->
+                    <div class="settings-item">
+                        <div class="settings-label">
+                            <span>✨</span>
+                            <span>Kualitas Grafis 3D</span>
+                        </div>
+                        <span class="settings-badge">ULTRA HD (60 FPS)</span>
+                    </div>
+
+                    <!-- Option 5: Account Info & Logout -->
+                    <div class="settings-item" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="settings-label">
+                                <span>👤</span>
+                                <span>Akun Aktif</span>
+                            </div>
+                            <span id="settings-auth-type" class="settings-badge" style="background: rgba(0,255,136,0.15); color: var(--jade-accent); border-color: var(--jade-accent);">Tamu</span>
+                        </div>
+                        <div id="settings-user-detail" style="font-size: 0.85rem; color: rgba(255,255,255,0.7); padding-left: 28px;">Nickname: VIP Player</div>
+                        <button id="btn-settings-logout" class="btn-vip-primary" style="margin-top: 6px; padding: 8px 14px; font-size: 0.85rem; background: rgba(200, 20, 24, 0.25); border: 1px solid rgba(255, 70, 70, 0.5); color: #ff9999;">🚪 Ganti Akun / Logout</button>
+                    </div>
+                </div>
+
+                <button class="btn-vip-primary btn-modal-close">SIMPAN &amp; TUTUP</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main ES Module Entrypoint -->
+    <script type="module" src="js/main.js"></script>
+
+    <!-- Service Worker Registration for PWA Offline Support -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('✅ [PWA] Service Worker aktif:', reg.scope))
+                    .catch(err => console.log('⚠️ [PWA] Service Worker gagal:', err));
+            });
+        }
+    </script>
+</body>
+</html>

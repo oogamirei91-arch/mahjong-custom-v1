@@ -2,9 +2,12 @@
 server/game-server.exe
 server/game-server
 server/*.exe
+server/*.exe~
 server/*.test
 *.out
 .env
+server/.env
+*.env.local
 
 # Unity Temporary & Cache Folders
 [Ll]ibrary/

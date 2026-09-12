@@ -21,7 +21,6 @@ namespace Mahjong.UI
 
         private Camera mainCam;
         private Vector2 touchStartScreenPos;
-        private bool isDragging = false;
 
         private void Awake()
         {
@@ -61,7 +60,6 @@ namespace Mahjong.UI
             if (inputDown)
             {
                 touchStartScreenPos = currentScreenPos;
-                isDragging = false;
 
                 Ray ray = mainCam.ScreenPointToRay(currentScreenPos);
                 if (Physics.Raycast(ray, out RaycastHit hit, 100f, tileLayerMask))
@@ -112,30 +110,37 @@ namespace Mahjong.UI
         {
             if (tile == null) return;
 
-            Debug.Log($"[TouchInputHandler] Membuang Ubin: {tile.tileName} (ID: {tile.tileId})");
+            int targetTileId = tile.tileId;
+            string targetName = tile.tileName;
+            Debug.Log($"[TouchInputHandler] Membuang Ubin: {targetName} (ID: {targetTileId})");
+
+            // Reset state seleksi sebelum menghancurkan objek
+            try
+            {
+                tile.SetSelected(false);
+                tile.isInteractive = false;
+            }
+            catch { }
+            SelectedTile = null;
 
             ProceduralLandingAndHUD.Instance?.OnTileDiscardedHUD();
 
             // Rute aksi ke SinglePlayer AI jika mode Solo aktif, atau ke Network Manager jika Online
             if (AI.SinglePlayerAIManager.Instance != null && AI.SinglePlayerAIManager.Instance.isGameActive)
             {
-                AI.SinglePlayerAIManager.Instance.OnPlayerDiscardTile(tile.tileId);
+                AI.SinglePlayerAIManager.Instance.OnPlayerDiscardTile(targetTileId);
             }
             else
             {
-                GameNetworkManager.Instance?.DiscardTile(tile.tileId);
+                GameNetworkManager.Instance?.DiscardTile(targetTileId);
             }
-
-            tile.SetSelected(false);
-            tile.isInteractive = false;
-            SelectedTile = null;
         }
 
         public void DeselectCurrentTile()
         {
             if (SelectedTile != null)
             {
-                SelectedTile.SetSelected(false);
+                try { SelectedTile.SetSelected(false); } catch { }
                 SelectedTile = null;
                 ProceduralLandingAndHUD.Instance?.OnTileDiscardedHUD();
             }

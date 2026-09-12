@@ -12,12 +12,12 @@ namespace Mahjong.Visual
     {
         [Header("Target & Posisi Sudut Pandang")]
         public Transform targetFocus; // Titik fokus kamera (tengah meja Mahjong)
-        public Vector3 defaultOffset = new Vector3(0, 0.48f, -0.42f);
-        public Vector3 defaultRotation = new Vector3(46f, 0, 0);
+        public Vector3 defaultOffset = new Vector3(0, 0.48f, -0.46f);
+        public Vector3 defaultRotation = new Vector3(43f, 0, 0);
 
         [Header("Pengaturan Mobile Responsif")]
-        public float landscapeFOV = 35f;
-        public float portraitFOV = 48f;
+        public float landscapeFOV = 40f;
+        public float portraitFOV = 52f;
         public float smoothSpeed = 6.0f;
 
         private Camera cam;

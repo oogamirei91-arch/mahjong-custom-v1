@@ -19,9 +19,9 @@ namespace Mahjong.Procedural
         public string tileName;
 
         [Header("Dimensi Ubin 3D (Rasio Standar Mahjong HD)")]
-        public float tileWidth = 0.044f;    // Lebar X (4.4 cm)
-        public float tileHeight = 0.062f;   // Panjang Y (6.2 cm)
-        public float tileThickness = 0.024f;// Tebal Z (2.4 cm)
+        public float tileWidth = 0.040f;    // Lebar X (4.0 cm)
+        public float tileHeight = 0.056f;   // Panjang Y (5.6 cm)
+        public float tileThickness = 0.026f;// Tebal Z (2.6 cm)
 
         [Header("State Interaksi")]
         public bool isSelected = false;
@@ -39,6 +39,13 @@ namespace Mahjong.Procedural
             meshFilter = GetComponent<MeshFilter>();
             meshRenderer = GetComponent<MeshRenderer>();
             boxCollider = GetComponent<BoxCollider>();
+
+            if (meshRenderer != null)
+            {
+                meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                meshRenderer.receiveShadows = true;
+            }
+
             GenerateTileMesh();
         }
 
@@ -55,7 +62,9 @@ namespace Mahjong.Procedural
         }
 
         /// <summary>
-        /// Membuat mesh 3D kotak ubin dengan 2 material (0: Depan Wajah Ivory bergambar, 1: Belakang Giok).
+        /// Membuat mesh 3D ubin dual-layer autentik:
+        /// - Lapisan Depan (Submesh 0): Gading Pearl Ivory (Wajah bertanda + 4 tepi sisi depan).
+        /// - Lapisan Belakang (Submesh 1): Giok Hijau Zamrud (Punggung giok + 4 tepi sisi belakang).
         /// </summary>
         [ContextMenu("Regenerate Tile Mesh")]
         public void GenerateTileMesh()
@@ -67,43 +76,77 @@ namespace Mahjong.Procedural
             float hx = tileWidth * 0.5f;
             float hy = tileHeight * 0.5f;
             float hz = tileThickness * 0.5f;
+            float splitZ = hz * 0.15f; // Garis batas dua lapis (35% Gading Depan, 65% Giok Belakang)
 
-            Mesh mesh = new Mesh { name = "Procedural_Tile_Mesh" };
+            Mesh mesh = new Mesh { name = "Procedural_DualLayer_Tile_Mesh" };
 
-            // 24 Vertices untuk kubus dengan mapping terpisah tiap sisi
-            Vector3[] vertices = new Vector3[]
-            {
-                // Front Face (Z +) -> Wajah Ubin Bergambar (Menghadap Pemain)
-                new Vector3(-hx, -hy,  hz), new Vector3( hx, -hy,  hz),
-                new Vector3( hx,  hy,  hz), new Vector3(-hx,  hy,  hz),
+            // 40 Vertices untuk membagi 2 layer secara sempurna
+            Vector3[] vertices = new Vector3[40];
 
-                // Back Face (Z -) -> Punggung Giok Zamrud
-                new Vector3( hx, -hy, -hz), new Vector3(-hx, -hy, -hz),
-                new Vector3(-hx,  hy, -hz), new Vector3( hx,  hy, -hz),
+            // --- LAYER 1: GADING / IVORY DEPAN (Submesh 0) ---
+            // Front Face (Z = hz)
+            vertices[0] = new Vector3(-hx, -hy,  hz);
+            vertices[1] = new Vector3( hx, -hy,  hz);
+            vertices[2] = new Vector3( hx,  hy,  hz);
+            vertices[3] = new Vector3(-hx,  hy,  hz);
 
-                // Top Face (Y +)
-                new Vector3(-hx,  hy,  hz), new Vector3( hx,  hy,  hz),
-                new Vector3( hx,  hy, -hz), new Vector3(-hx,  hy, -hz),
+            // Front Top (Y = hy)
+            vertices[4] = new Vector3(-hx,  hy,  hz);
+            vertices[5] = new Vector3( hx,  hy,  hz);
+            vertices[6] = new Vector3( hx,  hy, splitZ);
+            vertices[7] = new Vector3(-hx,  hy, splitZ);
 
-                // Bottom Face (Y -)
-                new Vector3(-hx, -hy, -hz), new Vector3( hx, -hy, -hz),
-                new Vector3( hx, -hy,  hz), new Vector3(-hx, -hy,  hz),
+            // Front Bottom (Y = -hy)
+            vertices[8]  = new Vector3(-hx, -hy, splitZ);
+            vertices[9]  = new Vector3( hx, -hy, splitZ);
+            vertices[10] = new Vector3( hx, -hy,  hz);
+            vertices[11] = new Vector3(-hx, -hy,  hz);
 
-                // Left Face (X -)
-                new Vector3(-hx, -hy, -hz), new Vector3(-hx, -hy,  hz),
-                new Vector3(-hx,  hy,  hz), new Vector3(-hx,  hy, -hz),
+            // Front Left (X = -hx)
+            vertices[12] = new Vector3(-hx, -hy, splitZ);
+            vertices[13] = new Vector3(-hx, -hy,  hz);
+            vertices[14] = new Vector3(-hx,  hy,  hz);
+            vertices[15] = new Vector3(-hx,  hy, splitZ);
 
-                // Right Face (X +)
-                new Vector3( hx, -hy,  hz), new Vector3( hx, -hy, -hz),
-                new Vector3( hx,  hy, -hz), new Vector3( hx,  hy,  hz)
-            };
+            // Front Right (X = hx)
+            vertices[16] = new Vector3( hx, -hy,  hz);
+            vertices[17] = new Vector3( hx, -hy, splitZ);
+            vertices[18] = new Vector3( hx,  hy, splitZ);
+            vertices[19] = new Vector3( hx,  hy,  hz);
 
-            Vector2[] uvs = new Vector2[24];
-            // Front Face UV (0-3)
-            uvs[0] = new Vector2(0, 0); uvs[1] = new Vector2(1, 0);
-            uvs[2] = new Vector2(1, 1); uvs[3] = new Vector2(0, 1);
+            // --- LAYER 2: GIOK / JADE BELAKANG (Submesh 1) ---
+            // Back Face (Z = -hz)
+            vertices[20] = new Vector3( hx, -hy, -hz);
+            vertices[21] = new Vector3(-hx, -hy, -hz);
+            vertices[22] = new Vector3(-hx,  hy, -hz);
+            vertices[23] = new Vector3( hx,  hy, -hz);
 
-            for (int i = 4; i < 24; i += 4)
+            // Back Top (Y = hy)
+            vertices[24] = new Vector3(-hx,  hy, splitZ);
+            vertices[25] = new Vector3( hx,  hy, splitZ);
+            vertices[26] = new Vector3( hx,  hy, -hz);
+            vertices[27] = new Vector3(-hx,  hy, -hz);
+
+            // Back Bottom (Y = -hy)
+            vertices[28] = new Vector3(-hx, -hy, -hz);
+            vertices[29] = new Vector3( hx, -hy, -hz);
+            vertices[30] = new Vector3( hx, -hy, splitZ);
+            vertices[31] = new Vector3(-hx, -hy, splitZ);
+
+            // Back Left (X = -hx)
+            vertices[32] = new Vector3(-hx, -hy, -hz);
+            vertices[33] = new Vector3(-hx, -hy, splitZ);
+            vertices[34] = new Vector3(-hx,  hy, splitZ);
+            vertices[35] = new Vector3(-hx,  hy, -hz);
+
+            // Back Right (X = hx)
+            vertices[36] = new Vector3( hx, -hy, splitZ);
+            vertices[37] = new Vector3( hx, -hy, -hz);
+            vertices[38] = new Vector3( hx,  hy, -hz);
+            vertices[39] = new Vector3( hx,  hy, splitZ);
+
+            Vector2[] uvs = new Vector2[40];
+            for (int i = 0; i < 40; i += 4)
             {
                 uvs[i]   = new Vector2(0, 0);
                 uvs[i+1] = new Vector2(1, 0);
@@ -111,22 +154,34 @@ namespace Mahjong.Procedural
                 uvs[i+3] = new Vector2(0, 1);
             }
 
-            // Submesh 0: Front Face (Ivory Pearl bertekstur atlas)
-            int[] frontTriangles = new int[] { 0, 2, 1, 0, 3, 2 };
+            // Triangles Submesh 0 (Lapisan Gading Ivory)
+            int[] frontTriangles = new int[]
+            {
+                // Front
+                0, 2, 1, 0, 3, 2,
+                // Front Top
+                4, 6, 5, 4, 7, 6,
+                // Front Bottom
+                8, 10, 9, 8, 11, 10,
+                // Front Left
+                12, 14, 13, 12, 15, 14,
+                // Front Right
+                16, 18, 17, 16, 19, 18
+            };
 
-            // Submesh 1: Sisi Lainnya (Jade Green & Body)
+            // Triangles Submesh 1 (Lapisan Giok Jade)
             int[] jadeTriangles = new int[]
             {
                 // Back
-                4, 6, 5, 4, 7, 6,
-                // Top
-                8, 10, 9, 8, 11, 10,
-                // Bottom
-                12, 14, 13, 12, 15, 14,
-                // Left
-                16, 18, 17, 16, 19, 18,
-                // Right
-                20, 22, 21, 20, 23, 22
+                20, 22, 21, 20, 23, 22,
+                // Back Top
+                24, 26, 25, 24, 27, 26,
+                // Back Bottom
+                28, 30, 29, 28, 31, 30,
+                // Back Left
+                32, 34, 33, 32, 35, 34,
+                // Back Right
+                36, 38, 37, 36, 39, 38
             };
 
             mesh.vertices = vertices;
@@ -138,15 +193,24 @@ namespace Mahjong.Procedural
             mesh.RecalculateBounds();
 
             meshFilter.sharedMesh = mesh;
-            boxCollider.size = new Vector3(tileWidth * 1.3f, tileHeight * 1.3f, tileThickness * 2.5f);
+            boxCollider.size = new Vector3(tileWidth * 1.15f, tileHeight * 1.15f, tileThickness * 2.0f);
             boxCollider.center = Vector3.zero;
-
-            SetupMaterials();
         }
 
-        public void SetupMaterials()
+        private static Material s_frontMat;
+        private static Material s_jadeMat;
+        private static bool s_materialsInitialized = false;
+
+        public static void ResetSharedMaterials()
         {
-            if (meshRenderer == null) return;
+            s_frontMat = null;
+            s_jadeMat = null;
+            s_materialsInitialized = false;
+        }
+
+        public static void EnsureMaterials()
+        {
+            if (s_materialsInitialized && s_frontMat != null && s_jadeMat != null) return;
 
             Texture2D atlas = ProceduralTileAtlas.Instance != null ? ProceduralTileAtlas.Instance.GeneratedAtlas : null;
             if (atlas == null && ProceduralTileAtlas.Instance != null)
@@ -154,26 +218,44 @@ namespace Mahjong.Procedural
                 ProceduralTileAtlas.Instance.GenerateFullAtlas();
                 atlas = ProceduralTileAtlas.Instance.GeneratedAtlas;
             }
+            if (atlas == null)
+            {
+                atlas = Resources.Load<Texture2D>("CustomMahjongAtlas");
+            }
+
+            Shader standardShader = Shader.Find("Standard");
+            if (standardShader == null) standardShader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Mobile/Diffuse") ?? Shader.Find("Diffuse");
 
             // Material Wajah: Pearl Ivory Putih dengan Tekstur Atlas
-            Material frontMat = new Material(Shader.Find("Standard"))
+            s_frontMat = new Material(standardShader)
             {
-                name = "Mat_Tile_Front_Ivory",
+                name = "Mat_Tile_Front_Ivory_Shared",
                 color = Color.white,
                 mainTexture = atlas
             };
-            frontMat.SetFloat("_Glossiness", 0.35f);
+            s_frontMat.SetFloat("_Glossiness", 0.35f);
 
             // Material Punggung: Jade Green (Giok Hijau Zamrud Mewah)
-            Material jadeMat = new Material(Shader.Find("Standard"))
+            Texture2D jadeTex = Resources.Load<Texture2D>("CustomJadeBack");
+            s_jadeMat = new Material(standardShader)
             {
-                name = "Mat_Tile_Back_Jade",
-                color = new Color(0.04f, 0.42f, 0.24f)
+                name = "Mat_Tile_Back_Jade_Shared",
+                color = jadeTex != null ? Color.white : new Color(0.04f, 0.42f, 0.24f),
+                mainTexture = jadeTex
             };
-            jadeMat.SetFloat("_Glossiness", 0.75f);
-            jadeMat.SetFloat("_Metallic", 0.15f);
+            s_jadeMat.SetFloat("_Glossiness", 0.75f);
+            s_jadeMat.SetFloat("_Metallic", 0.15f);
 
-            meshRenderer.sharedMaterials = new Material[] { frontMat, jadeMat };
+            s_materialsInitialized = true;
+        }
+
+        public void SetupMaterials()
+        {
+            if (meshRenderer == null) meshRenderer = GetComponent<MeshRenderer>();
+            if (meshRenderer == null) return;
+
+            EnsureMaterials();
+            meshRenderer.sharedMaterials = new Material[] { s_frontMat, s_jadeMat };
         }
 
         /// <summary>
@@ -232,10 +314,20 @@ namespace Mahjong.Procedural
             // Buat copy mesh instance agar UV tiap ubin unik
             Mesh m = Instantiate(meshFilter.sharedMesh);
             Vector2[] uvs = m.uv;
+            // Front face (0..3) -> Ikon ubin
             uvs[0] = new Vector2(uMin, vMin);
             uvs[1] = new Vector2(uMax, vMin);
             uvs[2] = new Vector2(uMax, vMax);
             uvs[3] = new Vector2(uMin, vMax);
+
+            // Sisi samping gading depan (4..19) -> Warna gading bersih
+            float ivoryU = uMin + uWidth * 0.03f;
+            float ivoryV = vMin + vHeight * 0.03f;
+            for (int i = 4; i < 20; i++)
+            {
+                uvs[i] = new Vector2(ivoryU, ivoryV);
+            }
+
             m.uv = uvs;
             meshFilter.sharedMesh = m;
         }

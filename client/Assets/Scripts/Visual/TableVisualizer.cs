@@ -17,13 +17,13 @@ namespace Mahjong.Visual
         public static TableVisualizer Instance { get; private set; }
 
         [Header("Pengaturan Posisi & Jarak Ubin Tangan HD")]
-        public float tileSpacingX = 0.048f; // Jarak horizontal antar ubin (4.8 cm -> ada celah bersih 4 mm)
-        public float handCenterZ = -0.285f; // Jarak tangan dari tengah meja (dekat dan jelas di layar bawah)
-        public float handHeightY = 0.033f;  // Tinggi ubin dari permukaan felt
+        public float tileSpacingX = 0.043f; // Jarak horizontal antar ubin (4.3 cm -> celah bersih 3 mm)
+        public float handCenterZ = -0.305f; // Jarak tangan dari tengah meja (dekat dan jelas di layar bawah)
+        public float handHeightY = 0.030f;  // Tinggi ubin dari permukaan felt
 
         [Header("Pengaturan Jarak Kolam Buangan (River / Kawa)")]
-        public float pondSpacingX = 0.046f; // Jarak horizontal antar ubin buangan (4.6 cm)
-        public float pondSpacingZ = 0.064f; // Jarak vertikal antar baris buangan (6.4 cm)
+        public float pondSpacingX = 0.043f; // Jarak horizontal antar ubin buangan (4.3 cm)
+        public float pondSpacingZ = 0.059f; // Jarak vertikal antar baris buangan (5.9 cm)
 
         // Kontainer Objek Ubin 3D
         private Transform tilesContainer;
@@ -84,7 +84,7 @@ namespace Mahjong.Visual
 
         /// <summary>
         /// Membagikan dan menampilkan 13 ubin di depan layar pemain lokal (South).
-        /// Ubin berdiri tegak dan sedikit miring (pitch 28°) menghadap langsung ke kamera pemain.
+        /// Ubin berdiri tegak dan sedikit miring (pitch 16°) menghadap kamera pemain dengan ketebalan 3D jelas.
         /// </summary>
         public void SpawnPlayerHand(List<TileData> hand)
         {
@@ -101,7 +101,7 @@ namespace Mahjong.Visual
             {
                 TileData data = hand[i];
                 Vector3 pos = new Vector3(startX + (i * tileSpacingX), handHeightY, handCenterZ);
-                Quaternion rot = Quaternion.Euler(28f, 0f, 0f);
+                Quaternion rot = Quaternion.Euler(16f, 0f, 0f);
 
                 ProceduralTile tileObj = CreateTileGameObject(data, pos, rot, true);
                 tileObj.SaveDefaultPosition(pos);
@@ -148,8 +148,8 @@ namespace Mahjong.Visual
         {
             int count = playerTileObjects.Count;
             float startX = -((count - 1) * tileSpacingX) * 0.5f;
-            Vector3 pos = new Vector3(startX + (count * tileSpacingX) + 0.024f, handHeightY, handCenterZ);
-            Quaternion rot = Quaternion.Euler(28f, 0f, 0f);
+            Vector3 pos = new Vector3(startX + (count * tileSpacingX) + 0.020f, handHeightY, handCenterZ);
+            Quaternion rot = Quaternion.Euler(16f, 0f, 0f);
 
             ProceduralTile tileObj = CreateTileGameObject(data, pos, rot, true);
             tileObj.SaveDefaultPosition(pos);
@@ -163,6 +163,7 @@ namespace Mahjong.Visual
         /// </summary>
         private void RealignPlayerHand()
         {
+            playerTileObjects.RemoveAll(t => t == null);
             // Urutkan objek ubin berdasarkan bobot suit & nilai
             playerTileObjects.Sort((a, b) => GetTileSortWeight(a.suit, a.value).CompareTo(GetTileSortWeight(b.suit, b.value)));
 
@@ -172,6 +173,7 @@ namespace Mahjong.Visual
             float startX = -((count - 1) * tileSpacingX) * 0.5f;
             for (int i = 0; i < count; i++)
             {
+                if (playerTileObjects[i] == null) continue;
                 Vector3 newPos = new Vector3(startX + (i * tileSpacingX), handHeightY, handCenterZ);
                 playerTileObjects[i].MoveToPositionSmooth(newPos, 0.20f);
             }
@@ -185,11 +187,18 @@ namespace Mahjong.Visual
         {
             if (seatIndex == 0)
             {
-                ProceduralTile found = playerTileObjects.Find(t => t.tileId == data.id);
+                ProceduralTile found = playerTileObjects.Find(t => t != null && t.tileId == data.id);
                 if (found != null)
                 {
                     playerTileObjects.Remove(found);
                     Destroy(found.gameObject);
+                }
+                else if (playerTileObjects.Count > 0)
+                {
+                    // Fallback jika ID tidak tepat sama: buang objek ubin paling kanan / terakhir
+                    ProceduralTile fallbackTile = playerTileObjects[playerTileObjects.Count - 1];
+                    playerTileObjects.RemoveAt(playerTileObjects.Count - 1);
+                    if (fallbackTile != null) Destroy(fallbackTile.gameObject);
                 }
                 RealignPlayerHand();
             }
@@ -209,19 +218,19 @@ namespace Mahjong.Visual
             {
                 case 0: // South (Bawah): berbaris rapi di bawah kompas
                     pondPos = new Vector3(colOffset, 0.013f, -0.095f - (row * pondSpacingZ));
-                    pondRot = Quaternion.Euler(90f, 0f, 0f);
+                    pondRot = Quaternion.Euler(-90f, 0f, 0f);
                     break;
                 case 1: // East (Kanan): berbaris rapi di kanan kompas
                     pondPos = new Vector3(0.095f + (row * pondSpacingZ), 0.013f, colOffset);
-                    pondRot = Quaternion.Euler(90f, -90f, 0f);
+                    pondRot = Quaternion.Euler(-90f, -90f, 0f);
                     break;
                 case 2: // North (Atas): berbaris rapi di atas kompas
                     pondPos = new Vector3(-colOffset, 0.013f, 0.095f + (row * pondSpacingZ));
-                    pondRot = Quaternion.Euler(90f, 180f, 0f);
+                    pondRot = Quaternion.Euler(-90f, 180f, 0f);
                     break;
                 case 3: // West (Kiri): berbaris rapi di kiri kompas
                     pondPos = new Vector3(-0.095f - (row * pondSpacingZ), 0.013f, -colOffset);
-                    pondRot = Quaternion.Euler(90f, 90f, 0f);
+                    pondRot = Quaternion.Euler(-90f, 90f, 0f);
                     break;
             }
 

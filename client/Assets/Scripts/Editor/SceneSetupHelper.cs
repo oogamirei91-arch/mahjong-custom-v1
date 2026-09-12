@@ -35,10 +35,11 @@ namespace Mahjong.Editor
             if (cam == null) cam = Object.FindAnyObjectByType<Camera>();
             if (cam != null)
             {
-                cam.transform.position = new Vector3(0, 0.72f, -0.68f);
-                cam.transform.rotation = Quaternion.Euler(48f, 0, 0);
+                cam.transform.position = new Vector3(0, 0.48f, -0.46f);
+                cam.transform.rotation = Quaternion.Euler(43f, 0, 0);
                 cam.clearFlags = CameraClearFlags.SolidColor;
-                cam.backgroundColor = new Color(0.08f, 0.12f, 0.16f);
+                cam.backgroundColor = new Color(0.06f, 0.09f, 0.13f);
+                cam.fieldOfView = 40f;
 
                 if (cam.GetComponent<CameraController>() == null)
                 {
@@ -52,6 +53,10 @@ namespace Mahjong.Editor
                 }
             }
 
+            // Setup Ambient Light for 3D Tile volume
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.48f, 0.50f, 0.55f);
+
             // 2. Setup Directional Light
             Light dirLight = Object.FindAnyObjectByType<Light>();
             if (dirLight == null)
@@ -59,10 +64,14 @@ namespace Mahjong.Editor
                 GameObject lightObj = new GameObject("Directional Light");
                 dirLight = lightObj.AddComponent<Light>();
                 dirLight.type = LightType.Directional;
-                dirLight.color = new Color(1f, 0.96f, 0.88f);
-                dirLight.intensity = 1.15f;
                 lightObj.transform.rotation = Quaternion.Euler(50f, -30f, 0);
                 sceneModified = true;
+            }
+            if (dirLight != null)
+            {
+                dirLight.color = new Color(1f, 0.98f, 0.92f);
+                dirLight.intensity = 1.35f;
+                dirLight.shadows = LightShadows.Soft;
             }
 
             // 3. Setup EventSystem

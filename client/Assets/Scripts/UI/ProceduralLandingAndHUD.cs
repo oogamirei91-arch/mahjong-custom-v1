@@ -7,8 +7,8 @@ using Mahjong.Audio;
 namespace Mahjong.UI
 {
     /// <summary>
-    /// ProceduralLandingAndHUD: Generator Antarmuka Otomatis (Landing Page, Login/Register Modal, 
-    /// Main Menu Lobby 4-Card Grid, Custom Room Modal, Friend List HUD, dan In-Game HUD).
+    /// ProceduralLandingAndHUD: Generator Antarmuka Pengguna Lengkap (Landing Page, Login/Register Modal, 
+    /// Main Menu Lobby 4-Card Grid, Custom Room Modal, Friend List HUD, In-Game HUD, dan Action Bar).
     /// Didesain khusus untuk Orientasi LANDSCAPE (16:9 / 1920x1080) bergaya Modern VIP Casino.
     /// </summary>
     public class ProceduralLandingAndHUD : MonoBehaviour
@@ -173,23 +173,25 @@ namespace Mahjong.UI
 
         private void BuildLandingLoginUI()
         {
-            panelLandingLogin = CreatePanel("Panel_LandingLogin", new Color(0.04f, 0.12f, 0.08f, 0.96f));
+            panelLandingLogin = CreatePanel("Panel_LandingLogin", new Color(0.03f, 0.08f, 0.05f, 0.95f));
 
-            CreateText(panelLandingLogin.transform, "MAHJONG VIP 🀄", 56, FontStyle.Bold, new Color(1.0f, 0.84f, 0.0f), new Vector2(0, 390), new Vector2(1200, 90));
-            CreateText(panelLandingLogin.transform, "Casual Multiplayer • 4-Player 3D Board Game", 24, FontStyle.Italic, new Color(0.8f, 0.95f, 0.85f), new Vector2(0, 325), new Vector2(1200, 50));
+            // Header Game
+            CreateText(panelLandingLogin.transform, "MAHJONG VIP 🀄", 54, FontStyle.Bold, new Color(1.0f, 0.84f, 0.15f), new Vector2(0, 380), new Vector2(1200, 80));
+            CreateText(panelLandingLogin.transform, "Luxury Casual • 4-Player 3D Board Game Experience", 22, FontStyle.Italic, new Color(0.85f, 0.95f, 0.90f), new Vector2(0, 320), new Vector2(1200, 45));
 
-            GameObject card = CreateCard(panelLandingLogin.transform, new Vector2(850, 540), new Vector2(0, -60));
+            // Card Login / Register
+            GameObject card = CreateCard(panelLandingLogin.transform, new Vector2(680, 480), new Vector2(0, -30));
 
-            CreateText(card.transform, "MASUK / DAFTAR AKUN", 28, FontStyle.Bold, Color.white, new Vector2(0, 200), new Vector2(700, 50));
+            CreateText(card.transform, "MASUK / DAFTAR AKUN", 26, FontStyle.Bold, Color.white, new Vector2(0, 175), new Vector2(600, 45));
 
-            inputUsername = CreateInputField(card.transform, "Username...", new Vector2(0, 115), new Vector2(700, 70));
-            inputPassword = CreateInputField(card.transform, "Password...", new Vector2(0, 30), new Vector2(700, 70), true);
+            inputUsername = CreateInputField(card.transform, "Username...", new Vector2(0, 105), new Vector2(560, 58));
+            inputPassword = CreateInputField(card.transform, "Password...", new Vector2(0, 35), new Vector2(560, 58), true);
 
-            txtAuthStatus = CreateText(card.transform, "Silakan login atau mainkan secara instan sebagai Tamu (Guest)", 20, FontStyle.Normal, new Color(1.0f, 0.85f, 0.4f), new Vector2(0, -45), new Vector2(700, 45));
+            txtAuthStatus = CreateText(card.transform, "Silakan login atau mainkan secara instan sebagai Tamu (Guest)", 18, FontStyle.Normal, new Color(1.0f, 0.85f, 0.4f), new Vector2(0, -25), new Vector2(580, 36));
 
-            CreateButton(card.transform, "LOGIN", new Color(0.1f, 0.55f, 0.25f), new Vector2(-180, -125), new Vector2(320, 68), OnClickLogin);
-            CreateButton(card.transform, "REGISTER", new Color(0.2f, 0.4f, 0.7f), new Vector2(180, -125), new Vector2(320, 68), OnClickRegister);
-            CreateButton(card.transform, "⚡ MAIN SEBAGAI GUEST", new Color(0.85f, 0.65f, 0.15f), new Vector2(0, -205), new Vector2(680, 65), OnClickGuestPlay);
+            CreateButton(card.transform, "LOGIN", new Color(0.12f, 0.58f, 0.28f), new Vector2(-145, -85), new Vector2(260, 56), OnClickLogin);
+            CreateButton(card.transform, "REGISTER", new Color(0.18f, 0.42f, 0.75f), new Vector2(145, -85), new Vector2(260, 56), OnClickRegister);
+            CreateButton(card.transform, "⚡ MAIN SEBAGAI GUEST", new Color(0.88f, 0.62f, 0.12f), new Vector2(0, -165), new Vector2(550, 58), OnClickGuestPlay);
         }
 
         // =========================================================================
@@ -198,29 +200,29 @@ namespace Mahjong.UI
 
         private void BuildMainMenuLobbyUI()
         {
-            panelMainMenuLobby = CreatePanel("Panel_MainMenuLobby", Color.clear);
+            panelMainMenuLobby = CreatePanel("Panel_MainMenuLobby", new Color(0.02f, 0.06f, 0.04f, 0.85f));
 
             // Top Bar Profile HUD (Landscape Span)
-            GameObject topBar = CreateCard(panelMainMenuLobby.transform, new Vector2(1820, 85), new Vector2(0, 475));
+            GameObject topBar = CreateCard(panelMainMenuLobby.transform, new Vector2(1820, 80), new Vector2(0, 470));
             topBar.GetComponent<Image>().color = new Color(0.04f, 0.14f, 0.09f, 0.98f);
-            txtTopBarProfile = CreateText(topBar.transform, "👑 Player_VIP | 🏆 1,000 Trofi | 🥇 Gold Master", 24, FontStyle.Bold, new Color(1.0f, 0.85f, 0.2f), new Vector2(-300, 0), new Vector2(1100, 70));
-            CreateButton(topBar.transform, "🚪 Logout", new Color(0.6f, 0.2f, 0.2f), new Vector2(780, 0), new Vector2(180, 58), ShowLandingScreen);
+            txtTopBarProfile = CreateText(topBar.transform, "👑 Player_VIP | 🏆 1,000 Trofi | 🥇 Gold Master", 24, FontStyle.Bold, new Color(1.0f, 0.85f, 0.2f), new Vector2(-260, 0), new Vector2(1150, 60));
+            CreateButton(topBar.transform, "🚪 Logout", new Color(0.6f, 0.2f, 0.2f), new Vector2(780, 0), new Vector2(180, 52), ShowLandingScreen);
 
             // 4 Mode Kartu Berjejer di Tengah Meja (Landscape 4-Card Hub)
-            CreateMenuModeCard(panelMainMenuLobby.transform, "🏆 RANKED MATCH", "Multiplayer Online 4 Pemain\nPerebutan Trofi & Peringkat", new Color(0.08f, 0.55f, 0.28f), new Vector2(-540, -35), OnClickRankedMatch);
-            CreateMenuModeCard(panelMainMenuLobby.transform, "🗝️ CUSTOM ROOM", "Mabar Bersama Teman\nDengan 4-Digit Kode VIP", new Color(0.15f, 0.45f, 0.75f), new Vector2(-180, -35), OnClickOpenCustomRoomModal);
-            CreateMenuModeCard(panelMainMenuLobby.transform, "👥 DAFTAR TEMAN", "Lihat Teman Online\nKirim Undangan Mabar", new Color(0.55f, 0.35f, 0.75f), new Vector2(180, -35), OnClickOpenFriendListModal);
-            CreateMenuModeCard(panelMainMenuLobby.transform, "🤖 SOLO VS 3 BOT", "Latihan Cepat Offline\nMelawan 3 Bot AI Cerdas", new Color(0.85f, 0.45f, 0.15f), new Vector2(540, -35), OnClickSoloAIMatch);
+            CreateMenuModeCard(panelMainMenuLobby.transform, "🏆 RANKED MATCH", "Multiplayer Online 4 Pemain\nPerebutan Trofi & Peringkat", new Color(0.08f, 0.58f, 0.30f), new Vector2(-570, -30), OnClickRankedMatch);
+            CreateMenuModeCard(panelMainMenuLobby.transform, "🗝️ CUSTOM ROOM", "Mabar Bersama Teman\nDengan 4-Digit Kode VIP", new Color(0.15f, 0.48f, 0.80f), new Vector2(-190, -30), OnClickOpenCustomRoomModal);
+            CreateMenuModeCard(panelMainMenuLobby.transform, "👥 DAFTAR TEMAN", "Lihat Teman Online\nKirim Undangan Mabar", new Color(0.55f, 0.35f, 0.78f), new Vector2(190, -30), OnClickOpenFriendListModal);
+            CreateMenuModeCard(panelMainMenuLobby.transform, "🤖 SOLO VS 3 BOT", "Latihan Cepat Offline\nMelawan 3 Bot AI Cerdas", new Color(0.88f, 0.48f, 0.15f), new Vector2(570, -30), OnClickSoloAIMatch);
         }
 
         private void CreateMenuModeCard(Transform parent, string title, string subtitle, Color btnColor, Vector2 pos, UnityEngine.Events.UnityAction action)
         {
-            GameObject card = CreateCard(parent, new Vector2(335, 460), pos);
-            card.GetComponent<Image>().color = new Color(0.05f, 0.16f, 0.10f, 0.94f);
+            GameObject card = CreateCard(parent, new Vector2(350, 480), pos);
+            card.GetComponent<Image>().color = new Color(0.04f, 0.15f, 0.09f, 0.96f);
 
-            CreateText(card.transform, title, 26, FontStyle.Bold, new Color(1f, 0.88f, 0.2f), new Vector2(0, 160), new Vector2(300, 60));
-            CreateText(card.transform, subtitle, 19, FontStyle.Normal, new Color(0.85f, 0.95f, 0.9f), new Vector2(0, 30), new Vector2(290, 160));
-            CreateButton(card.transform, "MAIN SEKARANG", btnColor, new Vector2(0, -155), new Vector2(280, 65), action);
+            CreateText(card.transform, title, 24, FontStyle.Bold, new Color(1f, 0.88f, 0.2f), new Vector2(0, 160), new Vector2(320, 50));
+            CreateText(card.transform, subtitle, 18, FontStyle.Normal, new Color(0.85f, 0.95f, 0.9f), new Vector2(0, 35), new Vector2(300, 140));
+            CreateButton(card.transform, "MAIN SEKARANG", btnColor, new Vector2(0, -165), new Vector2(290, 62), action);
         }
 
         // =========================================================================
@@ -232,20 +234,20 @@ namespace Mahjong.UI
             panelInGameHUD = CreatePanel("Panel_InGameHUD", Color.clear);
 
             // Tombol Menu (Kiri Atas)
-            CreateButton(panelInGameHUD.transform, "⚙️ Menu", new Color(0.2f, 0.25f, 0.3f, 0.95f), new Vector2(-840, 480), new Vector2(140, 60), ShowMainMenuLobby);
+            CreateButton(panelInGameHUD.transform, "⚙️ Menu", new Color(0.2f, 0.25f, 0.3f, 0.95f), new Vector2(-820, 475), new Vector2(160, 52), ShowMainMenuLobby);
 
             // Banner Status Giliran (Tengah Atas)
-            GameObject banner = CreateCard(panelInGameHUD.transform, new Vector2(720, 60), new Vector2(0, 480));
+            GameObject banner = CreateCard(panelInGameHUD.transform, new Vector2(680, 54), new Vector2(0, 475));
             banner.GetComponent<Image>().color = new Color(0.03f, 0.15f, 0.08f, 0.95f);
-            txtInGameTurnStatus = CreateText(banner.transform, "🟢 GILIRAN ANDA! (Pilih ubin lalu buang)", 22, FontStyle.Bold, new Color(1f, 0.92f, 0.4f), Vector2.zero, new Vector2(700, 55));
+            txtInGameTurnStatus = CreateText(banner.transform, "🟢 GILIRAN ANDA! (Pilih ubin lalu buang)", 20, FontStyle.Bold, new Color(1f, 0.92f, 0.4f), Vector2.zero, new Vector2(660, 50));
 
             // Sisa Ubin Wall (Kanan Atas)
-            GameObject wallBox = CreateCard(panelInGameHUD.transform, new Vector2(180, 60), new Vector2(830, 480));
+            GameObject wallBox = CreateCard(panelInGameHUD.transform, new Vector2(180, 54), new Vector2(820, 475));
             wallBox.GetComponent<Image>().color = new Color(0.03f, 0.15f, 0.08f, 0.95f);
-            txtWallTilesCounter = CreateText(wallBox.transform, "🀄 Wall: 72", 20, FontStyle.Bold, Color.white, Vector2.zero, new Vector2(170, 55));
+            txtWallTilesCounter = CreateText(wallBox.transform, "🀄 Wall: 72", 19, FontStyle.Bold, Color.white, Vector2.zero, new Vector2(170, 50));
 
             // Tombol Buang Ubin Terpilih (Kanan Bawah - Mudah Ditekan Jempol Kanan di Layar HP!)
-            btnDiscardSelected = CreateButton(panelInGameHUD.transform, "🔥 BUANG UBIN", new Color(0.85f, 0.25f, 0.15f), new Vector2(720, -380), new Vector2(340, 85), () =>
+            btnDiscardSelected = CreateButton(panelInGameHUD.transform, "🔥 BUANG UBIN", new Color(0.88f, 0.24f, 0.14f), new Vector2(700, -360), new Vector2(340, 80), () =>
             {
                 TouchInputHandler.Instance?.ExecuteDiscardSelectedTile();
             });
@@ -299,18 +301,18 @@ namespace Mahjong.UI
         {
             panelCustomRoomModal = CreatePanel("Panel_CustomRoomModal", new Color(0, 0, 0, 0.85f));
 
-            GameObject card = CreateCard(panelCustomRoomModal.transform, new Vector2(850, 560), Vector2.zero);
-            CreateText(card.transform, "CUSTOM ROOM (VIP MABAR)", 30, FontStyle.Bold, new Color(1f, 0.84f, 0f), new Vector2(0, 215), new Vector2(750, 55));
+            GameObject card = CreateCard(panelCustomRoomModal.transform, new Vector2(750, 520), Vector2.zero);
+            CreateText(card.transform, "CUSTOM ROOM (VIP MABAR)", 28, FontStyle.Bold, new Color(1f, 0.84f, 0f), new Vector2(0, 205), new Vector2(680, 50));
 
-            CreateButton(card.transform, "✨ BUAT ROOM BARU", new Color(0.1f, 0.6f, 0.3f), new Vector2(0, 120), new Vector2(600, 75), OnClickCreateVIPRoom);
-            txtCustomRoomDisplay = CreateText(card.transform, "Kode Anda: Belum dibuat", 22, FontStyle.Bold, new Color(0.8f, 1f, 0.8f), new Vector2(0, 50), new Vector2(600, 45));
+            CreateButton(card.transform, "✨ BUAT ROOM BARU", new Color(0.12f, 0.62f, 0.32f), new Vector2(0, 115), new Vector2(540, 68), OnClickCreateVIPRoom);
+            txtCustomRoomDisplay = CreateText(card.transform, "Kode Anda: Belum dibuat", 21, FontStyle.Bold, new Color(0.8f, 1f, 0.8f), new Vector2(0, 50), new Vector2(540, 42));
 
-            CreateText(card.transform, "— ATAU GABUNG ROOM TEMAN —", 20, FontStyle.Italic, Color.gray, new Vector2(0, -5), new Vector2(600, 35));
+            CreateText(card.transform, "— ATAU GABUNG ROOM TEMAN —", 19, FontStyle.Italic, Color.gray, new Vector2(0, -2), new Vector2(540, 32));
 
-            inputJoinCode = CreateInputField(card.transform, "Masukkan Kode (misal: VIP-8821)...", new Vector2(0, -70), new Vector2(600, 70));
-            CreateButton(card.transform, "➡️ GABUNG ROOM", new Color(0.2f, 0.45f, 0.8f), new Vector2(0, -155), new Vector2(600, 75), OnClickJoinVIPRoom);
+            inputJoinCode = CreateInputField(card.transform, "Masukkan Kode (misal: VIP-8821)...", new Vector2(0, -62), new Vector2(540, 62));
+            CreateButton(card.transform, "➡️ GABUNG ROOM", new Color(0.2f, 0.48f, 0.82f), new Vector2(0, -140), new Vector2(540, 68), OnClickJoinVIPRoom);
 
-            CreateButton(card.transform, "❌ TUTUP", new Color(0.5f, 0.5f, 0.5f), new Vector2(0, -230), new Vector2(260, 55), () => panelCustomRoomModal.SetActive(false));
+            CreateButton(card.transform, "❌ TUTUP", new Color(0.45f, 0.45f, 0.45f), new Vector2(0, -210), new Vector2(240, 50), () => panelCustomRoomModal.SetActive(false));
         }
 
         // =========================================================================
@@ -321,17 +323,17 @@ namespace Mahjong.UI
         {
             panelFriendListModal = CreatePanel("Panel_FriendListModal", new Color(0, 0, 0, 0.85f));
 
-            GameObject card = CreateCard(panelFriendListModal.transform, new Vector2(850, 580), Vector2.zero);
-            CreateText(card.transform, "DAFTAR TEMAN (FRIEND LIST)", 30, FontStyle.Bold, new Color(1f, 0.84f, 0f), new Vector2(0, 230), new Vector2(750, 55));
+            GameObject card = CreateCard(panelFriendListModal.transform, new Vector2(750, 540), Vector2.zero);
+            CreateText(card.transform, "DAFTAR TEMAN (FRIEND LIST)", 28, FontStyle.Bold, new Color(1f, 0.84f, 0f), new Vector2(0, 215), new Vector2(680, 50));
 
-            CreateText(card.transform, "Teman Online:", 22, FontStyle.Bold, Color.white, new Vector2(-260, 165), new Vector2(250, 45));
+            CreateText(card.transform, "Teman Online:", 21, FontStyle.Bold, Color.white, new Vector2(-220, 155), new Vector2(220, 40));
 
-            CreateText(card.transform, "🟢 Alex_VIP (In Lobby) — 🏆 1,450 [UNDANG MABAR]", 20, FontStyle.Normal, new Color(0.7f, 1f, 0.7f), new Vector2(0, 95), new Vector2(750, 45));
-            CreateText(card.transform, "🟢 Dewi_Mahjong (In Game) — 🏆 2,100", 20, FontStyle.Normal, new Color(0.9f, 0.9f, 0.5f), new Vector2(0, 40), new Vector2(750, 45));
-            CreateText(card.transform, "⚪ Budi_Dragon (Offline)", 20, FontStyle.Normal, Color.gray, new Vector2(0, -15), new Vector2(750, 45));
+            CreateText(card.transform, "🟢 Alex_VIP (In Lobby) — 🏆 1,450 [UNDANG MABAR]", 19, FontStyle.Normal, new Color(0.7f, 1f, 0.7f), new Vector2(0, 95), new Vector2(680, 40));
+            CreateText(card.transform, "🟢 Dewi_Mahjong (In Game) — 🏆 2,100", 19, FontStyle.Normal, new Color(0.9f, 0.9f, 0.5f), new Vector2(0, 45), new Vector2(680, 40));
+            CreateText(card.transform, "⚪ Budi_Dragon (Offline)", 19, FontStyle.Normal, Color.gray, new Vector2(0, -5), new Vector2(680, 40));
 
-            CreateButton(card.transform, "➕ TAMBAH TEMAN", new Color(0.15f, 0.5f, 0.75f), new Vector2(0, -120), new Vector2(500, 68), () => Debug.Log("Tambah Teman"));
-            CreateButton(card.transform, "❌ TUTUP", new Color(0.5f, 0.5f, 0.5f), new Vector2(0, -210), new Vector2(260, 55), () => panelFriendListModal.SetActive(false));
+            CreateButton(card.transform, "➕ TAMBAH TEMAN", new Color(0.15f, 0.52f, 0.78f), new Vector2(0, -100), new Vector2(460, 62), () => Debug.Log("Tambah Teman"));
+            CreateButton(card.transform, "❌ TUTUP", new Color(0.45f, 0.45f, 0.45f), new Vector2(0, -185), new Vector2(240, 50), () => panelFriendListModal.SetActive(false));
         }
 
         // =========================================================================
@@ -341,14 +343,14 @@ namespace Mahjong.UI
         private void BuildActionBarHUD()
         {
             panelActionBarHUD = CreatePanel("Panel_ActionBarHUD", Color.clear);
-            GameObject barCard = CreateCard(panelActionBarHUD.transform, new Vector2(980, 100), new Vector2(0, -260));
+            GameObject barCard = CreateCard(panelActionBarHUD.transform, new Vector2(920, 95), new Vector2(0, -270));
             barCard.GetComponent<Image>().color = new Color(0.04f, 0.14f, 0.08f, 0.96f);
 
-            CreateButton(barCard.transform, "CHOW (吃)", new Color(0.2f, 0.6f, 0.8f), new Vector2(-360, 0), new Vector2(170, 70), () => SubmitReaction("chow"));
-            CreateButton(barCard.transform, "PONG (碰)", new Color(0.9f, 0.6f, 0.1f), new Vector2(-180, 0), new Vector2(170, 70), () => SubmitReaction("pong"));
-            CreateButton(barCard.transform, "KONG (槓)", new Color(0.7f, 0.2f, 0.8f), new Vector2(0, 0), new Vector2(170, 70), () => SubmitReaction("kong"));
-            CreateButton(barCard.transform, "WIN / HU (胡)", new Color(0.9f, 0.15f, 0.2f), new Vector2(180, 0), new Vector2(170, 70), () => SubmitReaction("win"));
-            CreateButton(barCard.transform, "PASS (過)", new Color(0.4f, 0.4f, 0.4f), new Vector2(360, 0), new Vector2(150, 70), () => SubmitReaction("pass"));
+            CreateButton(barCard.transform, "CHOW (吃)", new Color(0.2f, 0.6f, 0.8f), new Vector2(-340, 0), new Vector2(155, 65), () => SubmitReaction("chow"));
+            CreateButton(barCard.transform, "PONG (碰)", new Color(0.9f, 0.6f, 0.1f), new Vector2(-170, 0), new Vector2(155, 65), () => SubmitReaction("pong"));
+            CreateButton(barCard.transform, "KONG (槓)", new Color(0.7f, 0.2f, 0.8f), new Vector2(0, 0), new Vector2(155, 65), () => SubmitReaction("kong"));
+            CreateButton(barCard.transform, "WIN / HU (胡)", new Color(0.9f, 0.15f, 0.2f), new Vector2(170, 0), new Vector2(155, 65), () => SubmitReaction("win"));
+            CreateButton(barCard.transform, "PASS (過)", new Color(0.4f, 0.4f, 0.4f), new Vector2(340, 0), new Vector2(135, 65), () => SubmitReaction("pass"));
 
             panelActionBarHUD.SetActive(false);
         }
@@ -361,12 +363,12 @@ namespace Mahjong.UI
         {
             panelVictoryModal = CreatePanel("Panel_VictoryModal", new Color(0, 0, 0, 0.88f));
 
-            GameObject card = CreateCard(panelVictoryModal.transform, new Vector2(850, 560), Vector2.zero);
-            CreateText(card.transform, "🏆 RONDE SELESAI 🏆", 34, FontStyle.Bold, new Color(1f, 0.85f, 0f), new Vector2(0, 215), new Vector2(750, 60));
+            GameObject card = CreateCard(panelVictoryModal.transform, new Vector2(800, 520), Vector2.zero);
+            CreateText(card.transform, "🏆 RONDE SELESAI 🏆", 32, FontStyle.Bold, new Color(1f, 0.85f, 0f), new Vector2(0, 200), new Vector2(700, 55));
 
-            txtVictoryDetails = CreateText(card.transform, "PEMENANG: SEAT SOUTH (ANDA)\n\n• Base Win: +100 Poin\n• Self-Draw (Zimo): +30 Poin\n• Special Hand (All Triplets): +50 Poin\n\nTotal: +180 Poin | Perolehan: +40 Trofi 🏆", 22, FontStyle.Normal, Color.white, new Vector2(0, 15), new Vector2(750, 260));
+            txtVictoryDetails = CreateText(card.transform, "PEMENANG: SEAT SOUTH (ANDA)\n\n• Base Win: +100 Poin\n• Self-Draw (Zimo): +30 Poin\n• Special Hand (All Triplets): +50 Poin\n\nTotal: +180 Poin | Perolehan: +40 Trofi 🏆", 21, FontStyle.Normal, Color.white, new Vector2(0, 15), new Vector2(700, 240));
 
-            CreateButton(card.transform, "LANJUT KE LOBBY", new Color(0.1f, 0.65f, 0.3f), new Vector2(0, -190), new Vector2(450, 75), ShowMainMenuLobby);
+            CreateButton(card.transform, "LANJUT KE LOBBY", new Color(0.12f, 0.65f, 0.32f), new Vector2(0, -180), new Vector2(420, 68), ShowMainMenuLobby);
 
             panelVictoryModal.SetActive(false);
         }
@@ -580,14 +582,23 @@ namespace Mahjong.UI
 
         private GameObject CreateCard(Transform parent, Vector2 size, Vector2 anchoredPos)
         {
-            GameObject card = new GameObject("Card_Glass", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            GameObject card = new GameObject("Card_Glass", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Outline), typeof(Shadow));
             card.transform.SetParent(parent, false);
             RectTransform rect = card.GetComponent<RectTransform>();
             rect.sizeDelta = size;
             rect.anchoredPosition = anchoredPos;
 
             Image img = card.GetComponent<Image>();
-            img.color = new Color(0.06f, 0.18f, 0.12f, 0.94f); // Emerald Dark Glass
+            img.color = new Color(0.05f, 0.16f, 0.10f, 0.95f); // Emerald Dark Glass
+
+            Outline outline = card.GetComponent<Outline>();
+            outline.effectColor = new Color(0.85f, 0.72f, 0.38f, 0.55f); // Gold Border Frame
+            outline.effectDistance = new Vector2(2, -2);
+
+            Shadow shadow = card.GetComponent<Shadow>();
+            shadow.effectColor = new Color(0, 0, 0, 0.65f);
+            shadow.effectDistance = new Vector2(4, -6);
+
             return card;
         }
 
@@ -614,14 +625,18 @@ namespace Mahjong.UI
 
         private InputField CreateInputField(Transform parent, string placeholder, Vector2 anchoredPos, Vector2 size, bool isPassword = false)
         {
-            GameObject inputObj = new GameObject("Input_" + placeholder, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(InputField));
+            GameObject inputObj = new GameObject("Input_" + placeholder, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Outline), typeof(InputField));
             inputObj.transform.SetParent(parent, false);
             RectTransform rect = inputObj.GetComponent<RectTransform>();
             rect.anchoredPosition = anchoredPos;
             rect.sizeDelta = size;
 
             Image bg = inputObj.GetComponent<Image>();
-            bg.color = new Color(0.03f, 0.08f, 0.05f, 0.9f);
+            bg.color = new Color(0.02f, 0.07f, 0.04f, 0.95f);
+
+            Outline outline = inputObj.GetComponent<Outline>();
+            outline.effectColor = new Color(0.7f, 0.6f, 0.35f, 0.4f);
+            outline.effectDistance = new Vector2(1, -1);
 
             InputField input = inputObj.GetComponent<InputField>();
 
@@ -632,7 +647,7 @@ namespace Mahjong.UI
             phRect.offsetMin = new Vector2(20, 0); phRect.offsetMax = new Vector2(-20, 0);
             Text phText = phObj.GetComponent<Text>();
             phText.text = placeholder;
-            phText.fontSize = 22;
+            phText.fontSize = 20;
             phText.fontStyle = FontStyle.Italic;
             phText.color = new Color(0.6f, 0.7f, 0.6f, 0.6f);
             phText.alignment = TextAnchor.MiddleLeft;
@@ -646,7 +661,7 @@ namespace Mahjong.UI
             txtRect.anchorMin = Vector2.zero; txtRect.anchorMax = Vector2.one;
             txtRect.offsetMin = new Vector2(20, 0); txtRect.offsetMax = new Vector2(-20, 0);
             Text text = txtObj.GetComponent<Text>();
-            text.fontSize = 24;
+            text.fontSize = 22;
             text.color = Color.white;
             text.alignment = TextAnchor.MiddleLeft;
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -663,7 +678,7 @@ namespace Mahjong.UI
 
         private Button CreateButton(Transform parent, string label, Color btnColor, Vector2 anchoredPos, Vector2 size, UnityEngine.Events.UnityAction onClick)
         {
-            GameObject btnObj = new GameObject("Btn_" + label, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            GameObject btnObj = new GameObject("Btn_" + label, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Outline), typeof(Shadow), typeof(Button));
             btnObj.transform.SetParent(parent, false);
             RectTransform rect = btnObj.GetComponent<RectTransform>();
             rect.anchoredPosition = anchoredPos;
@@ -671,6 +686,14 @@ namespace Mahjong.UI
 
             Image img = btnObj.GetComponent<Image>();
             img.color = btnColor;
+
+            Outline outline = btnObj.GetComponent<Outline>();
+            outline.effectColor = new Color(1f, 1f, 1f, 0.25f);
+            outline.effectDistance = new Vector2(1, -1);
+
+            Shadow shadow = btnObj.GetComponent<Shadow>();
+            shadow.effectColor = new Color(0, 0, 0, 0.45f);
+            shadow.effectDistance = new Vector2(2, -3);
 
             Button btn = btnObj.GetComponent<Button>();
             btn.targetGraphic = img;
@@ -688,7 +711,7 @@ namespace Mahjong.UI
 
             Text txt = txtObj.GetComponent<Text>();
             txt.text = label;
-            txt.fontSize = 24;
+            txt.fontSize = 22;
             txt.fontStyle = FontStyle.Bold;
             txt.color = Color.white;
             txt.alignment = TextAnchor.MiddleCenter;

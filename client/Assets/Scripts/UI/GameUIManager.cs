@@ -1,3 +1,4 @@
+#if false
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -206,3 +207,4 @@ namespace Mahjong.UI
         }
     }
 }
+#endif
