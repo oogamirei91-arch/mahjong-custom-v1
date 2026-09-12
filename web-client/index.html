@@ -240,6 +240,18 @@
             </div>
         </div>
 
+        <!-- Rotate Landscape Prompt Overlay (Aktif saat layar Portrait di Mobile/Tablet) -->
+        <div id="rotate-prompt-overlay">
+            <div class="rotate-prompt-box">
+                <div class="rotate-phone-anim">🔄📱</div>
+                <h2 style="font-family: var(--font-heading); color: var(--gold-bright); margin: 10px 0 6px;">MODE LANDSCAPE</h2>
+                <p style="color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 0 0 14px;">Silakan putar perangkat Anda ke posisi horizontal untuk grafis Mahjong 3D optimal.</p>
+                <button id="btn-force-landscape" class="btn-vip-primary" style="padding: 10px 22px; font-size: 0.95rem;">
+                    🔄 Putar Layar Sekarang
+                </button>
+            </div>
+        </div>
+
         <!-- 4. IN-GAME SCREEN & 3D VIEWPORT -->
         <div id="screen-game" class="screen-view">
             <!-- 15s Turn Timer Top Bar -->
@@ -250,8 +262,8 @@
             <!-- Top HUD Overlay -->
             <div class="game-hud-top">
                 <div class="hud-pill">
-                    <span>🀄 Tembok Ubin:</span>
-                    <span id="hud-wall-count" style="color: var(--gold-bright); font-weight: 800;">91</span>
+                    <span>🀄 Sisa Biji:</span>
+                    <span id="hud-wall-count" style="color: var(--gold-bright); font-weight: 800; margin-left: 4px;">91</span>
                 </div>
 
                 <div class="hud-pill" style="font-family: var(--font-heading); color: var(--gold-bright); letter-spacing: 1px;">
@@ -292,7 +304,6 @@
                 <div class="modal-header">
                     <span style="font-size: 1.4rem;">🗝️</span>
                     <h2 class="modal-title">RUANGAN VIP PRIVATE</h2>
-                    <button class="modal-close-icon btn-modal-close">&times;</button>
                 </div>
                 
                 <p class="modal-subtitle">Mainkan Mahjong bersama teman dengan kode meja</p>
@@ -338,7 +349,6 @@
                 <div class="modal-header">
                     <span style="font-size: 1.4rem;">📖</span>
                     <h2 class="modal-title">MAHJONG CUSTOM &bull; RULE BOOK v1.0</h2>
-                    <button class="modal-close-icon btn-modal-close">&times;</button>
                 </div>
                 
                 <div style="font-size: 0.9rem; line-height: 1.65; color: #e8ece9; display: flex; flex-direction: column; gap: 16px; margin-top: 10px; margin-bottom: 24px;">
@@ -411,7 +421,6 @@
                 <div class="modal-header">
                     <span style="font-size: 1.4rem;">🏆</span>
                     <h2 class="modal-title">PAPAN PERINGKAT GLOBAL</h2>
-                    <button class="modal-close-icon btn-modal-close">&times;</button>
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -452,7 +461,6 @@
                 <div class="modal-header">
                     <span style="font-size: 1.4rem;">⚙️</span>
                     <h2 class="modal-title">PENGATURAN VIP</h2>
-                    <button class="modal-close-icon btn-modal-close">&times;</button>
                 </div>
 
                 <div class="settings-list">

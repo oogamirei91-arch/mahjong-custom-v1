@@ -899,28 +899,7 @@ body, html {
 }
 
 .modal-close-icon {
-    position: absolute;
-    top: -6px;
-    right: -10px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 1.3rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.modal-close-icon:hover {
-    background: rgba(200, 20, 24, 0.3);
-    border-color: #ff4444;
-    color: #ffffff;
-    transform: scale(1.1);
+    display: none !important;
 }
 
 .modal-subtitle {
@@ -1159,5 +1138,57 @@ body, html {
     background: var(--jade-accent);
     box-shadow: 0 0 8px var(--jade-accent);
     animation: pulseSlow 2s infinite;
+}
+
+/* ==========================================================
+   ROTATE LANDSCAPE PROMPT OVERLAY (AUTO-LANDSCAPE)
+   ========================================================== */
+#rotate-prompt-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(4, 15, 11, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+}
+
+.rotate-prompt-box {
+    max-width: 420px;
+    background: linear-gradient(135deg, rgba(8, 28, 20, 0.95), rgba(4, 15, 10, 0.98));
+    border: 2px solid var(--jade-accent);
+    border-radius: 20px;
+    padding: 32px 24px;
+    box-shadow: 0 0 40px rgba(0, 255, 136, 0.25), 0 20px 40px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.rotate-phone-anim {
+    font-size: 3.5rem;
+    margin-bottom: 12px;
+    display: inline-block;
+    animation: rotatePhone 2s ease-in-out infinite alternate;
+}
+
+@keyframes rotatePhone {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(-45deg) scale(1.1); }
+    100% { transform: rotate(-90deg) scale(1); }
+}
+
+/* Tampilkan overlay saat orientasi layar vertikal/portrait */
+@media screen and (orientation: portrait) and (max-width: 1024px) {
+    #rotate-prompt-overlay {
+        display: flex;
+    }
 }
 

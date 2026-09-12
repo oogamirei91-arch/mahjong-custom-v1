@@ -27,9 +27,9 @@ export const GAME_CONSTANTS = {
     DISCARD_ROW_SIZE: 6,        // Jumlah ubin per baris di kolam buangan (Kawa)
     TILE_WIDTH: 0.040,          // 4.0 cm
     TILE_HEIGHT: 0.056,         // 5.6 cm
-    TILE_THICKNESS: 0.026,      // 2.6 cm
-    TILE_SPACING_X: 0.043,      // 4.3 cm (celah 3mm)
-    HAND_POS_Z: 0.305,          // Posisi tangan pemain dari pusat meja
+    TILE_THICKNESS: 0.024,      // 2.4 cm
+    TILE_SPACING_X: 0.041,      // 4.1 cm (celah rapi 1mm)
+    HAND_POS_Z: 0.272,          // Posisi tangan aktif pemain mundur memberi ruang melds di depan
     HAND_POS_Y: 0.030           // Tinggi dari felt meja
 };
 

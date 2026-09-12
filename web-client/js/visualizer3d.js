@@ -47,11 +47,12 @@ export class Mahjong3DVisualizer {
         this.onTileSelectedCallback = null;
         this.onTileDiscardCallback = null;
 
-        // Compass & Timer state
+        // Compass & Timer & Wall state
         this.compassTextCanvas = null;
         this.compassTexture = null;
         this.activeTurnSeat = SEATS.SOUTH;
         this.remainingSeconds = 15;
+        this.wallRemaining = 91;
 
         // Animation loop
         this.isAnimating = false;
@@ -292,10 +293,10 @@ export class Mahjong3DVisualizer {
             ctx.fillText(w.text, w.x, w.y);
         });
 
-        // Center Digital Countdown
+        // Center Digital Countdown (15s Turn Timer)
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.font = "bold 110px 'Courier New', monospace";
+        ctx.font = "bold 96px 'Courier New', monospace";
 
         const isUrgent = this.remainingSeconds <= 5;
         ctx.fillStyle = isUrgent ? "#ff3344" : "#ffea00";
@@ -303,7 +304,15 @@ export class Mahjong3DVisualizer {
         ctx.shadowBlur = isUrgent ? 25 : 10;
 
         const secStr = this.remainingSeconds < 10 ? `0${this.remainingSeconds}` : `${this.remainingSeconds}`;
-        ctx.fillText(secStr, 256, 256);
+        ctx.fillText(secStr, 256, 230);
+        ctx.shadowBlur = 0;
+
+        // Digital Remaining Wall Counter
+        ctx.font = "bold 28px 'Segoe UI', Arial";
+        ctx.fillStyle = "#00ff88";
+        ctx.shadowColor = "#00ff88";
+        ctx.shadowBlur = 8;
+        ctx.fillText(`SISA: ${this.wallRemaining}`, 256, 320);
         ctx.shadowBlur = 0;
 
         this.compassTexture.needsUpdate = true;
@@ -315,20 +324,25 @@ export class Mahjong3DVisualizer {
         this.updateCompassDisplay();
     }
 
+    setWallCount(count) {
+        this.wallRemaining = count !== undefined ? count : 0;
+        this.updateCompassDisplay();
+    }
+
     /**
      * Membuat Mesh Ubin 3D Dual-Layer (Gading Depan 35% + Giok Belakang 65%)
      */
-    createDualLayerTileMesh(tileData) {
+    createDualLayerTileMesh(tileData, scale = 1.0) {
         const group = new THREE.Group();
         group.name = "MahjongTile";
-        group.userData = { tileData, isSelected: false, basePosY: 0, index: -1 };
+        group.userData = { tileData, isSelected: false, basePosY: 0, index: -1, scale };
 
-        const w = GAME_CONSTANTS.TILE_WIDTH;
-        const h = GAME_CONSTANTS.TILE_HEIGHT;
-        const totalT = GAME_CONSTANTS.TILE_THICKNESS;
+        const w = GAME_CONSTANTS.TILE_WIDTH * scale;
+        const h = GAME_CONSTANTS.TILE_HEIGHT * scale;
+        const totalT = GAME_CONSTANTS.TILE_THICKNESS * scale;
 
-        const frontT = totalT * 0.35; // 0.91 cm
-        const backT = totalT * 0.65;  // 1.69 cm
+        const frontT = totalT * 0.35; // 35% Ivory
+        const backT = totalT * 0.65;  // 65% Jade
 
         // 1. Hitung UV Koordinat Ubin pada Gambar 3 (9 Kolom x 5 Baris)
         const uvCoords = this.calculateTileUV(tileData.suit, tileData.value);
@@ -458,16 +472,16 @@ export class Mahjong3DVisualizer {
         const startX = -totalW / 2;
 
         handTiles.forEach((tile, idx) => {
-            const mesh = this.createDualLayerTileMesh(tile);
+            const mesh = this.createDualLayerTileMesh(tile, 1.0);
             mesh.userData.index = idx;
             mesh.userData.seat = SEATS.SOUTH;
 
             const posX = startX + (idx * spacing);
-            const posY = GAME_CONSTANTS.HAND_POS_Y;
-            const posZ = GAME_CONSTANTS.HAND_POS_Z;
+            const posY = GAME_CONSTANTS.HAND_POS_Y; // 0.030
+            const posZ = GAME_CONSTANTS.HAND_POS_Z; // 0.272 (Mundur memberi ruang melds)
 
             mesh.position.set(posX, posY, posZ);
-            mesh.rotation.x = -THREE.MathUtils.degToRad(16); // Miring 16 derajat menghadap kamera
+            mesh.rotation.x = -THREE.MathUtils.degToRad(14); // Miring 14 derajat menghadap kamera
             mesh.userData.basePosY = posY;
 
             this.handsGroup.add(mesh);
@@ -484,17 +498,17 @@ export class Mahjong3DVisualizer {
             this.handMeshes[seat] = [];
         });
 
-        const spacing = GAME_CONSTANTS.TILE_SPACING_X * 0.95;
+        const spacing = GAME_CONSTANTS.TILE_SPACING_X * 0.92;
         const dummyTile = { suit: SUITS.DRAGON, value: 3, isBonus: false };
 
         // 1. East (Kanan) -> Punggung Giok Menghadap Tengah Meja
         const eastCount = opponentCounts[SEATS.EAST] || 13;
         const eastStart = -(eastCount - 1) * spacing / 2;
         for (let i = 0; i < eastCount; i++) {
-            const mesh = this.createDualLayerTileMesh(dummyTile);
+            const mesh = this.createDualLayerTileMesh(dummyTile, 1.0);
             mesh.position.set(0.36, GAME_CONSTANTS.HAND_POS_Y, eastStart + (i * spacing));
             mesh.rotation.y = Math.PI / 2;
-            mesh.rotation.z = -THREE.MathUtils.degToRad(16);
+            mesh.rotation.z = -THREE.MathUtils.degToRad(14);
             this.handsGroup.add(mesh);
             this.handMeshes[SEATS.EAST].push(mesh);
         }
@@ -503,10 +517,10 @@ export class Mahjong3DVisualizer {
         const northCount = opponentCounts[SEATS.NORTH] || 13;
         const northStart = (northCount - 1) * spacing / 2;
         for (let i = 0; i < northCount; i++) {
-            const mesh = this.createDualLayerTileMesh(dummyTile);
+            const mesh = this.createDualLayerTileMesh(dummyTile, 1.0);
             mesh.position.set(northStart - (i * spacing), GAME_CONSTANTS.HAND_POS_Y, -0.36);
             mesh.rotation.y = Math.PI;
-            mesh.rotation.x = -THREE.MathUtils.degToRad(16);
+            mesh.rotation.x = -THREE.MathUtils.degToRad(14);
             this.handsGroup.add(mesh);
             this.handMeshes[SEATS.NORTH].push(mesh);
         }
@@ -515,17 +529,18 @@ export class Mahjong3DVisualizer {
         const westCount = opponentCounts[SEATS.WEST] || 13;
         const westStart = (westCount - 1) * spacing / 2;
         for (let i = 0; i < westCount; i++) {
-            const mesh = this.createDualLayerTileMesh(dummyTile);
+            const mesh = this.createDualLayerTileMesh(dummyTile, 1.0);
             mesh.position.set(-0.36, GAME_CONSTANTS.HAND_POS_Y, westStart - (i * spacing));
             mesh.rotation.y = -Math.PI / 2;
-            mesh.rotation.z = THREE.MathUtils.degToRad(16);
+            mesh.rotation.z = THREE.MathUtils.degToRad(14);
             this.handsGroup.add(mesh);
             this.handMeshes[SEATS.WEST].push(mesh);
         }
     }
 
     /**
-     * Render Kolam Ubin Buangan (Discard River)
+     * Render Kolam Ubin Buangan (Discard River / Kawa) Tanpa Bertumpuk
+     * Grid 6 Kolom x 3 Baris yang presisi di sekeliling kompas digital
      */
     renderDiscardRiver(discardsBySeat) {
         for (let seat = 0; seat < 4; seat++) {
@@ -533,46 +548,51 @@ export class Mahjong3DVisualizer {
             this.discardMeshes[seat] = [];
         }
 
-        const tileW = GAME_CONSTANTS.TILE_WIDTH * 0.88;
-        const tileH = GAME_CONSTANTS.TILE_HEIGHT * 0.88;
-        const rowSize = GAME_CONSTANTS.DISCARD_ROW_SIZE;
+        const discardScale = 0.70;
+        const tileW = GAME_CONSTANTS.TILE_WIDTH * discardScale;   // 0.028
+        const tileH = GAME_CONSTANTS.TILE_HEIGHT * discardScale;  // 0.039
+        const rowSize = GAME_CONSTANTS.DISCARD_ROW_SIZE;          // 6
+        const colSpacing = tileW + 0.002;                         // 0.030
+        const rowSpacing = tileH + 0.003;                         // 0.042
+        const startDist = 0.082;                                  // Jarak aman di luar kompas digital (radius 0.070)
 
         for (let seat = 0; seat < 4; seat++) {
             const tiles = discardsBySeat[seat] || [];
             tiles.forEach((tile, idx) => {
-                const mesh = this.createDualLayerTileMesh(tile);
+                const mesh = this.createDualLayerTileMesh(tile, discardScale);
                 const col = idx % rowSize;
                 const row = Math.floor(idx / rowSize);
 
+                const offsetX = (col - (rowSize / 2) + 0.5) * colSpacing;
+                const offsetZ = row * rowSpacing;
+
                 let x = 0, z = 0, rotY = 0;
-                const offsetX = (col - (rowSize / 2) + 0.5) * (tileW + 0.003);
-                const offsetZ = row * (tileH + 0.004);
 
                 switch (seat) {
                     case SEATS.SOUTH:
                         x = offsetX;
-                        z = 0.115 + offsetZ;
+                        z = startDist + offsetZ;
                         rotY = 0;
                         break;
                     case SEATS.EAST:
-                        x = 0.115 + offsetZ;
+                        x = startDist + offsetZ;
                         z = -offsetX;
                         rotY = -Math.PI / 2;
                         break;
                     case SEATS.NORTH:
                         x = -offsetX;
-                        z = -0.115 - offsetZ;
+                        z = -startDist - offsetZ;
                         rotY = Math.PI;
                         break;
                     case SEATS.WEST:
-                        x = -0.115 - offsetZ;
+                        x = -startDist - offsetZ;
                         z = offsetX;
                         rotY = Math.PI / 2;
                         break;
                 }
 
-                mesh.position.set(x, 0.013, z);
-                mesh.rotation.x = -Math.PI / 2;
+                mesh.position.set(x, 0.008, z);
+                mesh.rotation.x = -Math.PI / 2; // Tergeletak rata muka menghadap ke atas
                 mesh.rotation.z = rotY;
 
                 this.discardsGroup.add(mesh);
@@ -582,7 +602,9 @@ export class Mahjong3DVisualizer {
     }
 
     /**
-     * Render Melds Terbuka (Pong, Chow, Kong) di Sudut Meja Setiap Pemain
+     * Render Ubin Jadi / Melds Terbuka (Chow, Pong, Kong) Tanpa Bertumpuk
+     * Pemain Lokal (South): Diletakkan persis di BAWAH ubin yang sedang dimainkan
+     * Pemain Lawan: Diletakkan rapi di depan tangan masing-masing
      */
     renderMelds(meldsBySeat) {
         for (let seat = 0; seat < 4; seat++) {
@@ -590,46 +612,78 @@ export class Mahjong3DVisualizer {
             this.meldMeshes[seat] = [];
         }
 
-        const tileW = GAME_CONSTANTS.TILE_WIDTH * 0.82;
-        const spacing = tileW + 0.002;
+        const meldScale = 0.85;
+        const tileW = GAME_CONSTANTS.TILE_WIDTH * meldScale;   // 0.034
+        const tileSpacing = tileW + 0.002;                     // 0.036
+        const meldGroupGap = 0.014;                            // Celah pemisah antar kombinasi meld
 
-        for (let seat = 0; seat < 4; seat++) {
-            const melds = meldsBySeat[seat] || [];
-            let totalMeldTileIdx = 0;
+        // 1. South Player Melds (Diletakkan di BAWAH tangan aktif pemain lokal)
+        const southMelds = meldsBySeat[SEATS.SOUTH] || [];
+        if (southMelds.length > 0) {
+            let totalMeldWidth = 0;
+            southMelds.forEach((meld, mIdx) => {
+                totalMeldWidth += (meld.tiles.length * tileSpacing);
+                if (mIdx < southMelds.length - 1) totalMeldWidth += meldGroupGap;
+            });
 
-            melds.forEach(meld => {
+            let currentX = -totalMeldWidth / 2 + (tileW / 2);
+            southMelds.forEach((meld) => {
+                meld.tiles.forEach((tile) => {
+                    const mesh = this.createDualLayerTileMesh(tile, meldScale);
+                    mesh.position.set(currentX, 0.010, 0.338); // Di bawah ubin tangan (Z=0.272)
+                    mesh.rotation.x = -Math.PI / 2;           // Tergeletak rata menghadap kamera
+                    mesh.rotation.z = 0;
+
+                    this.meldsGroup.add(mesh);
+                    this.meldMeshes[SEATS.SOUTH].push(mesh);
+                    currentX += tileSpacing;
+                });
+                currentX += meldGroupGap;
+            });
+        }
+
+        // 2. Opponent Melds (East, North, West)
+        [SEATS.EAST, SEATS.NORTH, SEATS.WEST].forEach(seat => {
+            const oppMelds = meldsBySeat[seat] || [];
+            if (oppMelds.length === 0) return;
+
+            let totalWidth = 0;
+            oppMelds.forEach((meld, mIdx) => {
+                totalWidth += (meld.tiles.length * tileSpacing);
+                if (mIdx < oppMelds.length - 1) totalWidth += meldGroupGap;
+            });
+
+            let currentOffset = -totalWidth / 2 + (tileW / 2);
+            oppMelds.forEach(meld => {
                 meld.tiles.forEach(tile => {
-                    const mesh = this.createDualLayerTileMesh(tile);
+                    const mesh = this.createDualLayerTileMesh(tile, meldScale * 0.95);
                     let x = 0, z = 0, rotY = 0;
 
-                    if (seat === SEATS.SOUTH) {
-                        x = 0.32 + (totalMeldTileIdx * spacing);
-                        z = GAME_CONSTANTS.HAND_POS_Z - 0.02;
-                        rotY = 0;
-                    } else if (seat === SEATS.EAST) {
-                        x = 0.36;
-                        z = 0.32 + (totalMeldTileIdx * spacing);
+                    if (seat === SEATS.EAST) {
+                        x = 0.310;
+                        z = currentOffset;
                         rotY = -Math.PI / 2;
                     } else if (seat === SEATS.NORTH) {
-                        x = -0.32 - (totalMeldTileIdx * spacing);
-                        z = -0.36;
+                        x = -currentOffset;
+                        z = -0.310;
                         rotY = Math.PI;
                     } else if (seat === SEATS.WEST) {
-                        x = -0.36;
-                        z = -0.32 - (totalMeldTileIdx * spacing);
+                        x = -0.310;
+                        z = -currentOffset;
                         rotY = Math.PI / 2;
                     }
 
-                    mesh.position.set(x, 0.013, z);
+                    mesh.position.set(x, 0.008, z);
                     mesh.rotation.x = -Math.PI / 2;
                     mesh.rotation.z = rotY;
 
                     this.meldsGroup.add(mesh);
                     this.meldMeshes[seat].push(mesh);
-                    totalMeldTileIdx++;
+                    currentOffset += tileSpacing;
                 });
+                currentOffset += meldGroupGap;
             });
-        }
+        });
     }
 
     setupEventListeners() {

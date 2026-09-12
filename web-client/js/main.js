@@ -157,6 +157,21 @@ class MahjongApp {
             });
         });
 
+        // Landscape Force Button Handler
+        document.getElementById("btn-force-landscape")?.addEventListener("click", () => {
+            this.requestLandscapeLock();
+            try {
+                const docEl = document.documentElement;
+                if (docEl.requestFullscreen) {
+                    docEl.requestFullscreen().catch(() => {});
+                } else if (docEl.webkitRequestFullscreen) {
+                    docEl.webkitRequestFullscreen();
+                }
+            } catch (e) {}
+            const overlay = document.getElementById("rotate-prompt-overlay");
+            if (overlay) overlay.style.display = "none";
+        });
+
         // 2. Login Method: Guest / Tamu (Check User di Supabase)
         document.getElementById("btn-login-guest")?.addEventListener("click", async () => {
             Sound.playButtonPop();
@@ -685,10 +700,29 @@ class MahjongApp {
         }, durationMs);
     }
 
+    requestLandscapeLock() {
+        try {
+            if (screen.orientation && typeof screen.orientation.lock === 'function') {
+                screen.orientation.lock('landscape').catch(() => {});
+            } else if (screen.lockOrientation) {
+                screen.lockOrientation('landscape');
+            }
+        } catch (e) {}
+    }
+
     switchScreen(screenId) {
+        this.requestLandscapeLock();
         document.querySelectorAll(".screen-view").forEach(s => s.classList.remove("active"));
         const target = document.getElementById(screenId);
         if (target) target.classList.add("active");
+
+        if (screenId === "screen-game") {
+            setTimeout(() => {
+                if (this.visualizer && typeof this.visualizer.onWindowResize === 'function') {
+                    this.visualizer.onWindowResize();
+                }
+            }, 100);
+        }
     }
 
     openModal(modalId) {
@@ -1215,6 +1249,7 @@ class MahjongApp {
         this.visualizer.renderOpponentHands(this.getOpponentHandCounts());
         this.visualizer.renderDiscardRiver(this.gameLogic.discards);
         this.visualizer.renderMelds(this.gameLogic.melds);
+        this.updateHUDWallCount();
 
         const claimantName = this.roomSlots[seat]?.name || `Kursi ${seat + 1}`;
         if (seat === this.localSeat) {
@@ -1235,9 +1270,13 @@ class MahjongApp {
     }
 
     updateHUDWallCount() {
+        const remaining = (this.gameLogic && this.gameLogic.deck) ? this.gameLogic.deck.length : 0;
         const wallEl = document.getElementById("hud-wall-count");
         if (wallEl) {
-            wallEl.textContent = `${this.gameLogic.deck.length}`;
+            wallEl.textContent = `${remaining}`;
+        }
+        if (this.visualizer && typeof this.visualizer.setWallCount === 'function') {
+            this.visualizer.setWallCount(remaining);
         }
     }
 
