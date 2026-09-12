@@ -1,0 +1,5 @@
+{
+  "outputDirectory": "web-client",
+  "cleanUrls": true,
+  "trailingSlash": false
+}
