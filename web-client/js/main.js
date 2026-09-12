@@ -82,6 +82,22 @@ class MahjongApp {
         this.bindNetworkEvents();
         this.updateProfileUI();
 
+        // Cek jika ada session OAuth Google setelah redirect Supabase
+        SupabaseDB.checkOAuthRedirectSession().then(res => {
+            if (res && res.user) {
+                this.username = res.user.username;
+                this.displayName = res.user.display_name;
+                this.authType = "google";
+                this.userEmail = res.user.email;
+                this.coins = res.wallet.chips_balance;
+                this.trophies = res.stats.trophy_points;
+                this.rankTier = res.stats.rank_tier;
+                this.updateProfileUI();
+                this.showStatusToast(`✅ Masuk sebagai ${this.displayName} (Google VIP)`);
+                this.switchScreen("screen-lobby");
+            }
+        });
+
         // Cek jika ada URL parameter ?room=XXXXXX untuk auto join
         this.checkUrlRoomParam();
 
@@ -200,13 +216,16 @@ class MahjongApp {
             }
         });
 
-        // 3. Login Method: Google Sign-In (Supabase OAuth)
+        // 3. Login Method: Google Sign-In (Supabase OAuth & VIP Fast-Auth)
         document.getElementById("btn-login-google")?.addEventListener("click", async () => {
             Sound.playButtonPop();
             hideAuthStatus();
+            const emailInput = document.getElementById("input-google-email");
+            const customEmail = (emailInput && emailInput.value.trim()) ? emailInput.value.trim() : "";
+
             this.showStatusToast("⏳ Mengautentikasi dengan Google...");
             try {
-                const res = await SupabaseDB.loginWithGoogle();
+                const res = await SupabaseDB.loginWithGoogle(customEmail);
                 this.username = res.user.username;
                 this.displayName = res.user.display_name;
                 this.authType = "google";
