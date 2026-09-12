@@ -114,17 +114,17 @@ class SupabaseService {
     }
 
     /**
-     * Login Akun Email & Password:
+     * Login Akun Email / Username & Password:
      * Cek apakah user terdaftar di database Supabase.
      * Jika tidak ada -> Error `needRegister: true`.
      */
-    async loginWithEmail(email, password) {
-        if (!email || !password) throw new Error("Email dan kata sandi wajib diisi.");
+    async loginWithEmail(identifier, password) {
+        if (!identifier || !password) throw new Error("Username/Email dan kata sandi wajib diisi.");
 
         const res = await fetch(`${SUPABASE_CONFIG.API_BASE}/api/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ identifier: email, password: password })
+            body: JSON.stringify({ identifier: identifier.trim(), password: password })
         });
 
         const data = await res.json().catch(() => ({}));
@@ -136,7 +136,7 @@ class SupabaseService {
         }
 
         if (!res.ok) {
-            throw new Error(data.message || "Email atau kata sandi yang Anda masukkan salah.");
+            throw new Error(data.message || "Username/Email atau kata sandi yang Anda masukkan salah.");
         }
 
         if (data.success && data.user) {
@@ -148,24 +148,26 @@ class SupabaseService {
     }
 
     /**
-     * Registrasi Akun Email & Password ke Supabase:
+     * Registrasi Akun Baru ke Supabase:
      * Membuat user baru di public.users (+25,000 Chips awal).
      */
-    async registerWithEmail(email, password, displayName) {
-        if (!email || !password) throw new Error("Email dan kata sandi wajib diisi.");
+    async registerWithEmail(username, email, password, displayName, avatarId = 1) {
+        if (!username || !password) throw new Error("Username dan kata sandi wajib diisi.");
+        if (password.length < 6) throw new Error("Kata sandi minimal 6 karakter.");
 
-        const username = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '') || "Player_" + Math.floor(Math.random() * 1000);
-        const dName = displayName && displayName.trim() ? displayName.trim() : username;
+        const uname = username.trim().replace(/[^a-zA-Z0-9_]/g, '') || "Player_" + Math.floor(Math.random() * 1000);
+        const dName = displayName && displayName.trim() ? displayName.trim() : uname;
+        const em = email && email.trim() ? email.trim() : `${uname.toLowerCase()}@mahjong.vip`;
 
         const res = await fetch(`${SUPABASE_CONFIG.API_BASE}/api/auth/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                username: username,
-                email: email,
+                username: uname,
+                email: em,
                 password: password,
                 display_name: dName,
-                avatar_id: 3
+                avatar_id: parseInt(avatarId) || 1
             })
         });
 
@@ -388,27 +390,153 @@ class SupabaseService {
         ];
     }
 
-    // --- 4. PENCATATAN HASIL PERTANDINGAN (MATCH RECORD & YAKU) ---
+    // --- 4. RIWAYAT PERTANDINGAN & STATISTIK PRIBADI USER ---
 
     /**
-     * Mencatat hasil match 4 ronde, perolehan trofi (+40/-25), dan saldo chips
+     * Mengambil daftar riwayat pertandingan pribadi milik user tertentu.
+     * Mengutamakan sinkronisasi Cloud Supabase / Go Server API, dengan fallback lokal terisolasi per user ID.
+     */
+    async fetchUserMatchHistory(userId) {
+        const uid = userId || localStorage.getItem("mahjong_user_id") || "usr_guest";
+
+        // 1. Coba ambil dari Go Game Server API
+        try {
+            const res = await fetch(`${SUPABASE_CONFIG.API_BASE}/api/history?user_id=${encodeURIComponent(uid)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    localStorage.setItem(`mahjong_history_${uid}`, JSON.stringify(data));
+                    return data;
+                }
+            }
+        } catch (e) {
+            console.debug("Fetch cloud history note:", e.message);
+        }
+
+        // 2. Coba Supabase REST API Langsung
+        try {
+            const res = await fetch(`${SUPABASE_CONFIG.URL}/rest/v1/v_player_match_history?user_id=eq.${encodeURIComponent(uid)}&order=started_at.desc&limit=25`, {
+                headers: {
+                    "apikey": SUPABASE_CONFIG.ANON_KEY,
+                    "Authorization": `Bearer ${SUPABASE_CONFIG.ANON_KEY}`
+                }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    localStorage.setItem(`mahjong_history_${uid}`, JSON.stringify(data));
+                    return data;
+                }
+            }
+        } catch (e) {
+            console.debug("Supabase REST history note:", e.message);
+        }
+
+        // 3. Fallback ke Local Storage per User ID
+        try {
+            const saved = localStorage.getItem(`mahjong_history_${uid}`);
+            if (saved) {
+                const list = JSON.parse(saved);
+                if (Array.isArray(list)) return list;
+            }
+        } catch (e) {}
+
+        return [];
+    }
+
+    /**
+     * Mengambil statistik detail & rekor 15 Special Hands untuk user tertentu
+     */
+    async fetchUserStatsDetail(userId) {
+        const uid = userId || localStorage.getItem("mahjong_user_id") || "usr_guest";
+
+        // 1. Coba dari API Server
+        try {
+            const res = await fetch(`${SUPABASE_CONFIG.API_BASE}/api/profile?user_id=${encodeURIComponent(uid)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.stats) {
+                    this.saveUserStatsToLocal(uid, data.stats);
+                    return data.stats;
+                }
+            }
+        } catch (e) {}
+
+        // 2. Fallback ke Local Storage
+        return this.getUserStatsFromLocal(uid);
+    }
+
+    getUserStatsFromLocal(userId) {
+        const defaultSpecialHands = {
+            thirteen_orphans: 0, nine_gates: 0, all_green: 0, big_four_winds: 0,
+            all_honors: 0, little_four_winds: 0, big_three_dragons: 0, all_terminals: 0,
+            all_kongs: 0, four_concealed_pongs: 0, little_three_dragons: 0, pure_flush: 0,
+            seven_pairs: 0, mixed_flush: 0, all_pongs: 0
+        };
+
+        try {
+            const raw = localStorage.getItem(`mahjong_stats_${userId}`);
+            if (raw) {
+                const obj = JSON.parse(raw);
+                if (obj) {
+                    obj.special_hands_record = { ...defaultSpecialHands, ...(obj.special_hands_record || {}) };
+                    return obj;
+                }
+            }
+        } catch (e) {}
+
+        const trophies = parseInt(localStorage.getItem("mahjong_trophies") || "0");
+        const rankTier = localStorage.getItem("mahjong_rank_tier") || this.calculateRankTier(trophies);
+        const chipsEarned = parseInt(localStorage.getItem("mahjong_coins") || "10000");
+
+        return {
+            user_id: userId,
+            trophy_points: trophies,
+            rank_tier: rankTier,
+            total_matches: 0,
+            total_wins: 0,
+            total_draws: 0,
+            total_losses: 0,
+            win_rate: 0.0,
+            highest_match_score: 0,
+            highest_round_score: 0,
+            current_win_streak: 0,
+            highest_win_streak: 0,
+            tsumo_wins: 0,
+            ron_wins: 0,
+            total_chips_earned: chipsEarned,
+            special_hands_record: defaultSpecialHands
+        };
+    }
+
+    saveUserStatsToLocal(userId, stats) {
+        if (!userId || !stats) return;
+        try {
+            localStorage.setItem(`mahjong_stats_${userId}`, JSON.stringify(stats));
+        } catch (e) {}
+    }
+
+    /**
+     * Mencatat hasil match 4 ronde, perolehan trofi (+40/-25), saldo chips, dan riwayat match
      */
     async recordMatchEnd(matchData) {
         const {
-            roomCode,
+            roomCode = "VIP-SOLO",
             gameMode = "CUSTOM_VIP",
             winnerSeat,
-            winnerName,
-            isWinnerLocal,
-            finalScores,
+            winnerName = "VIP Player",
+            isWinnerLocal = false,
+            finalScores = {},
             highestScore = 0,
-            specialHandsCount = {}
+            isTsumo = false,
+            specialHandsEarned = []
         } = matchData;
 
+        const uid = localStorage.getItem("mahjong_user_id") || "usr_guest";
         const trophyDelta = isWinnerLocal ? 40 : -25;
         const chipsDelta = isWinnerLocal ? 5000 : -1000;
 
-        // Update Lokal User
+        // 1. Update Trophy & Wallet Global
         let currentTrophies = parseInt(localStorage.getItem("mahjong_trophies") || "0") + trophyDelta;
         if (currentTrophies < 0) currentTrophies = 0;
         localStorage.setItem("mahjong_trophies", currentTrophies.toString());
@@ -420,33 +548,91 @@ class SupabaseService {
         if (currentCoins < 0) currentCoins = 0;
         localStorage.setItem("mahjong_coins", currentCoins.toString());
 
-        console.log(`🏆 [Supabase] Match Berakhir! Trofi: ${trophyDelta > 0 ? "+" + trophyDelta : trophyDelta} (${currentTrophies} pts) | Rank: ${newRankTier} | Chips: ${chipsDelta > 0 ? "+" + chipsDelta : chipsDelta}`);
+        // 2. Update Stats Personal User
+        const stats = this.getUserStatsFromLocal(uid);
+        stats.total_matches = (stats.total_matches || 0) + 1;
+        if (isWinnerLocal) {
+            stats.total_wins = (stats.total_wins || 0) + 1;
+            stats.current_win_streak = (stats.current_win_streak || 0) + 1;
+            if (stats.current_win_streak > (stats.highest_win_streak || 0)) {
+                stats.highest_win_streak = stats.current_win_streak;
+            }
+            if (isTsumo) {
+                stats.tsumo_wins = (stats.tsumo_wins || 0) + 1;
+            } else {
+                stats.ron_wins = (stats.ron_wins || 0) + 1;
+            }
+        } else {
+            stats.total_losses = (stats.total_losses || 0) + 1;
+            stats.current_win_streak = 0;
+        }
 
-        // Kirim ke cloud Supabase
-        const payload = {
-            room_code: roomCode || "VIP-SOLO",
+        stats.win_rate = stats.total_matches > 0 ? (stats.total_wins / stats.total_matches) * 100 : 0;
+        stats.trophy_points = currentTrophies;
+        stats.rank_tier = newRankTier;
+        if (highestScore > (stats.highest_match_score || 0)) {
+            stats.highest_match_score = highestScore;
+        }
+        if (chipsDelta > 0) {
+            stats.total_chips_earned = (stats.total_chips_earned || 0) + chipsDelta;
+        }
+
+        // Rekor Special Hands
+        if (Array.isArray(specialHandsEarned)) {
+            specialHandsEarned.forEach(yakuKey => {
+                if (stats.special_hands_record && stats.special_hands_record[yakuKey] !== undefined) {
+                    stats.special_hands_record[yakuKey]++;
+                }
+            });
+        }
+
+        this.saveUserStatsToLocal(uid, stats);
+
+        // 3. Catat Item Riwayat Pertandingan Baru
+        const historyItem = {
+            user_id: uid,
+            match_id: "m_" + Date.now(),
+            room_code: roomCode,
             game_mode: gameMode,
-            status: "FINISHED",
-            total_rounds: 4,
+            started_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+            finished_at: new Date().toISOString(),
+            seat_position: "SOUTH",
+            final_score: highestScore,
+            rank_position: isWinnerLocal ? 1 : 2,
+            trophy_delta: trophyDelta,
+            chips_delta: chipsDelta,
+            is_winner: isWinnerLocal,
             winning_score: highestScore,
-            started_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-            finished_at: new Date().toISOString()
+            win_type: isWinnerLocal ? (isTsumo ? "TSUMO" : "RON") : "DEFEAT"
         };
 
+        try {
+            const rawHist = localStorage.getItem(`mahjong_history_${uid}`);
+            let list = rawHist ? JSON.parse(rawHist) : [];
+            if (!Array.isArray(list)) list = [];
+            list.unshift(historyItem);
+            if (list.length > 50) list = list.slice(0, 50);
+            localStorage.setItem(`mahjong_history_${uid}`, JSON.stringify(list));
+        } catch (e) {}
+
+        console.log(`🏆 [Supabase] Match tersimpan untuk user ${uid}! Trofi: ${trophyDelta > 0 ? "+" + trophyDelta : trophyDelta} | Rank: ${newRankTier}`);
+
+        // 4. Kirim ke Server Backend & Cloud Supabase jika online
         if (this.isOnline) {
             try {
-                await fetch(`${SUPABASE_CONFIG.URL}/rest/v1/matches`, {
+                fetch(`${SUPABASE_CONFIG.API_BASE}/api/match/record`, {
                     method: "POST",
-                    headers: {
-                        "apikey": SUPABASE_CONFIG.ANON_KEY,
-                        "Authorization": `Bearer ${SUPABASE_CONFIG.ANON_KEY}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(payload)
-                });
-            } catch (e) {
-                console.debug("Kirim riwayat match ke cloud offline:", e.message);
-            }
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        room_code: roomCode,
+                        game_mode: gameMode,
+                        winner_id: isWinnerLocal ? uid : "bot_winner",
+                        winning_type: isTsumo ? "TSUMO" : "RON",
+                        player_scores: { [uid]: highestScore },
+                        highest_round_score: highestScore
+                    })
+                }).catch(() => {});
+            } catch (e) {}
         }
 
         return {
@@ -454,7 +640,8 @@ class SupabaseService {
             newTrophies: currentTrophies,
             newRankTier,
             chipsDelta,
-            newCoins: currentCoins
+            newCoins: currentCoins,
+            stats
         };
     }
 

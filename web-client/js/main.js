@@ -26,6 +26,7 @@ class MahjongApp {
         this.displayName = localStorage.getItem("mahjong_display_name") || this.username;
         this.userEmail = localStorage.getItem("mahjong_email") || "";
         this.avatarIdx = parseInt(localStorage.getItem("mahjong_avatar") || "1");
+        this.selectedAvatarId = 1;
         this.coins = parseInt(localStorage.getItem("mahjong_coins") || "10000");
         this.trophies = parseInt(localStorage.getItem("mahjong_trophies") || "0");
         this.rankTier = localStorage.getItem("mahjong_rank_tier") || "Novice 🥉";
@@ -53,7 +54,17 @@ class MahjongApp {
         this.init();
     }
 
-    getAvatarForAuth() {
+    getAvatarForAuth(avatarId = null) {
+        const id = avatarId || this.avatarIdx || 1;
+        const avatars = {
+            1: "👑",
+            2: "🀄",
+            3: "💎",
+            4: "🐉",
+            5: "🌸",
+            6: "⚡"
+        };
+        if (avatars[id]) return avatars[id];
         if (this.authType === "google") return "🔴";
         if (this.authType === "email") return "💎";
         return "👑";
@@ -122,11 +133,11 @@ class MahjongApp {
     }
 
     bindUIEvents() {
-        // 1. Tab Switching pada Layar Login
+        // 1. Tab Switching pada Layar Landing
         const tabs = [
+            { btn: "tab-btn-account", content: "tab-content-account" },
             { btn: "tab-btn-guest", content: "tab-content-guest" },
-            { btn: "tab-btn-google", content: "tab-content-google" },
-            { btn: "tab-btn-email", content: "tab-content-email" }
+            { btn: "tab-btn-google", content: "tab-content-google" }
         ];
 
         const showAuthStatus = (msg, isError = true) => {
@@ -157,6 +168,40 @@ class MahjongApp {
             });
         });
 
+        // 1b. Sub-tab Switching: Masuk (Login) vs Daftar Baru (Register)
+        const subtabLogin = document.getElementById("subtab-btn-login");
+        const subtabRegister = document.getElementById("subtab-btn-register");
+        const formLogin = document.getElementById("form-account-login");
+        const formRegister = document.getElementById("form-account-register");
+
+        subtabLogin?.addEventListener("click", () => {
+            Sound.playButtonPop();
+            hideAuthStatus();
+            subtabLogin.classList.add("active");
+            subtabRegister?.classList.remove("active");
+            formLogin?.classList.add("active");
+            formRegister?.classList.remove("active");
+        });
+
+        subtabRegister?.addEventListener("click", () => {
+            Sound.playButtonPop();
+            hideAuthStatus();
+            subtabRegister.classList.add("active");
+            subtabLogin?.classList.remove("active");
+            formRegister?.classList.add("active");
+            formLogin?.classList.remove("active");
+        });
+
+        // 1c. Avatar Selection in Registration Form
+        document.querySelectorAll(".avatar-choice-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                Sound.playButtonPop();
+                document.querySelectorAll(".avatar-choice-btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                this.selectedAvatarId = parseInt(btn.dataset.avatar) || 1;
+            });
+        });
+
         // Landscape Force Button Handler
         document.getElementById("btn-force-landscape")?.addEventListener("click", () => {
             this.requestLandscapeLock();
@@ -172,7 +217,100 @@ class MahjongApp {
             if (overlay) overlay.style.display = "none";
         });
 
-        // 2. Login Method: Guest / Tamu (Check User di Supabase)
+        // 2. Form Method: MASUK (Login Akun Pemain)
+        document.getElementById("btn-login-account")?.addEventListener("click", async () => {
+            Sound.playButtonPop();
+            hideAuthStatus();
+            const identInput = document.getElementById("input-login-identifier");
+            const passInput = document.getElementById("input-login-password");
+            const identVal = identInput ? identInput.value.trim() : "";
+            const passVal = passInput ? passInput.value.trim() : "";
+
+            if (!identVal) {
+                showAuthStatus("⚠️ Harap masukkan username atau email!", true);
+                this.showStatusToast("⚠️ Harap masukkan username atau email!");
+                return;
+            }
+            if (!passVal) {
+                showAuthStatus("⚠️ Harap masukkan kata sandi!", true);
+                this.showStatusToast("⚠️ Harap masukkan kata sandi!");
+                return;
+            }
+
+            this.showStatusToast("⏳ Memeriksa akun di database Supabase...");
+            try {
+                const res = await SupabaseDB.loginWithEmail(identVal, passVal);
+                this.username = res.user.username;
+                this.displayName = res.user.display_name || res.user.username;
+                this.authType = "email";
+                this.userEmail = res.user.email || "";
+                this.avatarIdx = res.user.avatar_id || 1;
+                this.coins = res.wallet ? res.wallet.chips_balance : 25000;
+                this.trophies = res.stats ? res.stats.trophy_points : 0;
+                this.rankTier = res.stats ? res.stats.rank_tier : "Novice 🥉";
+
+                this.updateProfileUI();
+                this.showStatusToast(`✅ Berhasil login: ${this.displayName}!`);
+                this.switchScreen("screen-lobby");
+            } catch (err) {
+                console.warn("Account Login Check:", err.message);
+                const msg = err.needRegister 
+                    ? "⚠️ Akun belum terdaftar di database Supabase! Silakan klik tab <b>DAFTAR BARU</b> di atas." 
+                    : `⚠️ ${err.message}`;
+                showAuthStatus(msg, true);
+                this.showStatusToast(err.needRegister ? "⚠️ Akun belum terdaftar! Silakan klik DAFTAR BARU." : err.message);
+            }
+        });
+
+        // 2b. Form Method: DAFTAR AKUN BARU (Registrasi Akun Pemain)
+        document.getElementById("btn-register-account")?.addEventListener("click", async () => {
+            Sound.playButtonPop();
+            hideAuthStatus();
+            const unameInput = document.getElementById("input-reg-username");
+            const dnameInput = document.getElementById("input-reg-displayname");
+            const emailInput = document.getElementById("input-reg-email");
+            const passInput = document.getElementById("input-reg-password");
+
+            const unameVal = unameInput ? unameInput.value.trim() : "";
+            const dnameVal = dnameInput ? dnameInput.value.trim() : "";
+            const emailVal = emailInput ? emailInput.value.trim() : "";
+            const passVal = passInput ? passInput.value.trim() : "";
+            const avatarId = this.selectedAvatarId || 1;
+
+            if (!unameVal || unameVal.length < 3) {
+                showAuthStatus("⚠️ Username minimal 3 karakter!", true);
+                this.showStatusToast("⚠️ Username minimal 3 karakter!");
+                return;
+            }
+            if (!passVal || passVal.length < 6) {
+                showAuthStatus("⚠️ Kata sandi minimal 6 karakter!", true);
+                this.showStatusToast("⚠️ Kata sandi minimal 6 karakter!");
+                return;
+            }
+
+            this.showStatusToast("⏳ Mendaftarkan akun baru ke Supabase...");
+            try {
+                const res = await SupabaseDB.registerWithEmail(unameVal, emailVal, passVal, dnameVal || unameVal, avatarId);
+                this.username = res.user.username;
+                this.displayName = res.user.display_name || res.user.username;
+                this.authType = "email";
+                this.userEmail = res.user.email || emailVal;
+                this.avatarIdx = avatarId;
+                this.coins = res.wallet ? res.wallet.chips_balance : 25000;
+                this.trophies = res.stats ? res.stats.trophy_points : 0;
+                this.rankTier = res.stats ? res.stats.rank_tier : "Novice 🥉";
+
+                this.updateProfileUI();
+                this.showStatusToast(`🎉 Akun berhasil didaftarkan! Bonus 25,000 Chips VIP`);
+                this.switchScreen("screen-lobby");
+            } catch (err) {
+                console.error("Account Register Error:", err);
+                showAuthStatus(`⚠️ Gagal mendaftar: ${err.message}`, true);
+                this.showStatusToast(`⚠️ Gagal mendaftar: ${err.message}`);
+            }
+        });
+
+        // 3. Login Method: Guest / Tamu Cepat (Check User di Supabase)
         document.getElementById("btn-login-guest")?.addEventListener("click", async () => {
             Sound.playButtonPop();
             hideAuthStatus();
@@ -186,6 +324,7 @@ class MahjongApp {
                 this.displayName = res.user.display_name;
                 this.authType = "guest";
                 this.userEmail = "";
+                this.avatarIdx = res.user.avatar_id || 1;
                 this.coins = res.wallet.chips_balance;
                 this.trophies = res.stats.trophy_points;
                 this.rankTier = res.stats.rank_tier;
@@ -203,7 +342,7 @@ class MahjongApp {
             }
         });
 
-        // 2b. Register Method: Guest / Tamu (Registrasi Akun Tamu Baru ke Supabase)
+        // 3b. Register Method: Guest / Tamu
         document.getElementById("btn-register-guest")?.addEventListener("click", async () => {
             Sound.playButtonPop();
             hideAuthStatus();
@@ -217,6 +356,7 @@ class MahjongApp {
                 this.displayName = res.user.display_name;
                 this.authType = "guest";
                 this.userEmail = "";
+                this.avatarIdx = res.user.avatar_id || 1;
                 this.coins = res.wallet.chips_balance;
                 this.trophies = res.stats.trophy_points;
                 this.rankTier = res.stats.rank_tier;
@@ -231,7 +371,7 @@ class MahjongApp {
             }
         });
 
-        // 3. Login Method: Google Sign-In (Supabase OAuth & VIP Fast-Auth)
+        // 4. Login Method: Google Sign-In (Supabase OAuth & VIP Fast-Auth)
         document.getElementById("btn-login-google")?.addEventListener("click", async () => {
             Sound.playButtonPop();
             hideAuthStatus();
@@ -245,6 +385,7 @@ class MahjongApp {
                 this.displayName = res.user.display_name;
                 this.authType = "google";
                 this.userEmail = res.user.email;
+                this.avatarIdx = res.user.avatar_id || 2;
                 this.coins = res.wallet.chips_balance;
                 this.trophies = res.stats.trophy_points;
                 this.rankTier = res.stats.rank_tier;
@@ -258,99 +399,44 @@ class MahjongApp {
             }
         });
 
-        // 4. Login Method: Email & Password (Cek User Terdaftar)
-        document.getElementById("btn-login-email")?.addEventListener("click", async () => {
+        // 5. Lobby Profile Badge & History Buttons (Open Personal Profile & Match History)
+        document.getElementById("lobby-profile-badge")?.addEventListener("click", () => {
             Sound.playButtonPop();
-            hideAuthStatus();
-            const emailInput = document.getElementById("input-email-address");
-            const passInput = document.getElementById("input-email-password");
-            const emailVal = emailInput ? emailInput.value.trim() : "";
-            const passVal = passInput ? passInput.value.trim() : "";
-
-            if (!emailVal || !emailVal.includes("@")) {
-                showAuthStatus("⚠️ Harap masukkan alamat email yang valid!", true);
-                this.showStatusToast("⚠️ Harap masukkan alamat email yang valid!");
-                return;
-            }
-            if (!passVal) {
-                showAuthStatus("⚠️ Harap masukkan kata sandi!", true);
-                this.showStatusToast("⚠️ Harap masukkan kata sandi!");
-                return;
-            }
-
-            this.showStatusToast("⏳ Memeriksa akun di database Supabase...");
-            try {
-                const res = await SupabaseDB.loginWithEmail(emailVal, passVal);
-                this.username = res.user.username;
-                this.displayName = res.user.display_name;
-                this.authType = "email";
-                this.userEmail = emailVal;
-                this.coins = res.wallet.chips_balance;
-                this.trophies = res.stats.trophy_points;
-                this.rankTier = res.stats.rank_tier;
-
-                this.updateProfileUI();
-                this.showStatusToast(`✅ Berhasil login: ${emailVal}`);
-                this.switchScreen("screen-lobby");
-            } catch (err) {
-                console.warn("Email Login Check:", err.message);
-                const msg = err.needRegister 
-                    ? "⚠️ Akun belum terdaftar di database Supabase! Silakan klik tombol <b>DAFTAR</b> terlebih dahulu." 
-                    : `⚠️ ${err.message}`;
-                showAuthStatus(msg, true);
-                this.showStatusToast(err.needRegister ? "⚠️ Akun belum terdaftar! Silakan klik DAFTAR." : err.message);
-            }
+            this.openUserProfileHistoryModal();
         });
 
-        // 4b. Register Method: Email & Password (Registrasi ke Supabase)
-        document.getElementById("btn-register-email")?.addEventListener("click", async () => {
+        document.getElementById("btn-lobby-history")?.addEventListener("click", () => {
             Sound.playButtonPop();
-            hideAuthStatus();
-            const emailInput = document.getElementById("input-email-address");
-            const passInput = document.getElementById("input-email-password");
-            const emailVal = emailInput ? emailInput.value.trim() : "";
-            const passVal = passInput ? passInput.value.trim() : "";
-
-            if (!emailVal || !emailVal.includes("@")) {
-                showAuthStatus("⚠️ Masukkan email yang valid untuk mendaftar!", true);
-                this.showStatusToast("⚠️ Masukkan email yang valid untuk mendaftar!");
-                return;
-            }
-            if (!passVal || passVal.length < 6) {
-                showAuthStatus("⚠️ Kata sandi minimal 6 karakter!", true);
-                this.showStatusToast("⚠️ Kata sandi minimal 6 karakter!");
-                return;
-            }
-
-            this.showStatusToast("⏳ Mendaftarkan akun ke Supabase...");
-            try {
-                const res = await SupabaseDB.registerWithEmail(emailVal, passVal);
-                this.username = res.user.username;
-                this.displayName = res.user.display_name;
-                this.authType = "email";
-                this.userEmail = emailVal;
-                this.coins = res.wallet.chips_balance;
-                this.trophies = res.stats.trophy_points;
-                this.rankTier = res.stats.rank_tier;
-
-                this.updateProfileUI();
-                this.showStatusToast(`🎉 Akun terdaftar di Supabase! Saldo: 25,000 Chips`);
-                this.switchScreen("screen-lobby");
-            } catch (err) {
-                console.error("Email Register Error:", err);
-                showAuthStatus(`⚠️ Gagal mendaftar: ${err.message}`, true);
-                this.showStatusToast(`⚠️ Gagal mendaftar: ${err.message}`);
-            }
+            this.openUserProfileHistoryModal();
         });
 
-        // 5. Leaderboard Button
+        // 5b. Profile & History Modal Tabs
+        const profTabs = [
+            { btn: "tab-btn-prof-stats", panel: "prof-panel-stats" },
+            { btn: "tab-btn-prof-history", panel: "prof-panel-history" },
+            { btn: "tab-btn-prof-yaku", panel: "prof-panel-yaku" }
+        ];
+
+        profTabs.forEach(t => {
+            document.getElementById(t.btn)?.addEventListener("click", () => {
+                Sound.playButtonPop();
+                profTabs.forEach(item => {
+                    document.getElementById(item.btn)?.classList.remove("active");
+                    document.getElementById(item.panel)?.classList.remove("active");
+                });
+                document.getElementById(t.btn)?.classList.add("active");
+                document.getElementById(t.panel)?.classList.add("active");
+            });
+        });
+
+        // 6. Leaderboard Button
         document.getElementById("btn-lobby-leaderboard")?.addEventListener("click", () => {
             Sound.playButtonPop();
             this.openModal("modal-leaderboard");
             this.loadLeaderboardFromSupabase();
         });
 
-        // 6. Logout / Ganti Akun
+        // 7. Logout / Ganti Akun
         document.getElementById("btn-settings-logout")?.addEventListener("click", () => {
             Sound.playButtonPop();
             this.closeModal("modal-settings");
@@ -1295,8 +1381,31 @@ class MahjongApp {
             const winnerName = this.roomSlots[result.winnerSeat]?.name || `Pemain ${result.winnerSeat + 1}`;
             const totalScore = result.scoreData ? result.scoreData.totalScore : 100;
             const breakdown = result.scoreData ? result.scoreData.breakdown : [];
+            const isTsumo = result.isSelfDraw || (result.scoreData && result.scoreData.isSelfDraw) || false;
 
-            // Sinkronkan hasil pertandingan ke Supabase Cloud
+            // Kumpulkan Yaku / Special Hands yang didapat
+            const specialHandsEarned = [];
+            const yakuKeyMap = {
+                "Thirteen Orphans": "thirteen_orphans",
+                "Nine Gates": "nine_gates",
+                "All Green": "all_green",
+                "Pure Suit": "pure_flush",
+                "Seven Pairs": "seven_pairs",
+                "All Triplets": "all_pongs",
+                "All Honors": "all_honors",
+                "Full 8 Bonus": "all_honors"
+            };
+            if (breakdown) {
+                breakdown.forEach(item => {
+                    for (const [nameMatch, key] of Object.entries(yakuKeyMap)) {
+                        if (item.name && item.name.includes(nameMatch)) {
+                            specialHandsEarned.push(key);
+                        }
+                    }
+                });
+            }
+
+            // Sinkronkan hasil pertandingan ke Supabase Cloud & Local Storage
             const cloudSync = await SupabaseDB.recordMatchEnd({
                 roomCode: this.currentRoomCode || "VIP-SOLO",
                 gameMode: this.currentGameMode,
@@ -1304,7 +1413,9 @@ class MahjongApp {
                 winnerName: winnerName,
                 isWinnerLocal: isMe,
                 finalScores: { [this.localSeat]: isMe ? totalScore : 0 },
-                highestScore: totalScore
+                highestScore: totalScore,
+                isTsumo: isTsumo,
+                specialHandsEarned: specialHandsEarned
             });
 
             this.trophies = cloudSync.newTrophies;
@@ -1381,11 +1492,204 @@ class MahjongApp {
         }
     }
 
+    // --- PROFIL & RIWAYAT PERTANDINGAN PEMAIN ---
+
+    async openUserProfileHistoryModal() {
+        const uid = localStorage.getItem("mahjong_user_id") || "usr_guest";
+
+        // Update Hero Card
+        const avatarEl = document.getElementById("prof-modal-avatar");
+        if (avatarEl) avatarEl.textContent = this.getAvatarForAuth();
+
+        const nameEl = document.getElementById("prof-modal-name");
+        if (nameEl) nameEl.textContent = this.displayName || this.username;
+
+        const unameEl = document.getElementById("prof-modal-username");
+        if (unameEl) unameEl.textContent = `@${this.username}`;
+
+        const uidEl = document.getElementById("prof-modal-uid");
+        if (uidEl) uidEl.textContent = uid.length > 16 ? uid.substring(0, 16) + "..." : uid;
+
+        const authEl = document.getElementById("prof-modal-auth");
+        if (authEl) {
+            authEl.className = `auth-tag tag-${this.authType.toLowerCase()}`;
+            authEl.textContent = this.authType === "google" ? "🔴 Google VIP" : (this.authType === "email" ? "💎 Terdaftar" : "👤 Tamu");
+        }
+
+        const rankEl = document.getElementById("prof-modal-rank");
+        if (rankEl) rankEl.textContent = this.rankTier;
+
+        const chipsEl = document.getElementById("prof-modal-chips");
+        if (chipsEl) chipsEl.textContent = this.coins.toLocaleString();
+
+        const trophiesEl = document.getElementById("prof-modal-trophies");
+        if (trophiesEl) trophiesEl.textContent = `${this.trophies.toLocaleString()} Pts`;
+
+        this.openModal("modal-profile-history");
+
+        // Load data tabs
+        await this.loadUserCareerStats(uid);
+        await this.loadUserMatchHistory(uid);
+    }
+
+    async loadUserCareerStats(userId) {
+        try {
+            const stats = await SupabaseDB.fetchUserStatsDetail(userId);
+            if (!stats) return;
+
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = val;
+            };
+
+            setVal("stat-total-matches", (stats.total_matches || 0).toLocaleString());
+            setVal("stat-total-wins", (stats.total_wins || 0).toLocaleString());
+            setVal("stat-total-losses", (stats.total_losses || 0).toLocaleString());
+            setVal("stat-win-rate", `${(stats.win_rate || 0).toFixed(1)}%`);
+            setVal("stat-win-streak", `${stats.current_win_streak || 0} 🔥`);
+            setVal("stat-best-streak", stats.highest_win_streak || 0);
+            setVal("stat-tsumo-wins", (stats.tsumo_wins || 0).toLocaleString());
+            setVal("stat-ron-wins", (stats.ron_wins || 0).toLocaleString());
+            setVal("stat-highest-score", (stats.highest_match_score || 0).toLocaleString());
+            setVal("stat-total-earned", (stats.total_chips_earned || this.coins || 25000).toLocaleString());
+
+            this.renderYakuGallery(stats.special_hands_record || {});
+        } catch (e) {
+            console.warn("Gagal render career stats:", e);
+        }
+    }
+
+    async loadUserMatchHistory(userId) {
+        const container = document.getElementById("prof-match-history-list");
+        if (!container) return;
+
+        container.innerHTML = `
+            <div style="text-align: center; padding: 25px; color: var(--gold-bright);">
+                ⏳ Mengambil riwayat pertandingan dari Cloud Supabase...
+            </div>
+        `;
+
+        try {
+            const history = await SupabaseDB.fetchUserMatchHistory(userId);
+            if (!history || history.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 30px 20px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.15);">
+                        <div style="font-size: 2.2rem; margin-bottom: 8px;">🀄</div>
+                        <div style="font-weight: 700; color: #ffffff; margin-bottom: 4px;">Belum Ada Riwayat Pertandingan</div>
+                        <div style="font-size: 0.82rem; color: rgba(255,255,255,0.6);">Mainkan ronde pertama Anda sekarang untuk mencatat data karir!</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = history.map((item, idx) => {
+                const isWin = item.is_winner || item.rank_position === 1;
+                const isDraw = item.win_type === "DRAW" || item.game_mode === "DRAW";
+                const modeName = item.game_mode === "SOLO_AI" ? "🤖 Latihan AI" : (item.game_mode === "TOURNAMENT" ? "🏆 Turnamen" : "🗝️ Ruangan VIP");
+                
+                let dateStr = "Baru Saja";
+                if (item.started_at) {
+                    try {
+                        const d = new Date(item.started_at);
+                        dateStr = d.toLocaleDateString("id-ID", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    } catch (e) {}
+                }
+
+                let badgeClass = isWin ? "win" : (isDraw ? "draw" : "loss");
+                let badgeText = isWin ? "🥇 MENANG (HU)" : (isDraw ? "⚖️ SERI" : "KALAH");
+                let itemClass = isWin ? "is-victory" : (isDraw ? "is-draw" : "is-defeat");
+
+                const trophyText = item.trophy_delta > 0 ? `+${item.trophy_delta}` : `${item.trophy_delta}`;
+                const chipsText = item.chips_delta > 0 ? `+${item.chips_delta.toLocaleString()}` : `${item.chips_delta.toLocaleString()}`;
+
+                return `
+                    <div class="match-history-item ${itemClass}">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span class="match-rank-badge ${badgeClass}">${badgeText}</span>
+                            <div>
+                                <div style="font-weight: 700; color: #ffffff; font-size: 0.9rem;">${modeName} <span style="font-weight: 400; font-size: 0.75rem; color: rgba(255,255,255,0.5);">(${item.room_code || 'VIP'})</span></div>
+                                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${dateStr}</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.85rem; font-weight: 800; color: var(--gold-bright);">${item.final_score ? `+${item.final_score} Pts` : ''}</div>
+                                <div style="font-size: 0.75rem; color: ${item.trophy_delta >= 0 ? 'var(--jade-accent)' : '#ff8080'}; font-weight: 700;">
+                                    🏆 ${trophyText} Pts
+                                </div>
+                            </div>
+
+                            <div style="background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-family: monospace; font-size: 0.85rem; color: ${item.chips_delta >= 0 ? 'var(--jade-accent)' : '#ff8080'};">
+                                🪙 ${chipsText}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (err) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: #ff6666;">
+                    ⚠️ Gagal memuat riwayat pertandingan: ${err.message}
+                </div>
+            `;
+        }
+    }
+
+    renderYakuGallery(yakuRecord = {}) {
+        const container = document.getElementById("prof-yaku-grid");
+        if (!container) return;
+
+        const yakus = this.getYakuDefinitions();
+        container.innerHTML = yakus.map(y => {
+            const count = yakuRecord[y.key] || 0;
+            const isUnlocked = count > 0;
+
+            return `
+                <div class="yaku-card ${isUnlocked ? 'unlocked' : ''}">
+                    <div>
+                        <div class="yaku-card-header">
+                            <span class="yaku-card-title">${y.name}</span>
+                            <span class="yaku-card-pts">${y.pts}</span>
+                        </div>
+                        <p class="yaku-card-desc">${y.desc}</p>
+                    </div>
+                    <div>
+                        <span class="yaku-card-status ${isUnlocked ? 'achieved' : 'locked'}">
+                            ${isUnlocked ? `✨ Tercapai: ${count}x` : '🔒 Belum Tercapai'}
+                        </span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    getYakuDefinitions() {
+        return [
+            { key: "thirteen_orphans", name: "Thirteen Orphans (Kokushi 國士無雙)", pts: "+150 Pts", desc: "13 jenis ubin Terminal (1 & 9) & Honor lengkap + 1 pasang kembar." },
+            { key: "nine_gates", name: "Nine Gates (Chuuren 九蓮寶燈)", pts: "+150 Pts", desc: "Pola 1112345678999 pada satu jenis suit angka." },
+            { key: "all_green", name: "All Green (Ryuuiisou 綠一色)", pts: "+150 Pts", desc: "Hanya terdiri dari Bamboo (2, 3, 4, 6, 8) & Green Dragon (Fa)." },
+            { key: "big_four_winds", name: "Big Four Winds (Daisuushii 大四喜)", pts: "+150 Pts", desc: "4 set Pong/Kong dari Angin Timur, Selatan, Barat, dan Utara." },
+            { key: "all_honors", name: "All Honors (Tsuuiisou 字一色)", pts: "+150 Pts", desc: "Seluruh ubin hanya terdiri dari ubin Angin dan Naga." },
+            { key: "four_concealed_pongs", name: "Four Concealed Pongs (Suuankou 四暗刻)", pts: "+150 Pts", desc: "4 set Pong/Kong tertutup tanpa mencuri buangan lawan." },
+            { key: "all_kongs", name: "All Kongs (Suukantsu 四槓子)", pts: "+150 Pts", desc: "4 set Kong (16 ubin lengkap + 1 pair)." },
+            { key: "all_terminals", name: "All Terminals (Chinroutou 清老頭)", pts: "+150 Pts", desc: "Seluruh set hanya terdiri dari ubin angka 1 dan 9." },
+            { key: "little_four_winds", name: "Little Four Winds (Shousuushii 小四喜)", pts: "+120 Pts", desc: "3 set Pong/Kong angin + 1 pasang angin ke-4." },
+            { key: "big_three_dragons", name: "Big Three Dragons (Daisangen 大三元)", pts: "+120 Pts", desc: "3 set Pong/Kong Naga Merah, Hijau, dan Putih." },
+            { key: "pure_flush", name: "Pure Flush (Chinitsu 清一色)", pts: "+100 Pts", desc: "Semua ubin dari satu suit angka (tanpa angin/naga)." },
+            { key: "seven_pairs", name: "Seven Pairs (Chiitoitsu 七對子)", pts: "+100 Pts", desc: "7 pasang ubin kembar berbeda yang terpisah." },
+            { key: "little_three_dragons", name: "Little Three Dragons (Shousangen 小三元)", pts: "+80 Pts", desc: "2 set Pong/Kong naga + 1 pasang naga ke-3." },
+            { key: "mixed_flush", name: "Mixed Flush (Honitsu 混一色)", pts: "+60 Pts", desc: "Satu suit angka dikombinasikan dengan ubin Angin/Naga." },
+            { key: "all_pongs", name: "All Triplets (Toitoi 對對和)", pts: "+50 Pts", desc: "4 set Pong/Kong ubin kembar + 1 pair." }
+        ];
+    }
+
     saveAuthState() {
         localStorage.setItem("mahjong_user", this.username);
         localStorage.setItem("mahjong_display_name", this.displayName || this.username);
         localStorage.setItem("mahjong_auth_type", this.authType);
         localStorage.setItem("mahjong_email", this.userEmail || "");
+        localStorage.setItem("mahjong_avatar", (this.avatarIdx || 1).toString());
         localStorage.setItem("mahjong_coins", this.coins.toString());
         localStorage.setItem("mahjong_trophies", this.trophies.toString());
         localStorage.setItem("mahjong_rank_tier", this.rankTier);
@@ -1429,13 +1733,14 @@ class MahjongApp {
 
                 const isMe = (entry.username === this.username || entry.display_name === this.displayName);
                 const meHighlight = isMe ? "background: rgba(0, 255, 136, 0.15); font-weight: bold;" : "";
+                const avatarIcon = this.getAvatarForAuth(entry.avatar_id);
 
                 return `
                     <tr class="${topClass}" style="${meHighlight}">
                         <td>${rankBadgeHtml}</td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-size: 1.2rem;">${entry.avatar_id === 2 ? '🔴' : (entry.avatar_id === 3 ? '💎' : '👑')}</span>
+                                <span style="font-size: 1.2rem;">${avatarIcon}</span>
                                 <div>
                                     <div style="font-weight: 700; color: #fff;">${entry.display_name || entry.username}</div>
                                     <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">@${entry.username}</div>

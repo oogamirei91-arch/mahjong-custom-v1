@@ -405,9 +405,44 @@ func (r *PostgresRepository) RecordMatchOutcome(roomCode, gameMode, winnerID, wi
 	return nil
 }
 
+// GetPlayerMatchHistory mengambil riwayat pertandingan pemain tertentu dari Supabase.
+func (r *PostgresRepository) GetPlayerMatchHistory(userID string, limit int) []PlayerMatchHistoryEntry {
+	if limit <= 0 {
+		limit = 20
+	}
+
+	rows, err := r.db.Query(`
+		SELECT user_id, match_id, room_code, game_mode, started_at, COALESCE(finished_at, started_at), seat_position, final_score, rank_position, trophy_delta, chips_delta, is_winner, winning_score
+		FROM public.v_player_match_history
+		WHERE user_id = $1
+		ORDER BY started_at DESC
+		LIMIT $2;
+	`, userID, limit)
+	if err != nil {
+		log.Printf("⚠️ [Database] Gagal query match history pemain %s: %v", userID, err)
+		return nil
+	}
+	defer rows.Close()
+
+	var list []PlayerMatchHistoryEntry
+	for rows.Next() {
+		var item PlayerMatchHistoryEntry
+		if err := rows.Scan(
+			&item.UserID, &item.MatchID, &item.RoomCode, &item.GameMode,
+			&item.StartedAt, &item.FinishedAt, &item.SeatPosition,
+			&item.FinalScore, &item.RankPosition, &item.TrophyDelta,
+			&item.ChipsDelta, &item.IsWinner, &item.WinningScore,
+		); err == nil {
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
 func max(a, b int) int {
 	if a > b {
 		return a
 	}
 	return b
 }
+

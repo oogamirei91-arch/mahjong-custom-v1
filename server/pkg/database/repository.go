@@ -652,6 +652,41 @@ func (r *Repository) GetLeaderboard(limit int) []LeaderboardEntry {
 	return entries
 }
 
+// GetPlayerMatchHistory mengambil riwayat pertandingan in-memory pemain.
+func (r *Repository) GetPlayerMatchHistory(userID string, limit int) []PlayerMatchHistoryEntry {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var list []PlayerMatchHistoryEntry
+	for i := len(r.matches) - 1; i >= 0; i-- {
+		m := r.matches[i]
+		for _, p := range m.Players {
+			if p.UserID == userID {
+				list = append(list, PlayerMatchHistoryEntry{
+					UserID:       userID,
+					MatchID:      m.ID,
+					RoomCode:     m.RoomCode,
+					GameMode:     m.GameMode,
+					StartedAt:    m.StartedAt,
+					FinishedAt:   m.FinishedAt,
+					SeatPosition: p.SeatPosition,
+					FinalScore:   p.FinalScore,
+					RankPosition: p.RankPosition,
+					TrophyDelta:  p.TrophyDelta,
+					ChipsDelta:   p.ChipsDelta,
+					IsWinner:     m.WinnerID == userID,
+					WinningScore: m.WinningScore,
+				})
+				break
+			}
+		}
+		if limit > 0 && len(list) >= limit {
+			break
+		}
+	}
+	return list
+}
+
 func min(a, b int) int {
 	if a < b {
 		return a

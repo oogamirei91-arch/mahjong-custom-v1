@@ -17,22 +17,88 @@
     <div id="app-root">
         <!-- 1. LANDING & LOGIN SCREEN -->
         <div id="screen-landing" class="screen-view active">
-            <div class="landing-card">
+            <div class="landing-card" style="max-width: 520px;">
                 <h1 class="game-logo-title">🀄 MAHJONG VIP 3D</h1>
                 <p class="game-tagline">Classic 144 Tiles &bull; Emerald Casino Edition</p>
 
-                <!-- Login Method Tabs (Guest, Google, Email) -->
+                <!-- Login Method Tabs (Akun Pemain, Tamu, Google) -->
                 <div class="login-tabs">
-                    <button class="login-tab-btn active" id="tab-btn-guest">👤 Tamu</button>
-                    <button class="login-tab-btn" id="tab-btn-google">🔴 Google</button>
-                    <button class="login-tab-btn" id="tab-btn-email">📧 Email</button>
+                    <button class="login-tab-btn active" id="tab-btn-account">📧 Akun Pemain</button>
+                    <button class="login-tab-btn" id="tab-btn-guest">👤 Tamu Cepat</button>
+                    <button class="login-tab-btn" id="tab-btn-google">🔴 Google VIP</button>
                 </div>
 
                 <!-- Status / Error Feedback Message -->
                 <div id="login-status-msg" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 14px; text-align: center; transition: all 0.3s ease;"></div>
 
-                <!-- Tab 1: Guest Login & Register -->
-                <div class="login-tab-content active" id="tab-content-guest">
+                <!-- Tab 1: Akun Pemain (Masuk / Daftar Akun) -->
+                <div class="login-tab-content active" id="tab-content-account">
+                    <!-- Sub-tab Switcher: Masuk vs Daftar -->
+                    <div class="auth-subtabs">
+                        <button type="button" class="auth-subtab-btn active" id="subtab-btn-login">🔑 MASUK (LOGIN)</button>
+                        <button type="button" class="auth-subtab-btn" id="subtab-btn-register">📝 DAFTAR BARU</button>
+                    </div>
+
+                    <!-- Form 1: Masuk (Login) -->
+                    <div id="form-account-login" class="auth-form-view active">
+                        <div class="input-group" style="margin-bottom: 12px;">
+                            <label class="input-label" for="input-login-identifier">Username atau Email</label>
+                            <input type="text" id="input-login-identifier" class="vip-input" placeholder="Masukkan username / email...">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 16px;">
+                            <label class="input-label" for="input-login-password">Kata Sandi</label>
+                            <input type="password" id="input-login-password" class="vip-input" placeholder="Masukkan kata sandi...">
+                        </div>
+                        <button id="btn-login-account" class="btn-vip-primary" style="width: 100%; padding: 13px; font-size: 1rem; margin-bottom: 10px;">
+                            MASUK SEKARANG
+                        </button>
+                        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.65); text-align: center; margin: 0;">
+                            ℹ️ Belum punya akun? Klik <b>DAFTAR BARU</b> di atas (+25,000 Chips VIP).
+                        </p>
+                    </div>
+
+                    <!-- Form 2: Daftar Baru (Register) -->
+                    <div id="form-account-register" class="auth-form-view">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <label class="input-label" for="input-reg-username">Username</label>
+                                <input type="text" id="input-reg-username" class="vip-input" placeholder="cth: master_vip" maxlength="20">
+                            </div>
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <label class="input-label" for="input-reg-displayname">Nama Tampilan</label>
+                                <input type="text" id="input-reg-displayname" class="vip-input" placeholder="cth: Naga Mahjong" maxlength="25">
+                            </div>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 10px;">
+                            <label class="input-label" for="input-reg-email">Alamat Email</label>
+                            <input type="email" id="input-reg-email" class="vip-input" placeholder="nama@email.com">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 12px;">
+                            <label class="input-label" for="input-reg-password">Kata Sandi (Min 6 Karakter)</label>
+                            <input type="password" id="input-reg-password" class="vip-input" placeholder="Buat kata sandi aman...">
+                        </div>
+                        
+                        <!-- Avatar Selection Grid -->
+                        <div class="input-group" style="margin-bottom: 14px;">
+                            <label class="input-label">Pilih Avatar VIP Anda</label>
+                            <div class="avatar-picker-grid" id="avatar-picker-grid">
+                                <button type="button" class="avatar-choice-btn active" data-avatar="1">👑<span class="avatar-name">Kaisar</span></button>
+                                <button type="button" class="avatar-choice-btn" data-avatar="2">🀄<span class="avatar-name">Master</span></button>
+                                <button type="button" class="avatar-choice-btn" data-avatar="3">💎<span class="avatar-name">Emerald</span></button>
+                                <button type="button" class="avatar-choice-btn" data-avatar="4">🐉<span class="avatar-name">Dragon</span></button>
+                                <button type="button" class="avatar-choice-btn" data-avatar="5">🌸<span class="avatar-name">Lotus</span></button>
+                                <button type="button" class="avatar-choice-btn" data-avatar="6">⚡<span class="avatar-name">Thunder</span></button>
+                            </div>
+                        </div>
+
+                        <button id="btn-register-account" class="btn-vip-primary" style="width: 100%; padding: 13px; font-size: 1rem; margin-bottom: 8px; background: linear-gradient(135deg, #0e9146 0%, #054f24 100%);">
+                            DAFTAR AKUN BARU (+25,000 CHIPS)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Guest Login & Register -->
+                <div class="login-tab-content" id="tab-content-guest">
                     <div class="input-group" style="margin-bottom: 12px;">
                         <label class="input-label" for="input-guest-name">Nama Pemain (Nickname)</label>
                         <input type="text" id="input-guest-name" class="vip-input" placeholder="Masukkan Nickname..." value="VIP Player" maxlength="15">
@@ -42,11 +108,11 @@
                         <button id="btn-register-guest" class="btn-vip-primary" style="flex: 1; padding: 12px 10px; font-size: 0.95rem; background: rgba(0, 255, 136, 0.2); border: 1px solid var(--jade-accent); color: var(--jade-accent);">DAFTAR TAMU</button>
                     </div>
                     <p style="font-size: 0.75rem; color: rgba(255,255,255,0.6); text-align: center; margin: 0;">
-                        ℹ️ Cek akun tamu perangkat di Supabase. Jika belum ada, silakan klik <b>DAFTAR TAMU</b> (+10,000 Chips).
+                        ℹ️ Masuk cepat tanpa password (terikat ID perangkat, +10,000 Chips).
                     </p>
                 </div>
 
-                <!-- Tab 2: Google Sign-In -->
+                <!-- Tab 3: Google Sign-In -->
                 <div class="login-tab-content" id="tab-content-google">
                     <p style="font-size: 0.85rem; color: rgba(255,255,255,0.75); margin-bottom: 14px; text-align: center;">
                         Masuk & sinkronkan data profil Anda dengan Akun Google (+50,000 Chips VIP).
@@ -69,25 +135,6 @@
                     </p>
                 </div>
 
-                <!-- Tab 3: Email Login & Register -->
-                <div class="login-tab-content" id="tab-content-email">
-                    <div class="input-group" style="margin-bottom: 12px;">
-                        <label class="input-label" for="input-email-address">Alamat Email</label>
-                        <input type="email" id="input-email-address" class="vip-input" placeholder="nama@email.com">
-                    </div>
-                    <div class="input-group" style="margin-bottom: 16px;">
-                        <label class="input-label" for="input-email-password">Kata Sandi</label>
-                        <input type="password" id="input-email-password" class="vip-input" placeholder="Masukkan sandi...">
-                    </div>
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <button id="btn-login-email" class="btn-vip-primary" style="flex: 1; padding: 12px 10px; font-size: 0.95rem;">MASUK</button>
-                        <button id="btn-register-email" class="btn-vip-primary" style="flex: 1; padding: 12px 10px; font-size: 0.95rem; background: rgba(0, 255, 136, 0.2); border: 1px solid var(--jade-accent); color: var(--jade-accent);">DAFTAR</button>
-                    </div>
-                    <p style="font-size: 0.75rem; color: rgba(255,255,255,0.6); text-align: center; margin: 0;">
-                        ℹ️ Belum punya akun? Klik <b>DAFTAR</b> untuk registrasi akun baru (+25,000 Chips).
-                    </p>
-                </div>
-
                 <!-- Footer note -->
                 <div class="login-footer-info">
                     <span>🔒 Database Cloud Supabase PostgreSQL Aktif & Terlindungi</span>
@@ -98,7 +145,7 @@
         <!-- 2. LOBBY SCREEN (4 MODE CARDS) -->
         <div id="screen-lobby" class="screen-view">
             <header class="lobby-header">
-                <div class="player-profile-badge">
+                <div class="player-profile-badge" id="lobby-profile-badge" title="Klik untuk membuka Profil & Riwayat Pertandingan" style="cursor: pointer;">
                     <div class="profile-avatar" id="header-avatar">👑</div>
                     <div class="profile-info">
                         <div style="display: flex; align-items: center; gap: 6px;">
@@ -124,6 +171,7 @@
                 </h2>
 
                 <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="hud-btn" id="btn-lobby-history" title="Profil & Riwayat Pertandingan" style="background: linear-gradient(135deg, rgba(0,255,136,0.25), rgba(212,175,55,0.2)); border-color: var(--jade-accent); color: var(--jade-accent); font-size: 1.1rem;">📊</button>
                     <button class="hud-btn" id="btn-lobby-leaderboard" title="Papan Peringkat Global" style="background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(0,255,136,0.15)); border-color: var(--gold-bright); color: var(--gold-bright); font-size: 1.1rem;">🏆</button>
                     <button class="hud-btn" id="btn-lobby-rules" title="Panduan Aturan" onclick="document.getElementById('modal-rules').classList.add('active')">📖</button>
                     <button class="hud-btn" id="btn-lobby-settings" title="Pengaturan" onclick="document.getElementById('modal-settings').classList.add('active')">⚙️</button>
@@ -412,6 +460,120 @@
                 </div>
 
                 <button class="btn-vip-primary btn-modal-close">TUTUP PANDUAN</button>
+            </div>
+        </div>
+
+        <!-- MODAL: PROFIL & RIWAYAT PERTANDINGAN PEMAIN (PERSONAL PROFILE & MATCH HISTORY) -->
+        <div id="modal-profile-history" class="modal-overlay">
+            <div class="modal-box" style="max-width: 780px; width: 95%; max-height: 88vh; display: flex; flex-direction: column;">
+                <!-- Header Kartu Pemain -->
+                <div class="profile-hero-card">
+                    <div class="profile-hero-avatar" id="prof-modal-avatar">👑</div>
+                    <div class="profile-hero-details">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <h2 class="profile-hero-name" id="prof-modal-name">VIP Player</h2>
+                            <span class="auth-tag tag-guest" id="prof-modal-auth">👤 Tamu</span>
+                            <span class="rank-tier-tag" id="prof-modal-rank">Novice 🥉</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 4px; font-size: 0.8rem; color: rgba(255,255,255,0.7);">
+                            <span id="prof-modal-username">@vip_player</span>
+                            <span>&bull;</span>
+                            <span style="font-family: monospace;" id="prof-modal-uid-wrap">ID: <span id="prof-modal-uid">usr_001</span></span>
+                        </div>
+                    </div>
+                    <div class="profile-hero-wallet">
+                        <div class="profile-coin-wrap">
+                            <span>🪙</span>
+                            <span id="prof-modal-chips" style="color: var(--jade-accent); font-weight: 800; font-family: monospace;">25,000</span>
+                        </div>
+                        <div class="profile-coin-wrap" style="background: rgba(255, 215, 0, 0.15); border-color: rgba(255, 215, 0, 0.4);">
+                            <span>🏆</span>
+                            <span id="prof-modal-trophies" style="color: var(--gold-bright); font-weight: 800; font-family: monospace;">0 Pts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3 Interactive Tabs -->
+                <div class="prof-tabs-nav">
+                    <button type="button" class="prof-tab-btn active" id="tab-btn-prof-stats">📊 Statistik Karir</button>
+                    <button type="button" class="prof-tab-btn" id="tab-btn-prof-history">📜 Riwayat Match</button>
+                    <button type="button" class="prof-tab-btn" id="tab-btn-prof-yaku">🀄 15 Special Hands</button>
+                </div>
+
+                <!-- Tab Content 1: Statistik Karir -->
+                <div class="prof-tab-panel active" id="prof-panel-stats" style="overflow-y: auto; max-height: 400px; padding: 4px;">
+                    <div class="stats-summary-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-title">Total Match</div>
+                            <div class="stat-card-val" id="stat-total-matches">0</div>
+                            <div class="stat-card-sub">Semua Mode Permainan</div>
+                        </div>
+                        <div class="stat-card stat-card-win">
+                            <div class="stat-card-title">Kemenangan (Win)</div>
+                            <div class="stat-card-val" id="stat-total-wins" style="color: var(--jade-accent);">0</div>
+                            <div class="stat-card-sub">Juara 1 (Hu)</div>
+                        </div>
+                        <div class="stat-card stat-card-winrate">
+                            <div class="stat-card-title">Win Rate (%)</div>
+                            <div class="stat-card-val" id="stat-win-rate" style="color: var(--gold-bright);">0.0%</div>
+                            <div class="stat-card-sub">Rasio Kemenangan</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Streak Menang</div>
+                            <div class="stat-card-val" id="stat-win-streak" style="color: #ff9900;">0 🔥</div>
+                            <div class="stat-card-sub">Rekor: <span id="stat-best-streak">0</span>x Beruntun</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Tsumo Wins (Self-Draw)</div>
+                            <div class="stat-card-val" id="stat-tsumo-wins">0</div>
+                            <div class="stat-card-sub">Ambil Ubin Sendiri</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Ron Wins (Discard Claim)</div>
+                            <div class="stat-card-val" id="stat-ron-wins">0</div>
+                            <div class="stat-card-sub">Klaim Buangan Lawan</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Skor Tertinggi Ronde</div>
+                            <div class="stat-card-val" id="stat-highest-score" style="color: var(--gold-bright);">0</div>
+                            <div class="stat-card-sub">Poin Maksimal</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">Total Chips Dimenangkan</div>
+                            <div class="stat-card-val" id="stat-total-earned" style="color: var(--jade-accent); font-size: 1.15rem;">25,000</div>
+                            <div class="stat-card-sub">Pendapatan Karir</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content 2: Riwayat Pertandingan (Match History) -->
+                <div class="prof-tab-panel" id="prof-panel-history" style="overflow-y: auto; max-height: 400px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="font-size: 0.82rem; color: rgba(255,255,255,0.7);">Catatan 25 pertandingan terakhir akun ini</span>
+                        <span class="sync-status-indicator" style="font-size: 0.72rem;"><span class="sync-dot"></span> Cloud PostgreSQL Sync</span>
+                    </div>
+
+                    <div class="match-history-list" id="prof-match-history-list">
+                        <!-- Diisi secara dinamis oleh JavaScript -->
+                        <div style="text-align: center; padding: 30px; color: rgba(255,255,255,0.5);">
+                            ⏳ Memuat data riwayat pertandingan...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content 3: Galeri 15 Special Hands (Yaku Gallery) -->
+                <div class="prof-tab-panel" id="prof-panel-yaku" style="overflow-y: auto; max-height: 400px;">
+                    <p style="font-size: 0.82rem; color: rgba(255,255,255,0.75); margin-bottom: 12px; text-align: left;">
+                        Koleksi 15 Kombinasi Ubin Spesial Mahjong yang berhasil diraih oleh akun ini:
+                    </p>
+                    <div class="yaku-gallery-grid" id="prof-yaku-grid">
+                        <!-- Diisi secara dinamis oleh JavaScript -->
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+                    <button class="btn-vip-primary btn-modal-close" style="padding: 10px 24px; font-size: 0.95rem;">TUTUP PROFIL</button>
+                </div>
             </div>
         </div>
 

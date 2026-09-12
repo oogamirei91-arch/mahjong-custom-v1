@@ -464,7 +464,62 @@ func main() {
 		})
 	})
 
-	// 7. WebSocket Gateway
+	// 7. Player Match History
+	http.HandleFunc("/api/history", func(w http.ResponseWriter, r *http.Request) {
+		enableCORS(w)
+		userID := r.URL.Query().Get("user_id")
+		if userID == "" {
+			http.Error(w, "user_id parameter is required", http.StatusBadRequest)
+			return
+		}
+
+		var list []database.PlayerMatchHistoryEntry
+		if pgRepo != nil {
+			list = pgRepo.GetPlayerMatchHistory(userID, 25)
+		} else {
+			list = memRepo.GetPlayerMatchHistory(userID, 25)
+		}
+
+		if list == nil {
+			list = []database.PlayerMatchHistoryEntry{}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(list)
+	})
+
+	// 8. Record Match Outcome
+	http.HandleFunc("/api/match/record", func(w http.ResponseWriter, r *http.Request) {
+		enableCORS(w)
+		if r.Method == "OPTIONS" {
+			return
+		}
+
+		var req struct {
+			RoomCode          string         `json:"room_code"`
+			GameMode          string         `json:"game_mode"`
+			WinnerID          string         `json:"winner_id"`
+			WinningType       string         `json:"winning_type"`
+			PlayerScores      map[string]int `json:"player_scores"`
+			HighestRoundScore int            `json:"highest_round_score"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
+
+		if pgRepo != nil {
+			_ = pgRepo.RecordMatchOutcome(req.RoomCode, req.GameMode, req.WinnerID, req.WinningType, req.PlayerScores, req.HighestRoundScore)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"message": "Hasil pertandingan berhasil dicatat ke Supabase",
+		})
+	})
+
+	// 9. WebSocket Gateway
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		username := r.URL.Query().Get("username")
 		if username == "" {

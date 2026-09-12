@@ -207,6 +207,23 @@ type LeaderboardEntry struct {
 	HighestMatchScore int     `json:"highest_match_score"`
 }
 
+// PlayerMatchHistoryEntry merepresentasikan riwayat pertandingan satu pemain dari view 'v_player_match_history'.
+type PlayerMatchHistoryEntry struct {
+	UserID       string    `json:"user_id"`
+	MatchID      string    `json:"match_id"`
+	RoomCode     string    `json:"room_code"`
+	GameMode     string    `json:"game_mode"`
+	StartedAt    time.Time `json:"started_at"`
+	FinishedAt   time.Time `json:"finished_at"`
+	SeatPosition string    `json:"seat_position"`
+	FinalScore   int       `json:"final_score"`
+	RankPosition int       `json:"rank_position"`
+	TrophyDelta  int       `json:"trophy_delta"`
+	ChipsDelta   int64     `json:"chips_delta"`
+	IsWinner     bool      `json:"is_winner"`
+	WinningScore int       `json:"winning_score"`
+}
+
 // HashPassword membuat hash SHA-256 ber-salt untuk keamanan password akun.
 func HashPassword(password, salt string) string {
 	hasher := sha256.New()
